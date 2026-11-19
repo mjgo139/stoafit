@@ -31,9 +31,10 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Pantallas en celular y PC (Playwright)
         run: npm run test:e2e
-      # Si el espacio de GitHub para adjuntos está lleno, no frena la publicación
-      - name: Guardar capturas
-        if: always()
+      # Solo si una prueba falla (para ver qué pasó): así no se llena el espacio gratis de GitHub para adjuntos.
+      # Si igual estuviera lleno, no frena la publicación.
+      - name: Guardar capturas (solo si falla)
+        if: failure()
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
