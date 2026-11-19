@@ -120,3 +120,25 @@ describe('código de barras y Open Food Facts', () => {
     expect((await buscarEnOFF('7840000000444', respuesta(200, { status: 1, product: { product_name: 'Raro', nutriments: {} } }))).tipo).toBe('sin-datos');
   });
 });
+
+import { esSuelta, repartoMacros, unidadSuelta } from './nutricion';
+import { textoCantidad } from '../ui/nutri';
+
+describe('v1.3: gramos sueltos y reparto de macros', () => {
+  const pan = { id: 'x', nombre: 'Pan', grupo: 'panes', por100: { kcal: 290, prot: 7, carb: 54, gras: 5.2 }, porciones: [{ nombre: '1 unidad', gramos: 50 }, { nombre: '100 g', gramos: 100 }] } as never;
+  it('itemDe en gramos sueltos', () => {
+    const i = itemDe(pan, 'g', 35, 'a');
+    expect(i.gramos).toBe(35);
+    expect(i.kcal).toBe(Math.round(290 * 0.35));
+    expect(textoCantidad(i)).toBe('35 g');
+    expect(esSuelta('ml')).toBe(true);
+    expect(unidadSuelta(pan)).toBe('g');
+    expect(unidadSuelta({ porciones: [{ nombre: '100 ml', gramos: 100 }] })).toBe('ml');
+  });
+  it('reparto de calorías por macro suma 100', () => {
+    const r = repartoMacros({ kcal: 131, prot: 4.2, carb: 25.3, gras: 0.8 });
+    expect(r.prot + r.carb + r.gras).toBe(100);
+    expect(r.carb).toBeGreaterThan(80);
+    expect(repartoMacros({ kcal: 0, prot: 0, carb: 0, gras: 0 })).toEqual({ prot: 0, carb: 0, gras: 0 });
+  });
+});

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { buscarAlimento } from '../lib/alimentos';
 import { claveDia, fechaCorta, fechaLarga, formatoNumero, nuevoId, semana, sumarDias } from '../lib/logica';
-import { COMIDAS, NOMBRE_COMIDA, cantidadItems, copiarItems, diaCumplido, itemDe, metasDe, sumar } from '../lib/nutricion';
+import { COMIDAS, NOMBRE_COMIDA, cantidadItems, copiarItems, diaCumplido, esSuelta, itemDe, metasDe, sumar } from '../lib/nutricion';
 import type { Dia, ItemComida, TipoComida } from '../lib/tipos';
 import { useSesion } from '../ui/contexto';
 import { CabeceraPagina, Grupo } from '../ui/familia';
@@ -182,6 +182,7 @@ function EditarItem({ item, alGuardar, alQuitar }: { item: ItemComida; alGuardar
   const { perfil } = useSesion();
   void perfil;
   const [cantidad, setCantidad] = useState(item.cantidad);
+  const paso = esSuelta(item.porcion) ? 10 : 0.5;
   const a = buscarAlimento(item.alimentoId);
   // Si es un alimento propio (no está en la biblioteca) se escala con lo guardado
   const nuevo: ItemComida = a ? { ...itemDe(a, item.porcion, cantidad, item.id) } : {
@@ -193,9 +194,9 @@ function EditarItem({ item, alGuardar, alQuitar }: { item: ItemComida; alGuardar
     <div>
       <div className="text-[14px] text-mu">{item.porcion}</div>
       <div className="mt-3 flex items-center justify-center gap-3">
-        <button className="chip h-11 w-11" aria-label="Menos cantidad" onClick={() => setCantidad((c) => Math.max(0.25, c - 0.5))}><Icono n="menos" size={16} /></button>
-        <span className="num w-20 text-center text-[32px] oro">{formatoNumero(cantidad, 2)}</span>
-        <button className="chip h-11 w-11" aria-label="Más cantidad" onClick={() => setCantidad((c) => c + 0.5)}><Icono n="mas" size={16} /></button>
+        <button className="chip h-11 w-11" aria-label="Menos cantidad" onClick={() => setCantidad((c) => Math.max(paso === 10 ? 1 : 0.25, c - paso))}><Icono n="menos" size={16} /></button>
+        <span className="num w-24 text-center text-[32px] oro">{formatoNumero(cantidad, 2)}{paso === 10 ? <span className="ml-1 text-[16px]">{item.porcion}</span> : null}</span>
+        <button className="chip h-11 w-11" aria-label="Más cantidad" onClick={() => setCantidad((c) => c + paso)}><Icono n="mas" size={16} /></button>
       </div>
       <p className="mt-2 text-center text-[14px] text-mu">{formatoNumero(nuevo.gramos)} g · <b className="text-tx">{formatoNumero(nuevo.kcal)} kcal</b></p>
       <div className="mt-5 flex flex-col gap-2">

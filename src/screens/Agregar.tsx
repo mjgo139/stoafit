@@ -11,7 +11,7 @@ import { useSesion } from '../ui/contexto';
 import { Escaner } from '../ui/Escaner';
 import { Icono } from '../ui/Icono';
 import { Celebracion, Encabezado, Hoja, Vacio } from '../ui/piezas';
-import { useDia } from '../ui/usarDia';
+import { useCopiar, useDia } from '../ui/usarDia';
 import { useProductos } from '../ui/usarProductos';
 import { mensajeError } from '../data/repo';
 
@@ -25,6 +25,7 @@ export default function Agregar() {
   const fecha = params.get('fecha') ?? claveDia();
   const comida = (COMIDAS.find((c) => c.id === params.get('comida'))?.id ?? sugerirComida()) as TipoComida;
   const { dia, agregar } = useDia(fecha);
+  const copiarA = useCopiar();
   const [texto, setTexto] = useState('');
   const [grupo, setGrupo] = useState<GrupoAlimento | null>(null);
   const [pestana, setPestana] = useState<Pestana>((params.get('ver') as Pestana) || 'recientes');
@@ -90,7 +91,7 @@ export default function Agregar() {
     setCache(productosEnCache());
   }
 
-  async function agregarElegido(a: Alimento, item: ItemComida) {
+  async function agregarElegido(a: Alimento, item: ItemComida, otrosDias: string[] = []) {
     setElegido(null);
     let it = item;
     // Lo encontrado en Open Food Facts pasa a la base compartida con su código: la próxima vez lo encuentra cualquiera
@@ -102,7 +103,9 @@ export default function Agregar() {
       } catch { /* sin conexión: igual se registra la comida */ }
     }
     if (a.compartido) usarCompartido(a);
-    await sumarItems([it], `${it.nombre} agregado`);
+    // Los otros días: 1 lectura + 2 escrituras cada uno
+    for (const f of otrosDias) await copiarA(f, comida, [it]);
+    await sumarItems([it], otrosDias.length ? `${it.nombre} agregado a ${otrosDias.length + 1} días` : `${it.nombre} agregado`);
   }
 
   const leerCodigo = useCallback(async (codigo: string) => {
@@ -277,7 +280,7 @@ export default function Agregar() {
               else setForm({ inicial: etiquetaDe(a), editar: a, codigo: a.compartido ? a.codigo : undefined });
             } : undefined}
             alReportar={elegido.compartido && !productos.cargador ? () => { const a = elegido; setElegido(null); setReportar(a); } : undefined}
-            alAgregar={(item) => agregarElegido(elegido, item)} />
+            fecha={fecha} alAgregar={(item, otros) => agregarElegido(elegido, item, otros)} />
         )}
       </Hoja>
 

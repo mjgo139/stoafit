@@ -1,6 +1,16 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.3.0',
+    fecha: '2026-11-19',
+    cambios: [
+      'Agregar alimento renovado: escribís la cantidad y elegís la medida o gramos (ml en líquidos) sueltos.',
+      'Ves el anillo de calorías con el % de proteínas, carbohidratos y grasas, y cuánto es de tu meta del día.',
+      'También en otros días: sumás el mismo alimento a varios días de la semana de una vez.',
+      'Botón atrás de Android: cierra la hoja abierta, vuelve a Hoy y, en Hoy, hay que tocarlo dos veces para salir.',
+    ],
+  },
+  {
     version: '1.2.1',
     fecha: '2026-11-19',
     cambios: [

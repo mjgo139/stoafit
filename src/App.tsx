@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useApp } from './ui/contexto';
 import { Marco } from './ui/Marco';
+import { useBotonAtras } from './ui/atras';
 import { Cargando } from './ui/piezas';
 import Acceso from './screens/Acceso';
 
@@ -24,6 +25,7 @@ function precargar() {
 export default function App() {
   const { usuario, perfil, cargando, mensaje } = useApp();
   const loc = useLocation();
+  useBotonAtras();
   useEffect(() => { if (usuario) precargar(); }, [usuario]);
 
   if (cargando) return <div className="mx-auto max-w-[480px] px-[17px]"><Cargando forma="pagina" /></div>;

@@ -78,8 +78,16 @@ export function macrosDe(a: Pick<Alimento, 'por100'>, gramos: number): Macros {
   };
 }
 
+/** Unidad suelta de un alimento para pesar a gusto: ml si es líquido, g si no */
+export function unidadSuelta(a: Pick<Alimento, 'porciones'>): 'g' | 'ml' {
+  return a.porciones.some((p) => p.nombre === '100 ml') ? 'ml' : 'g';
+}
+
+/** Porción "g" o "ml": la cantidad son gramos (o ml) sueltos */
+export const esSuelta = (porcion: string) => porcion === 'g' || porcion === 'ml';
+
 export function itemDe(a: Alimento, porcion: string, cantidad: number, id: string): ItemComida {
-  const p = a.porciones.find((x) => x.nombre === porcion) ?? a.porciones[0] ?? { nombre: '100 g', gramos: 100 };
+  const p = esSuelta(porcion) ? { nombre: porcion, gramos: 1 } : a.porciones.find((x) => x.nombre === porcion) ?? a.porciones[0] ?? { nombre: '100 g', gramos: 100 };
   const gramos = Math.round(p.gramos * cantidad);
   return { id, alimentoId: a.id, nombre: a.nombre, cantidad, porcion: p.nombre, gramos, ...macrosDe(a, gramos) };
 }
@@ -236,4 +244,13 @@ export function etiquetaDe(a: Alimento): Etiqueta {
     nombre: a.nombre, marca: a.marca, codigo: a.codigo, modo: 'porcion', porcion: p.nombre, gramos: p.gramos, ...m,
     otras: a.porciones.slice(1).filter((x) => x.nombre !== '100 g'),
   };
+}
+
+/** Qué parte de las calorías viene de cada macro (proteínas y carbohidratos 4 kcal/g, grasas 9 kcal/g) */
+export function repartoMacros(m: Macros): { prot: number; carb: number; gras: number } {
+  const p = m.prot * 4, c = m.carb * 4, g = m.gras * 9;
+  const t = p + c + g;
+  if (!t) return { prot: 0, carb: 0, gras: 0 };
+  const prot = Math.round((p / t) * 100), gras = Math.round((g / t) * 100);
+  return { prot, carb: 100 - prot - gras, gras };
 }

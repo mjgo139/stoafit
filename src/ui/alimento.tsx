@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
-import { formatoNumero, nuevoId } from '../lib/logica';
-import { itemDe, type Etiqueta } from '../lib/nutricion';
+import { fechaCorta, fechaDeClave, formatoNumero, nuevoId, sumarDias } from '../lib/logica';
+import { esSuelta, itemDe, metasDe, repartoMacros, unidadSuelta, type Etiqueta } from '../lib/nutricion';
+import { useSesion } from './contexto';
 import type { Alimento, ItemComida, Porcion } from '../lib/tipos';
 import type { LecturaEtiqueta } from '../lib/productos';
 import { mensajeError } from '../data/repo';
@@ -8,15 +9,41 @@ import { Icono } from './Icono';
 import { Selector } from './piezas';
 
 const CANTIDADES = [0.5, 1, 1.5, 2, 3];
+const GRAMOS = [25, 50, 100, 150, 200];
+const DIAS_CORTOS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const num = (s: string) => Number(s.replace(',', '.')) || 0;
+const texto = (n: number) => String(Math.round(n * 100) / 100).replace('.', ',');
 
-/** Porción, cantidad y lo que aporta. Opcionalmente favorito, editar y borrar (alimentos propios). */
-export function ElegirPorcion({ alimento: a, favorito, alFavorito, alAgregar, alEditar, alReportar, textoBoton = 'Agregar' }: {
-  alimento: Alimento; favorito?: boolean; alFavorito?: () => void; alAgregar: (i: ItemComida) => void;
+/**
+ * Agregar un alimento: cantidad libre (se escribe) en la porción que quieras o en gramos sueltos,
+ * lo que aporta, cuánto es de tu meta del día y, si se pide, sumarlo a varios días de una vez.
+ */
+export function ElegirPorcion({ alimento: a, favorito, alFavorito, alAgregar, alEditar, alReportar, textoBoton = 'Agregar', fecha }: {
+  alimento: Alimento; favorito?: boolean; alFavorito?: () => void; alAgregar: (i: ItemComida, otrosDias: string[]) => void;
   alEditar?: () => void; alReportar?: () => void; textoBoton?: string;
+  /** Si viene, se puede sumar también a los 6 días siguientes */
+  fecha?: string;
 }) {
+  const { perfil } = useSesion();
+  const metas = metasDe(perfil);
+  const suelta = unidadSuelta(a);
   const [porcion, setPorcion] = useState(a.porciones[0]?.nombre ?? '100 g');
-  const [cantidad, setCantidad] = useState(1);
+  const [cant, setCant] = useState('1');
+  const [dias, setDias] = useState<string[]>([]);
+  const cantidad = num(cant);
   const item = itemDe(a, porcion, cantidad, nuevoId());
+  const enGramos = esSuelta(porcion);
+  const r = repartoMacros(item);
+
+  function cambiarUnidad(p: string) {
+    // a gramos: se mantiene lo mismo que ya elegiste; de gramos a una porción: 1
+    if (esSuelta(p) && !enGramos) setCant(String(item.gramos || 100));
+    else if (!esSuelta(p) && enGramos) setCant('1');
+    setPorcion(p);
+  }
+  const proximos = fecha ? Array.from({ length: 7 }, (_, n) => sumarDias(fecha, n)) : [];
+  const pct = (v: number, m: number) => (m ? Math.round((v / m) * 100) : 0);
+
   return (
     <div>
       {a.compartido && (
@@ -32,31 +59,75 @@ export function ElegirPorcion({ alimento: a, favorito, alFavorito, alAgregar, al
           {a.receta ? `Receta · ${a.receta.ingredientes.length} ingredientes · rinde ${a.receta.porciones} porciones` : [a.marca, a.codigo && `Código ${a.codigo}`].filter(Boolean).join(' · ')}
         </p>
       )}
-      <div className="etiqueta">Porción</div>
-      <div className="mt-2 flex flex-wrap gap-1.5" role="radiogroup" aria-label="Porción">
-        {a.porciones.map((p) => (
-          <button key={p.nombre} role="radio" aria-checked={porcion === p.nombre} onClick={() => setPorcion(p.nombre)} className={`chip ${porcion === p.nombre ? 'chip-on' : ''}`}>
-            {p.nombre}{p.nombre !== '100 g' && p.nombre !== '100 ml' && !p.nombre.includes('(') && <span className="ml-1 opacity-70">({p.gramos} g)</span>}
+
+      <div className="etiqueta">Cuánto</div>
+      <div className="mt-2 flex items-center gap-2">
+        <button className="chip h-11 w-11 shrink-0" aria-label="Menos cantidad" onClick={() => setCant((c) => texto(Math.max(enGramos ? 1 : 0.25, num(c) - (enGramos ? 10 : 0.5))))}><Icono n="menos" size={16} /></button>
+        <input className="campo num h-11 w-[84px] shrink-0 text-center text-[22px]" inputMode="decimal" value={cant} aria-label="Cantidad"
+          onChange={(e) => setCant(e.target.value.replace(/[^0-9.,]/g, '').slice(0, 7))} onFocus={(e) => e.target.select()} />
+        <button className="chip h-11 w-11 shrink-0" aria-label="Más cantidad" onClick={() => setCant((c) => texto(num(c) + (enGramos ? 10 : 0.5)))}><Icono n="mas" size={16} /></button>
+        <select className="campo h-11 min-w-0 flex-1 px-3 text-[14px]" value={porcion} onChange={(e) => cambiarUnidad(e.target.value)} aria-label="Unidad">
+          {a.porciones.map((p) => (
+            <option key={p.nombre} value={p.nombre}>{p.nombre}{p.nombre !== '100 g' && p.nombre !== '100 ml' && !p.nombre.includes('(') ? ` (${formatoNumero(p.gramos)} g)` : ''}</option>
+          ))}
+          <option value={suelta}>{suelta === 'ml' ? 'mililitros (ml)' : 'gramos (g)'}</option>
+        </select>
+      </div>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {(enGramos ? GRAMOS : CANTIDADES).map((c) => (
+          <button key={c} className={`chip h-8 px-2.5 text-[12px] ${cantidad === c ? 'chip-on' : ''}`} onClick={() => setCant(texto(c))}>
+            {enGramos ? `${c} ${porcion}` : c === 0.5 ? '½' : c === 1.5 ? '1½' : c}
           </button>
         ))}
       </div>
-      <div className="etiqueta mt-5">Cantidad</div>
-      <div className="mt-2 flex items-center gap-2">
-        <button className="chip h-11 w-11" aria-label="Menos cantidad" onClick={() => setCantidad((c) => Math.max(0.25, c - 0.5))}><Icono n="menos" size={16} /></button>
-        <span className="num w-14 text-center text-[24px]" aria-label="Cantidad">{formatoNumero(cantidad, 2)}</span>
-        <button className="chip h-11 w-11" aria-label="Más cantidad" onClick={() => setCantidad((c) => c + 0.5)}><Icono n="mas" size={16} /></button>
-        <div className="ml-auto flex gap-1">
-          {CANTIDADES.map((c) => <button key={c} className={`chip h-8 px-2.5 text-[12px] ${cantidad === c ? 'chip-on' : ''}`} onClick={() => setCantidad(c)}>{c === 0.5 ? '½' : c === 1.5 ? '1½' : c}</button>)}
+
+      <div className="mt-4 flex items-center gap-4 rounded-[12px] border border-ln2 p-3" data-testid="aporte">
+        <AnilloMacros kcal={item.kcal} r={r} />
+        <div className="grid min-w-0 flex-1 grid-cols-3 gap-1 text-center">
+          {([['prot', 'Proteínas'], ['carb', 'Carbohidr.'], ['gras', 'Grasas']] as const).map(([k, t]) => (
+            <div key={k}>
+              <div className="text-[11px] font-bold" style={{ color: `var(--${k})` }}>{r[k]} %</div>
+              <div className="num text-[18px]">{formatoNumero(item[k], 1)} <span className="text-[12px] text-mu">g</span></div>
+              <div className="text-[11px] text-mu">{t}</div>
+            </div>
+          ))}
         </div>
       </div>
-      <div className="mt-5 grid grid-cols-4 gap-2 rounded-[12px] border border-ln2 p-3 text-center" data-testid="aporte">
-        <div><div className="num text-[22px] oro">{formatoNumero(item.kcal)}</div><div className="text-[11px] text-mu">kcal</div></div>
-        <div><div className="num text-[18px]" style={{ color: 'var(--prot)' }}>{formatoNumero(item.prot, 1)}</div><div className="text-[11px] text-mu">prot. g</div></div>
-        <div><div className="num text-[18px]" style={{ color: 'var(--carb)' }}>{formatoNumero(item.carb, 1)}</div><div className="text-[11px] text-mu">carb. g</div></div>
-        <div><div className="num text-[18px]" style={{ color: 'var(--gras)' }}>{formatoNumero(item.gras, 1)}</div><div className="text-[11px] text-mu">grasas g</div></div>
+      <p className="mt-1.5 text-center text-[12px] text-mu2">{formatoNumero(item.gramos)} {suelta === 'ml' && enGramos ? 'ml' : 'g'} en total{a.fuente === 'off' ? ' · datos de Open Food Facts' : ''}</p>
+
+      <div className="mt-3" data-testid="de-tu-meta">
+        <div className="etiqueta mb-2">De tu meta del día</div>
+        <div className="grid grid-cols-4 gap-2">
+          {([['kcal', 'Calorías', 'var(--gold)', ''], ['prot', 'Proteínas', 'var(--prot)', ' g'], ['carb', 'Carbohidr.', 'var(--carb)', ' g'], ['gras', 'Grasas', 'var(--gras)', ' g']] as const).map(([k, t, color, u]) => (
+            <div key={k} className="min-w-0">
+              <div className="truncate text-[11px] text-mu">{t}</div>
+              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-ln2"><div className="h-full rounded-full" style={{ width: `${Math.min(100, pct(item[k], metas[k]))}%`, background: color }} /></div>
+              <div className="mt-1 flex justify-between gap-1 text-[11px]"><b>{pct(item[k], metas[k])} %</b><span className="truncate text-mu2">{formatoNumero(metas[k])}{u}</span></div>
+            </div>
+          ))}
+        </div>
       </div>
-      <p className="mt-2 text-center text-[12px] text-mu2">{formatoNumero(item.gramos)} g en total{a.fuente === 'off' ? ' · datos de Open Food Facts' : ''}</p>
-      {alReportar && <button className="mx-auto mt-1 block text-[12px] font-semibold text-mu underline" onClick={alReportar}>¿Algún dato está mal? Reportar error</button>}
+
+      {fecha && (
+        <div className="mt-4">
+          <div className="etiqueta mb-2">También en otros días</div>
+          <div className="flex justify-between gap-1" role="group" aria-label="Otros días">
+            {proximos.map((d, n) => {
+              const on = n === 0 || dias.includes(d);
+              return (
+                <button key={d} disabled={n === 0} aria-pressed={on} aria-label={n === 0 ? `${fechaCorta(d)} (este día)` : `Sumar también el ${fechaCorta(d)}`}
+                  onClick={() => setDias((l) => (l.includes(d) ? l.filter((x) => x !== d) : [...l, d]))}
+                  className={`flex h-14 flex-1 flex-col items-center justify-center rounded-[12px] border text-[11px] ${on ? 'border-gold bg-goldbg oro' : 'border-ln2 text-mu'}`}>
+                  <span>{DIAS_CORTOS[fechaDeClave(d).getDay()]}</span>
+                  <span className="num text-[16px]">{fechaDeClave(d).getDate()}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {alReportar && <button className="mx-auto mt-3 block text-[12px] font-semibold text-mu underline" onClick={alReportar}>¿Algún dato está mal? Reportar error</button>}
       <div className="mt-4 flex gap-2">
         {alFavorito && (
           <button className="btn-sec h-[52px] w-[52px] shrink-0 px-0" aria-label={favorito ? 'Quitar de favoritos' : 'Agregar a favoritos'} aria-pressed={!!favorito} onClick={alFavorito}>
@@ -68,7 +139,31 @@ export function ElegirPorcion({ alimento: a, favorito, alFavorito, alAgregar, al
             <Icono n="editar" size={19} />
           </button>
         )}
-        <button className="btn flex-1" onClick={() => alAgregar(item)}>{textoBoton}</button>
+        <button className="btn flex-1" disabled={cantidad <= 0} onClick={() => alAgregar(item, [...dias].sort())}>
+          {dias.length ? `${textoBoton} a ${dias.length + 1} días` : textoBoton}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Anillo de calorías partido según de dónde vienen (proteínas, carbohidratos, grasas) */
+function AnilloMacros({ kcal, r }: { kcal: number; r: { prot: number; carb: number; gras: number } }) {
+  const R = 40, C = 2 * Math.PI * R;
+  let ini = 0;
+  const partes = (['carb', 'gras', 'prot'] as const).map((k) => { const p = { k, ini, largo: (r[k] / 100) * C }; ini += p.largo; return p; });
+  return (
+    <div className="relative h-[92px] w-[92px] shrink-0">
+      <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90" aria-hidden>
+        <circle cx="50" cy="50" r={R} fill="none" stroke="var(--ln2)" strokeWidth="8" />
+        {partes.map((p) => p.largo > 0 && (
+          <circle key={p.k} cx="50" cy="50" r={R} fill="none" stroke={`var(--${p.k})`} strokeWidth="8"
+            strokeDasharray={`${Math.max(0, p.largo - 1.5)} ${C}`} strokeDashoffset={-p.ini} />
+        ))}
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="num text-[22px] leading-none oro">{formatoNumero(kcal)}</span>
+        <span className="mt-0.5 text-[10px] uppercase tracking-[.08em] text-mu">kcal</span>
       </div>
     </div>
   );

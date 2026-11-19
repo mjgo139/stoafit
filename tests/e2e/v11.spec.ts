@@ -20,6 +20,13 @@ async function entrar(page: Page) {
   await expect(page.getByRole('heading', { name: /(Buen día|Buenas tardes|Buenas noches), Sofía/ })).toBeVisible();
 }
 
+/** Elige la medida en la lista "Unidad" por una parte del texto */
+async function medida(scope: Page | ReturnType<Page['getByRole']>, re: RegExp) {
+  const sel = scope.getByLabel('Unidad');
+  const v = await sel.evaluate((s, src) => [...(s as HTMLSelectElement).options].find((o) => new RegExp(src).test(o.text))?.value, re.source);
+  await sel.selectOption(v!);
+}
+
 const ir = (page: Page, nombre: 'Hoy' | 'Diario') => page.getByRole('link', { name: nombre, exact: true }).filter({ visible: true }).click();
 
 test('código de barras: producto encontrado y producto nuevo', async ({ page }) => {
@@ -60,7 +67,7 @@ test('código de barras: producto encontrado y producto nuevo', async ({ page })
   await captura(page, '82-crear-alimento');
   await page.getByRole('button', { name: 'Guardar producto' }).click();
   await expect(page.getByRole('dialog', { name: 'Mbejú congelado' })).toContainText('Granja Ejemplo');
-  await page.getByRole('radio', { name: /1 paquete/ }).click();
+  await medida(page.getByRole('dialog'), /1 paquete/);
   await expect(page.getByTestId('aporte')).toContainText('1.440');
   await page.getByRole('button', { name: 'Agregar', exact: true }).click();
 
@@ -142,7 +149,7 @@ test('recetas: ingredientes, porciones y peso cocido', async ({ page }) => {
     await page.getByLabel('Buscar ingrediente').fill(buscar);
     await page.getByTestId('resultado-ingrediente').first().click();
     const d = page.getByRole('dialog');
-    await d.getByRole('radio', { name: new RegExp(porcion) }).click();
+    await medida(d, new RegExp(porcion));
     for (let k = 0; k < veces; k++) await d.getByRole('button', { name: 'Más cantidad' }).click();
     await d.getByRole('button', { name: 'Sumar a la receta' }).click();
   }

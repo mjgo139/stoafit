@@ -1,3 +1,4 @@
+import { useCerrarConAtras } from './atras';
 import { Grupo } from './familia';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -43,6 +44,7 @@ export function Hoja({ abierta, alCerrar, titulo, etiqueta, children }: {
   abierta: boolean; alCerrar: () => void; titulo: string; etiqueta?: string; children: ReactNode;
 }) {
   const [montada, setMontada] = useState(abierta);
+  useCerrarConAtras(abierta, alCerrar);
   // al cerrar se sigue mostrando lo último mientras baja, para que no salte
   const ultimo = useRef({ titulo, etiqueta, children });
   if (abierta) ultimo.current = { titulo, etiqueta, children };
@@ -86,6 +88,7 @@ export function Hoja({ abierta, alCerrar, titulo, etiqueta, children }: {
 export function Celebracion({ visible, titulo, linea, icono = 'laurel', etiqueta = 'Día cumplido', alCerrar }: {
   visible: boolean; titulo: string; linea?: string; icono?: 'medalla' | 'laurel'; etiqueta?: string; alCerrar: () => void;
 }) {
+  useCerrarConAtras(visible, alCerrar);
   useEffect(() => {
     if (!visible) return;
     const t = setTimeout(alCerrar, 3200);
