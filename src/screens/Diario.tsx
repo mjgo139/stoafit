@@ -22,6 +22,7 @@ export default function Diario() {
   const copiarA = useCopiar();
   const [editar, setEditar] = useState<{ comida: TipoComida; item: ItemComida } | null>(null);
   const [copiar, setCopiar] = useState<TipoComida | null>(null);
+  const [traer, setTraer] = useState<TipoComida | null>(null);
   const [guardarComo, setGuardarComo] = useState<TipoComida | null>(null);
   const [anterior, setAnterior] = useState<Dia | null>(null);
 
@@ -96,14 +97,15 @@ export default function Diario() {
                         </button>
                       </div>
                     ))}
-                    <div className={`flex min-h-[52px] items-center gap-2 ${items.length ? 'border-t border-ln2' : ''}`}>
+                    <div className={`flex min-h-[52px] flex-wrap items-center gap-2 py-2 ${items.length ? 'border-t border-ln2' : ''}`}>
                       <Link to={`/agregar?comida=${c.id}&fecha=${fecha}`} className="flex flex-1 items-center gap-2 text-[14px] font-semibold oro">
                         <Icono n="mas" size={18} />Agregar
                       </Link>
+                      <button className="chip h-8 px-2.5 text-[12px]" onClick={() => setTraer(c.id)} aria-label={`Repetir ${c.nombre.toLowerCase()} de otro día`}><Icono n="repetir" size={14} />Repetir…</button>
                       {items.length > 0 && (
                         <>
-                          <button className="chip h-8 px-2.5 text-[12px]" onClick={() => setCopiar(c.id)} aria-label={`Copiar ${c.nombre.toLowerCase()} a otro día`}><Icono n="copiar" size={14} />Copiar a…</button>
-                          <button className="chip h-8 px-2.5 text-[12px]" onClick={() => setGuardarComo(c.id)} aria-label={`Guardar ${c.nombre.toLowerCase()} como comida`}><Icono n="guardar" size={14} />Guardar</button>
+                          <button className="chip h-8 px-2.5 text-[12px]" onClick={() => setCopiar(c.id)} aria-label={`Copiar ${c.nombre.toLowerCase()} a otro día`}><Icono n="copiar" size={14} /><span className="hidden lg:inline">Copiar</span></button>
+                          <button className="chip h-8 px-2.5 text-[12px]" onClick={() => setGuardarComo(c.id)} aria-label={`Guardar ${c.nombre.toLowerCase()} como comida`}><Icono n="guardar" size={14} /><span className="hidden lg:inline">Guardar</span></button>
                         </>
                       )}
                     </div>
@@ -144,6 +146,16 @@ export default function Diario() {
             else await copiarA(f, c, items);
             setCopiar(null);
             aviso(`Copiado a ${NOMBRE_COMIDA[c].toLowerCase()} del ${fechaCorta(f)}`);
+          }} />
+        )}
+      </Hoja>
+
+      <Hoja abierta={!!traer} alCerrar={() => setTraer(null)} etiqueta={traer ? `${NOMBRE_COMIDA[traer]} · ${fechaCorta(fecha)}` : ''} titulo="Repetir de otro día">
+        {traer && (
+          <TraerDe destino={traer} fecha={fecha} alTraer={async (items, desde) => {
+            await agregar(traer, copiarItems(items, nuevoId));
+            setTraer(null);
+            aviso(`Repetiste ${items.length === 1 ? items[0].nombre : `${items.length} alimentos`} del ${fechaCorta(desde)}`);
           }} />
         )}
       </Hoja>
@@ -215,6 +227,67 @@ function CopiarA({ origen, hoy, alCopiar }: { origen: TipoComida; hoy: string; a
         </div>
       </div>
       <button className="btn w-full" onClick={() => alCopiar(destino, comida)}>Copiar a {NOMBRE_COMIDA[comida].toLowerCase()} · {fechaCorta(destino)}</button>
+    </div>
+  );
+}
+
+/**
+ * Repetir una comida de cualquier día (el desayuno del martes, la cena de ayer al almuerzo de hoy…).
+ * Los días con registros salen del resumen del perfil (0 lecturas); se lee solo el día elegido (1 lectura).
+ */
+function TraerDe({ destino, fecha, alTraer }: { destino: TipoComida; fecha: string; alTraer: (items: ItemComida[], desde: string) => void }) {
+  const { repo, usuario, perfil } = useSesion();
+  const hoy = claveDia();
+  const recientes = [...perfil.resumen.dias].filter((d) => d !== fecha && d <= hoy).sort().reverse().slice(0, 6);
+  const [desde, setDesde] = useState(recientes[0] ?? sumarDias(fecha, -1));
+  const [comida, setComida] = useState<TipoComida>(destino);
+  const [dia, setDia] = useState<Dia | null | undefined>(undefined);
+  const [fuera, setFuera] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    let vivo = true;
+    setDia(undefined);
+    repo.leerDia(usuario.uid, desde).then((d) => vivo && setDia(d)).catch(() => vivo && setDia(null));
+    return () => { vivo = false; };
+  }, [repo, usuario.uid, desde]);
+  useEffect(() => setFuera(new Set()), [desde, comida]);
+
+  const items = dia?.comidas[comida] ?? [];
+  const elegidos = items.filter((i) => !fuera.has(i.id));
+  const nombreDia = (d: string) => (d === hoy ? 'Hoy' : d === sumarDias(hoy, -1) ? 'Ayer' : fechaCorta(d));
+  return (
+    <div className="flex flex-col gap-4">
+      <div>
+        <div className="etiqueta mb-2">De qué día</div>
+        <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Día de origen">
+          {recientes.map((d) => <button key={d} role="radio" aria-checked={desde === d} className={`chip ${desde === d ? 'chip-on' : ''}`} onClick={() => setDesde(d)}>{nombreDia(d)}</button>)}
+          <input type="date" className="campo h-8 w-auto rounded-full px-3 text-[13px]" value={desde} max={hoy} onChange={(e) => e.target.value && setDesde(e.target.value)} aria-label="Elegir otra fecha" />
+        </div>
+      </div>
+      <div>
+        <div className="etiqueta mb-2">Qué comida</div>
+        <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Comida de origen">
+          {COMIDAS.map((c) => <button key={c.id} role="radio" aria-checked={comida === c.id} className={`chip ${comida === c.id ? 'chip-on' : ''}`} onClick={() => setComida(c.id)}>{c.nombre}</button>)}
+        </div>
+      </div>
+      <div className="rounded-[12px] border border-ln2 px-3 py-1" data-testid="traer-lista">
+        {dia === undefined ? <Cargando forma="linea" /> : items.length === 0 ? (
+          <p className="py-3 text-[14px] text-mu">Ese día no tiene nada en {NOMBRE_COMIDA[comida].toLowerCase()}.</p>
+        ) : items.map((i) => (
+          <label key={i.id} className="fila cursor-pointer last:border-0">
+            <input type="checkbox" className="h-4 w-4 shrink-0 accent-[var(--gold)]" checked={!fuera.has(i.id)} aria-label={i.nombre}
+              onChange={() => setFuera((s) => { const n = new Set(s); if (n.has(i.id)) n.delete(i.id); else n.add(i.id); return n; })} />
+            <span className="min-w-0 flex-1 py-2">
+              <span className="block truncate font-semibold">{i.nombre}</span>
+              <span className="block text-[13px] text-mu">{textoCantidad(i)}</span>
+            </span>
+            <span className="num shrink-0 text-[15px]">{formatoNumero(i.kcal)}</span>
+          </label>
+        ))}
+      </div>
+      <button className="btn w-full" disabled={!elegidos.length} onClick={() => alTraer(elegidos, desde)}>
+        {elegidos.length ? `Agregar a ${NOMBRE_COMIDA[destino].toLowerCase()} · ${formatoNumero(sumar(elegidos).kcal)} kcal` : 'Elegí al menos un alimento'}
+      </button>
     </div>
   );
 }

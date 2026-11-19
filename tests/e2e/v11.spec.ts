@@ -114,6 +114,24 @@ test('repetir: día anterior, copiar a otro día y comidas guardadas', async ({ 
   await captura(page, '85-guardadas');
 });
 
+test('repetir una comida de cualquier día, eligiendo qué alimentos', async ({ page }) => {
+  await entrar(page);
+  await ir(page, 'Diario');
+  const cena = page.getByTestId('diario-cena').getByTestId('item-comida');
+  const antes = await cena.count();
+  await page.getByRole('button', { name: 'Repetir cena de otro día' }).click();
+  await page.getByRole('radiogroup', { name: 'Comida de origen' }).getByRole('radio', { name: 'Desayuno' }).click();
+  const lista = page.getByTestId('traer-lista').getByRole('checkbox');
+  await expect(lista.first()).toBeVisible();
+  const n = await lista.count();
+  expect(n).toBeGreaterThan(1);
+  await lista.first().uncheck();
+  await captura(page, '86-repetir-comida');
+  await page.getByRole('button', { name: /^Agregar a cena/ }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Repetiste' })).toBeVisible();
+  await expect(cena).toHaveCount(antes + n - 1);
+});
+
 test('recetas: ingredientes, porciones y peso cocido', async ({ page }) => {
   await entrar(page);
   await page.goto('/agregar?comida=almuerzo');
