@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { BIBLIOTECA, GRUPOS, buscar, buscarAlimento } from '../lib/alimentos';
 import { claveDia, fechaCorta, formatoNumero, nuevoId, sumarDias } from '../lib/logica';
-import { COMIDAS, NOMBRE_COMIDA, alimentoDeEtiqueta, copiarItems, etiquetaDe, itemDe, sumar, type Etiqueta } from '../lib/nutricion';
+import { alimentoDeEtiqueta, nombreComida, copiarItems, etiquetaDe, itemDe, sumar, type Etiqueta } from '../lib/nutricion';
 import { FUENTE_OFF, PRODUCTOS_PRUEBA, buscarEnOFF } from '../lib/openfoodfacts';
 import { alimentoDeProducto, codigoDeId, productosEnCache, recordarProducto } from '../lib/productos';
 import type { Alimento, ComidaGuardada, Dia, GrupoAlimento, ItemComida, TipoComida } from '../lib/tipos';
@@ -13,6 +13,8 @@ import { Icono } from '../ui/Icono';
 import { Celebracion, Hoja, Vacio } from '../ui/piezas';
 import { textoCantidad } from '../ui/nutri';
 import { useCopiar, useDia } from '../ui/usarDia';
+import { useComidas } from '../ui/comidas';
+import { LineaMacros } from '../ui/nutri';
 import { useProductos } from '../ui/usarProductos';
 import { mensajeError } from '../data/repo';
 
@@ -24,7 +26,10 @@ export default function Agregar() {
   const nav = useNavigate();
   const [params, setParams] = useSearchParams();
   const fecha = params.get('fecha') ?? claveDia();
-  const comida = (COMIDAS.find((c) => c.id === params.get('comida'))?.id ?? sugerirComida()) as TipoComida;
+  const misComidas = useComidas();
+  const pedida = params.get('comida');
+  const comida: TipoComida = pedida && /^[a-z0-9-]{2,20}$/.test(pedida) ? pedida : sugerirComida(misComidas.map((c) => c.id));
+  const nombre = nombreComida(misComidas, comida);
   const { dia, agregar } = useDia(fecha);
   const copiarA = useCopiar();
   const [texto, setTexto] = useState('');
@@ -156,25 +161,50 @@ export default function Agregar() {
     return itemDe(a, u?.porcion ?? a.porciones[0]?.nombre ?? '100 g', u?.cantidad ?? 1, nuevoId());
   };
 
+  /** Atajos: escanear, solo calorías y crear alimento (en una sola tarjeta, separados por líneas finas) */
+  const atajos = (id: string, vertical = false) => {
+    const botones: [string, string, string, () => void][] = [
+      ['barras', 'Escanear', 'Código de barras', () => setEscanear(true)],
+      ['kcal', 'Solo calorías', 'Sin buscar el alimento', () => setRapida(true)],
+      ['mas', 'Crear alimento', 'Con su etiqueta', () => setForm({ inicial: { nombre: texto } })],
+    ];
+    return (
+      <div className={`tarjeta p-0 ${vertical ? 'flex flex-col divide-y divide-ln2' : 'grid grid-cols-3 divide-x divide-ln2'}`} data-testid={id}>
+        {botones.map(([ic, t, l, f]) => (
+          <button key={t} onClick={f} className={`flex items-center gap-3 hover:bg-sf2 ${vertical ? 'px-4 py-3 text-left first:rounded-t-[16px] last:rounded-b-[16px]' : 'flex-col justify-center gap-2 px-1 py-4 text-center first:rounded-l-[16px] last:rounded-r-[16px]'}`}>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gold2 oro">
+              {ic === 'kcal' ? <span className="num text-[12px] font-semibold">kcal</span> : <Icono n={ic} size={19} />}
+            </span>
+            <span className="min-w-0">
+              <span className="block text-[11.5px] font-bold uppercase leading-tight tracking-[.1em] oro">{t}</span>
+              {vertical && <span className="block text-[12.5px] text-mu">{l}</span>}
+            </span>
+          </button>
+        ))}
+      </div>
+    );
+  };
+
   return (
-    <div className="lg:mx-auto lg:max-w-[880px]">
+    <div className="lg:mx-auto lg:max-w-[1180px]">
       <header className="entrar sticky top-0 z-20 -mx-[17px] bg-bg px-[17px] pb-3 pt-4 lg:static lg:mx-0 lg:px-0 lg:pt-8">
-        <div className="flex min-h-[48px] items-center gap-1">
-          <button aria-label="Volver" className="toque -ml-3 flex shrink-0 items-center justify-center oro" onClick={() => nav(-1)}><Icono n="atras" /></button>
-          <div className="relative min-w-0 flex-1 text-center">
+        {/* Tres columnas iguales a los costados: el título queda siempre en el centro */}
+        <div className="grid min-h-[48px] grid-cols-[84px_minmax(0,1fr)_84px] items-center">
+          <button aria-label="Volver" className="toque -ml-3 flex items-center justify-center justify-self-start oro" onClick={() => nav(-1)}><Icono n="atras" /></button>
+          <div className="relative min-w-0 text-center">
             <h1 className="sr-only">¿Qué comiste?</h1>
             <label className="relative inline-flex max-w-full items-center gap-1.5">
-              <span className="font-display truncate text-[26px] font-semibold leading-none oro">{NOMBRE_COMIDA[comida]}</span>
+              <span className="font-display truncate text-[26px] font-semibold leading-none oro">{nombre}</span>
               <Icono n="abajo" size={20} className="shrink-0 oro" />
               <select className="absolute inset-0 cursor-pointer opacity-0" value={comida} onChange={(e) => cambiarComida(e.target.value as TipoComida)} aria-label="Comida">
-                {COMIDAS.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                {(misComidas.some((c) => c.id === comida) ? misComidas : [...misComidas, { id: comida, nombre }]).map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
               </select>
             </label>
             <div className="mt-1 truncate text-[12.5px] text-mu" data-testid="ya-en-comida">
               {fecha === claveDia() ? 'Hoy' : fechaCorta(fecha)}{yaHay.length ? ` · ${yaHay.length} alimento${yaHay.length > 1 ? 's' : ''} · ${formatoNumero(sumar(yaHay).kcal)} kcal` : ' · todavía nada'}
             </div>
           </div>
-          <div className="flex w-[72px] shrink-0 justify-end">
+          <div className="flex justify-end">
             {agregados > 0 && <button className="btn h-10 px-4 text-[12px]" onClick={() => nav(-1)}>Listo</button>}
           </div>
         </div>
@@ -197,18 +227,9 @@ export default function Agregar() {
       </header>
       {buscando && <p className="mb-2 text-[13px] text-mu" role="status">Buscando el código {buscando}…</p>}
 
-      {!buscandoTexto && pestana === 'recientes' && (
-        <div className="mt-2 grid grid-cols-2 gap-3" data-testid="accesos">
-          <button className="tarjeta flex min-h-[112px] flex-col items-center justify-center gap-2 text-center oro hover:border-gold2" onClick={() => setEscanear(true)}>
-            <Icono n="barras" size={30} />
-            <span className="text-[14px] font-semibold leading-tight">Escanear un código<br />de barras</span>
-          </button>
-          <button className="tarjeta flex min-h-[112px] flex-col items-center justify-center gap-2 text-center oro hover:border-gold2" onClick={() => setRapida(true)}>
-            <Icono n="llama" size={30} />
-            <span className="text-[14px] font-semibold leading-tight">Adición rápida<br /><span className="font-normal text-mu">solo calorías</span></span>
-          </button>
-        </div>
-      )}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
+      <div className="min-w-0">
+      {!buscandoTexto && pestana === 'recientes' && <div className="mt-2 lg:hidden">{atajos('accesos')}</div>}
 
       {!buscandoTexto && pestana === 'todos' && (
         <div className="-mx-[17px] mt-3 flex gap-1.5 overflow-x-auto px-[17px] pb-1 lg:mx-0 lg:flex-wrap lg:px-0">
@@ -222,12 +243,12 @@ export default function Agregar() {
         {!buscandoTexto && pestana === 'comidas' ? (
           <div className="flex flex-col gap-5">
             <section>
-              <h2 className="titulo-tarjeta mb-2.5">{NOMBRE_COMIDA[comida]} de ayer</h2>
+              <h2 className="titulo-tarjeta mb-2.5">{nombre} de ayer</h2>
               {deAyer.length ? (
                 <div className="tarjeta" data-testid="lo-de-ayer">
                   <div className="flex items-center justify-between gap-3">
                     <div className="text-[14px] text-mu">{formatoNumero(sumar(deAyer).kcal)} kcal · {deAyer.length} alimentos</div>
-                    <button className="btn h-10 px-4 text-[12px]" onClick={() => sumarItems(copiarItems(deAyer, nuevoId), `Repetiste ${NOMBRE_COMIDA[comida].toLowerCase()} de ayer`)}>
+                    <button className="btn h-10 px-4 text-[12px]" onClick={() => sumarItems(copiarItems(deAyer, nuevoId), `Repetiste ${nombre.toLowerCase()} de ayer`)}>
                       <Icono n="repetir" size={16} />Repetir
                     </button>
                   </div>
@@ -235,7 +256,7 @@ export default function Agregar() {
                     {deAyer.map((i) => <li key={i.id} className="flex justify-between gap-3 py-1"><span className="min-w-0 truncate">{i.nombre}</span><span className="shrink-0 text-mu">{formatoNumero(i.kcal)} kcal</span></li>)}
                   </ul>
                 </div>
-              ) : <p className="tarjeta py-5 text-center text-[14px] text-mu">Ayer no registraste {NOMBRE_COMIDA[comida].toLowerCase()}. En el Diario, "Repetir…" trae cualquier comida de otro día.</p>}
+              ) : <p className="tarjeta py-5 text-center text-[14px] text-mu">Ayer no registraste {nombre.toLowerCase()}. En el Diario, "Repetir…" trae cualquier comida de otro día.</p>}
             </section>
             <section>
               <h2 className="titulo-tarjeta mb-2.5">Guardadas</h2>
@@ -314,17 +335,41 @@ export default function Agregar() {
         )}
       </div>
 
-      <p className="mt-6 text-center text-[12px] text-mu2">Valores aproximados de tablas generales. {FUENTE_OFF}.</p>
+      <p className="mt-6 text-center text-[12px] text-mu2 lg:hidden">Valores aproximados de tablas generales. {FUENTE_OFF}.</p>
+      </div>
 
-      <Hoja abierta={rapida} alCerrar={() => setRapida(false)} etiqueta={NOMBRE_COMIDA[comida]} titulo="Adición rápida">
+      {/* PC: a la derecha, lo que ya tiene esta comida y los atajos */}
+      <aside className="hidden flex-col gap-4 lg:sticky lg:top-8 lg:mt-2 lg:flex">
+        <section className="tarjeta" data-testid="en-esta-comida">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="etiqueta">En {nombre.toLowerCase()}</span>
+            <span className="num text-[18px]">{formatoNumero(sumar(yaHay).kcal)}<span className="ml-1 font-sans text-[12px] text-mu">kcal</span></span>
+          </div>
+          {yaHay.length ? (
+            <ul className="mt-2">
+              {yaHay.map((i) => (
+                <li key={i.id} className="fila last:border-0">
+                  <span className="min-w-0 flex-1 py-1.5"><span className="block truncate text-[14px] font-semibold">{i.nombre}</span><span className="block text-[12px] text-mu">{textoCantidad(i)}</span></span>
+                  <span className="shrink-0 text-right"><span className="num block text-[15px]">{formatoNumero(i.kcal)}</span><LineaMacros m={i} /></span>
+                </li>
+              ))}
+            </ul>
+          ) : <p className="mt-2 text-[14px] text-mu">Todavía nada. Tocá el "+" de un alimento y aparece acá.</p>}
+        </section>
+        {atajos('accesos-pc', true)}
+        <p className="text-[12px] text-mu2">Valores aproximados de tablas generales. {FUENTE_OFF}.</p>
+      </aside>
+      </div>
+
+      <Hoja abierta={rapida} alCerrar={() => setRapida(false)} etiqueta={nombre} titulo="Solo calorías">
         {rapida && <AdicionRapida alAgregar={async (it) => { setRapida(false); await sumarItems([it], `${it.nombre} agregado`); }} />}
       </Hoja>
 
-      <Hoja abierta={escanear} alCerrar={() => setEscanear(false)} etiqueta={NOMBRE_COMIDA[comida]} titulo="Escanear código de barras">
+      <Hoja abierta={escanear} alCerrar={() => setEscanear(false)} etiqueta={nombre} titulo="Escanear código de barras">
         {escanear && <Escaner alLeer={leerCodigo} />}
       </Hoja>
 
-      <Hoja abierta={!!elegido} alCerrar={() => setElegido(null)} etiqueta={NOMBRE_COMIDA[comida]} titulo={elegido?.nombre ?? ''}>
+      <Hoja abierta={!!elegido} alCerrar={() => setElegido(null)} etiqueta={nombre} titulo={elegido?.nombre ?? ''}>
         {elegido && (
           <ElegirPorcion key={elegido.id} alimento={elegido} favorito={favoritos.includes(elegido.id)} alFavorito={() => alternarFavorito(elegido)}
             alEditar={elegido.propio || (elegido.compartido && productos.cargador) ? () => {
@@ -402,12 +447,11 @@ export default function Agregar() {
   );
 }
 
-function sugerirComida(): TipoComida {
+/** La comida que toca a esta hora, si la persona la tiene; si no, la primera de su lista */
+function sugerirComida(ids: string[]): TipoComida {
   const h = new Date().getHours();
-  if (h < 10) return 'desayuno';
-  if (h < 15) return 'almuerzo';
-  if (h < 19) return 'merienda';
-  return 'cena';
+  const toca = h < 10 ? 'desayuno' : h < 15 ? 'almuerzo' : h < 19 ? 'merienda' : 'cena';
+  return ids.includes(toca) ? toca : ids[0] ?? 'desayuno';
 }
 
 /** Sumar calorías (y si querés, macros) sin buscar el alimento */

@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import { fraseDelDia } from '../lib/frases';
 import { claveDia, fechaLarga, formatoNumero, racha, romano, saludo, semana } from '../lib/logica';
-import { COMIDAS, comidasRegistradas, metasDe } from '../lib/nutricion';
+import { comidasDelDia, comidasRegistradas, metasDe, repartoDe } from '../lib/nutricion';
+import { useComidas } from '../ui/comidas';
 import { useSesion } from '../ui/contexto';
 import { Ficha, Grupo, Laurel } from '../ui/familia';
 import { Icono } from '../ui/Icono';
@@ -15,6 +16,8 @@ export default function Hoy() {
   const hoy = claveDia();
   const { dia, agua } = useDia(hoy);
   const metas = metasDe(perfil);
+  const lista = useComidas();
+  const reparto = repartoDe(lista);
   const cumplidos = perfil.resumen.cumplidos;
   const r = racha(cumplidos, hoy);
   const sem = semana(hoy);
@@ -33,7 +36,7 @@ export default function Hoy() {
             <p className="mt-2 max-w-[520px] font-display text-[15px] italic text-mu lg:text-[16px]">“{frase.texto}” <span className="not-italic">— {frase.autor}</span></p>
             <div className="mt-4 flex flex-wrap gap-2">
               <Ficha><Icono n="fuego" size={15} className="oro" />{r ? `${r} día${r > 1 ? 's' : ''} de racha` : 'Empezá tu racha'}</Ficha>
-              <Ficha><Icono n="plato" size={15} className="acento" />{dia ? comidasRegistradas(dia) : 0}/5 comidas</Ficha>
+              <Ficha><Icono n="plato" size={15} className="acento" />{dia ? comidasRegistradas(dia) : 0}/{lista.length} comidas</Ficha>
               <Ficha><Icono n="agua" size={15} className="acento" />{dia ? formatoNumero(dia.agua / 1000, 2) : 0} L</Ficha>
             </div>
           </div>
@@ -58,7 +61,7 @@ export default function Hoy() {
             </span>}>Comidas de hoy</Grupo>
           {!dia ? <Cargando /> : (
             <div className="flex flex-col gap-2.5">
-              {COMIDAS.map((c) => <TarjetaComida key={c.id} tipo={c.id} items={dia.comidas[c.id] ?? []} metas={metas} fecha={hoy} />)}
+              {comidasDelDia(lista, dia).map((c) => <TarjetaComida key={c.id} tipo={c.id} nombre={c.nombre} parte={reparto[c.id] ?? 0} items={dia.comidas[c.id] ?? []} metas={metas} fecha={hoy} />)}
             </div>
           )}
         </section>

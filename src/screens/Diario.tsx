@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { buscarAlimento } from '../lib/alimentos';
 import { claveDia, fechaCorta, fechaLarga, formatoNumero, nuevoId, semana, sumarDias } from '../lib/logica';
-import { COMIDAS, NOMBRE_COMIDA, cantidadItems, copiarItems, diaCumplido, esSuelta, itemDe, metasDe, sumar } from '../lib/nutricion';
+import { comidasDelDia, nombreComida, cantidadItems, copiarItems, diaCumplido, esSuelta, itemDe, metasDe, sumar } from '../lib/nutricion';
 import type { Dia, ItemComida, TipoComida } from '../lib/tipos';
 import { useSesion } from '../ui/contexto';
 import { CabeceraPagina } from '../ui/familia';
@@ -10,10 +10,11 @@ import { Icono } from '../ui/Icono';
 import { Anillo, LineaMacros, Macros3, Vasos, textoCantidad } from '../ui/nutri';
 import { Cargando, Hoja } from '../ui/piezas';
 import { useCopiar, useDia } from '../ui/usarDia';
+import { EditorComidas, useComidas } from '../ui/comidas';
 
 /** Diario de comidas: un día a la vez, con todo lo registrado */
 export default function Diario() {
-  const { repo, usuario, perfil, aviso } = useSesion();
+  const { repo, usuario, perfil, aviso, cambiarPerfil } = useSesion();
   const [params, setParams] = useSearchParams();
   const loc = useLocation();
   const hoy = claveDia();
@@ -24,6 +25,8 @@ export default function Diario() {
   const [copiar, setCopiar] = useState<TipoComida | null>(null);
   const [traer, setTraer] = useState<TipoComida | null>(null);
   const [menu, setMenu] = useState<TipoComida | null>(null);
+  const [editarComidas, setEditarComidas] = useState(false);
+  const lista = useComidas();
   const [guardarComo, setGuardarComo] = useState<TipoComida | null>(null);
   const [anterior, setAnterior] = useState<Dia | null>(null);
 
@@ -40,6 +43,31 @@ export default function Diario() {
   }, [dia, loc.hash]);
 
   const cumplido = dia ? diaCumplido(dia, metas) : false;
+  const nombre = (id: TipoComida) => nombreComida(lista, id);
+  // En el celular van arriba; en la PC, en la columna de la derecha
+  const restantes = (id: string) => dia && (
+    <section className="tarjeta" data-testid={id}>
+      <div className="etiqueta">Calorías restantes</div>
+      <div className="mt-3 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-start text-center">
+        <div><div className="num text-[20px]">{formatoNumero(metas.kcal)}</div><div className="text-[12px] text-mu">Meta</div></div>
+        <div className="num px-1 text-[20px] text-mu">−</div>
+        <div><div className="num text-[20px]">{formatoNumero(dia.totales.kcal)}</div><div className="text-[12px] text-mu">Comido</div></div>
+        <div className="num px-1 text-[20px] text-mu">=</div>
+        <div><div className={`num text-[24px] ${metas.kcal - dia.totales.kcal < 0 ? 'text-miss' : 'oro'}`}>{formatoNumero(Math.abs(metas.kcal - dia.totales.kcal))}</div>
+          <div className="text-[12px] text-mu">{metas.kcal - dia.totales.kcal < 0 ? 'De más' : 'Restan'}</div></div>
+      </div>
+    </section>
+  );
+  const repetir = (id: string) => dia && anterior && cantidadItems(anterior) > 0 && (
+    <div className="tarjeta flex items-center gap-3" data-testid={id}>
+      <Icono n="repetir" className="shrink-0 oro" />
+      <span className="min-w-0 flex-1 text-[14px]">
+        <b>Repetir el día anterior</b>
+        <span className="block text-[13px] text-mu">{cantidadItems(anterior)} alimentos · {formatoNumero(anterior.totales.kcal)} kcal{cantidadItems(dia) > 0 ? ' · se suman a lo que ya tenés' : ''}</span>
+      </span>
+      <button className="btn h-10 shrink-0 px-4 text-[12px]" onClick={async () => { await sumarDia(anterior); aviso('Repetiste el día anterior'); }}>Repetir</button>
+    </div>
+  );
   return (
     <div className="pt-6 lg:pt-10">
       <CabeceraPagina etiqueta="Diario" titulo={fecha === hoy ? 'Hoy' : fecha === sumarDias(hoy, -1) ? 'Ayer' : <span className="first-letter:uppercase">{fechaLarga(fecha).split(',')[0]}</span>}
@@ -62,35 +90,12 @@ export default function Diario() {
         ))}
       </div>
 
-      {dia && (
-        <section className="tarjeta mt-5" data-testid="restantes">
-          <div className="etiqueta">Calorías restantes</div>
-          <div className="mt-3 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-start text-center">
-            <div><div className="num text-[20px]">{formatoNumero(metas.kcal)}</div><div className="text-[12px] text-mu">Meta</div></div>
-            <div className="num px-1 text-[20px] text-mu">−</div>
-            <div><div className="num text-[20px]">{formatoNumero(dia.totales.kcal)}</div><div className="text-[12px] text-mu">Comido</div></div>
-            <div className="num px-1 text-[20px] text-mu">=</div>
-            <div><div className={`num text-[24px] ${metas.kcal - dia.totales.kcal < 0 ? 'text-miss' : 'oro'}`}>{formatoNumero(Math.abs(metas.kcal - dia.totales.kcal))}</div>
-              <div className="text-[12px] text-mu">{metas.kcal - dia.totales.kcal < 0 ? 'De más' : 'Restan'}</div></div>
-          </div>
-        </section>
-      )}
-
-      {dia && anterior && cantidadItems(anterior) > 0 && (
-        <div className="tarjeta mt-5 flex items-center gap-3" data-testid="repetir-dia">
-          <Icono n="repetir" className="shrink-0 oro" />
-          <span className="min-w-0 flex-1 text-[14px]">
-            <b>Repetir el día anterior</b>
-            <span className="block text-[13px] text-mu">{cantidadItems(anterior)} alimentos · {formatoNumero(anterior.totales.kcal)} kcal{cantidadItems(dia) > 0 ? ' · se suman a lo que ya tenés' : ''}</span>
-          </span>
-          <button className="btn h-10 shrink-0 px-4 text-[12px]" onClick={async () => { await sumarDia(anterior); aviso('Repetiste el día anterior'); }}>Repetir</button>
-        </div>
-      )}
+      {dia && <div className="mt-5 flex flex-col gap-4 lg:hidden">{restantes('restantes')}{repetir('repetir-dia')}</div>}
 
       {!dia ? <Cargando forma="pagina" /> : (
-        <div className="mt-6 grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)] lg:items-start lg:gap-6">
+        <div className="mt-6 grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1.6fr)_minmax(340px,1fr)] lg:items-start lg:gap-6">
           <div className="flex flex-col gap-4">
-            {COMIDAS.map((c) => {
+            {comidasDelDia(lista, dia).map((c) => {
               const items = dia.comidas[c.id] ?? [];
               const t = sumar(items);
               return (
@@ -129,9 +134,13 @@ export default function Diario() {
                 </section>
               );
             })}
+            <button className="flex h-12 items-center justify-center gap-2 rounded-[16px] border border-dashed border-ln3 text-[13px] font-semibold text-mu hover:border-gold2 hover:text-tx" onClick={() => setEditarComidas(true)}>
+              <Icono n="editar" size={16} />Editar comidas: nombres, orden, agregar o quitar
+            </button>
           </div>
 
-          <aside className="flex flex-col gap-6 lg:sticky lg:top-8">
+          <aside className="flex flex-col gap-6 lg:sticky lg:top-8 lg:gap-4">
+            <div className="hidden flex-col gap-4 lg:flex">{restantes('restantes-pc')}{repetir('repetir-dia-pc')}</div>
             <section className="tarjeta" data-testid="resumen-dia">
               <div className="flex items-center justify-between">
                 <span className="etiqueta">Resumen del día</span>
@@ -154,25 +163,26 @@ export default function Diario() {
         </div>
       )}
 
-      <Hoja abierta={!!copiar} alCerrar={() => setCopiar(null)} etiqueta={copiar ? `${NOMBRE_COMIDA[copiar]} · ${fechaCorta(fecha)}` : ''} titulo="Copiar a otro día">
+      <Hoja abierta={!!copiar} alCerrar={() => setCopiar(null)} etiqueta={copiar ? `${nombre(copiar)} · ${fechaCorta(fecha)}` : ''} titulo="Copiar a otro día">
         {copiar && dia && (
           <CopiarA origen={copiar} hoy={hoy} alCopiar={async (f, c) => {
             const items = dia.comidas[copiar] ?? [];
             if (f === fecha) await agregar(c, copiarItems(items, nuevoId));
             else await copiarA(f, c, items);
             setCopiar(null);
-            aviso(`Copiado a ${NOMBRE_COMIDA[c].toLowerCase()} del ${fechaCorta(f)}`);
+            aviso(`Copiado a ${nombre(c).toLowerCase()} del ${fechaCorta(f)}`);
           }} />
         )}
       </Hoja>
 
-      <Hoja abierta={!!menu} alCerrar={() => setMenu(null)} etiqueta={menu ? `${NOMBRE_COMIDA[menu]} · ${fechaCorta(fecha)}` : ''} titulo="Opciones">
+      <Hoja abierta={!!menu} alCerrar={() => setMenu(null)} etiqueta={menu ? `${nombre(menu)} · ${fechaCorta(fecha)}` : ''} titulo="Opciones">
         {menu && (
           <div className="-mx-1 flex flex-col">
             {([
               ['repetir', 'Repetir de otro día', 'Traé esta u otra comida de cualquier día', () => setTraer(menu), true],
               ['copiar', 'Copiar a otro día', 'Mandá lo que hay acá a otro día o comida', () => setCopiar(menu), (dia?.comidas[menu] ?? []).length > 0],
               ['guardar', 'Guardar como comida', 'Para agregarla de un toque cuando quieras', () => setGuardarComo(menu), (dia?.comidas[menu] ?? []).length > 0],
+              ['editar', 'Cambiar nombre u orden', 'Renombrá, ordená, agregá o quitá comidas', () => setEditarComidas(true), true],
             ] as const).filter((o) => o[4]).map(([ic, t, l, f]) => (
               <button key={t} className="flex items-center gap-3 rounded-[12px] px-2 py-3 text-left hover:bg-sf2" onClick={() => { setMenu(null); f(); }}>
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-goldbg oro"><Icono n={ic} size={18} /></span>
@@ -183,7 +193,11 @@ export default function Diario() {
         )}
       </Hoja>
 
-      <Hoja abierta={!!traer} alCerrar={() => setTraer(null)} etiqueta={traer ? `${NOMBRE_COMIDA[traer]} · ${fechaCorta(fecha)}` : ''} titulo="Repetir de otro día">
+      <Hoja abierta={editarComidas} alCerrar={() => setEditarComidas(false)} etiqueta="Tus comidas del día" titulo="Editar comidas">
+        {editarComidas && <EditorComidas alGuardar={async (l) => { await cambiarPerfil({ comidas: l }); setEditarComidas(false); aviso('Tus comidas quedaron guardadas'); }} />}
+      </Hoja>
+
+      <Hoja abierta={!!traer} alCerrar={() => setTraer(null)} etiqueta={traer ? `${nombre(traer)} · ${fechaCorta(fecha)}` : ''} titulo="Repetir de otro día">
         {traer && (
           <TraerDe destino={traer} fecha={fecha} alTraer={async (items, desde) => {
             await agregar(traer, copiarItems(items, nuevoId));
@@ -195,7 +209,7 @@ export default function Diario() {
 
       <Hoja abierta={!!guardarComo} alCerrar={() => setGuardarComo(null)} etiqueta="Comida guardada" titulo="Guardar para repetir">
         {guardarComo && dia && (
-          <GuardarComo sugerido={`Mi ${NOMBRE_COMIDA[guardarComo].toLowerCase()} de siempre`} items={dia.comidas[guardarComo] ?? []} alGuardar={async (nombre) => {
+          <GuardarComo sugerido={`Mi ${nombre(guardarComo).toLowerCase()} de siempre`} items={dia.comidas[guardarComo] ?? []} alGuardar={async (nombre) => {
             await repo.guardarGuardada(usuario.uid, { id: nuevoId(), nombre, items: copiarItems(dia.comidas[guardarComo] ?? [], nuevoId), creado: Date.now() });
             setGuardarComo(null);
             aviso(`"${nombre}" guardada: la encontrás en Agregar → Guardadas`);
@@ -242,6 +256,7 @@ function EditarItem({ item, alGuardar, alQuitar }: { item: ItemComida; alGuardar
 
 /** Elegir día y comida de destino */
 function CopiarA({ origen, hoy, alCopiar }: { origen: TipoComida; hoy: string; alCopiar: (fecha: string, comida: TipoComida) => void }) {
+  const lista = useComidas();
   const [destino, setDestino] = useState(hoy);
   const [comida, setComida] = useState<TipoComida>(origen);
   const rapidos: [string, string][] = [[sumarDias(hoy, -1), 'Ayer'], [hoy, 'Hoy'], [sumarDias(hoy, 1), 'Mañana']];
@@ -257,10 +272,10 @@ function CopiarA({ origen, hoy, alCopiar }: { origen: TipoComida; hoy: string; a
       <div>
         <div className="etiqueta mb-2">Comida</div>
         <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Comida de destino">
-          {COMIDAS.map((c) => <button key={c.id} role="radio" aria-checked={comida === c.id} className={`chip ${comida === c.id ? 'chip-on' : ''}`} onClick={() => setComida(c.id)}>{c.nombre}</button>)}
+          {lista.map((c) => <button key={c.id} role="radio" aria-checked={comida === c.id} className={`chip ${comida === c.id ? 'chip-on' : ''}`} onClick={() => setComida(c.id)}>{c.nombre}</button>)}
         </div>
       </div>
-      <button className="btn w-full" onClick={() => alCopiar(destino, comida)}>Copiar a {NOMBRE_COMIDA[comida].toLowerCase()} · {fechaCorta(destino)}</button>
+      <button className="btn w-full" onClick={() => alCopiar(destino, comida)}>Copiar a {nombreComida(lista, comida).toLowerCase()} · {fechaCorta(destino)}</button>
     </div>
   );
 }
@@ -270,6 +285,7 @@ function CopiarA({ origen, hoy, alCopiar }: { origen: TipoComida; hoy: string; a
  * Los días con registros salen del resumen del perfil (0 lecturas); se lee solo el día elegido (1 lectura).
  */
 function TraerDe({ destino, fecha, alTraer }: { destino: TipoComida; fecha: string; alTraer: (items: ItemComida[], desde: string) => void }) {
+  const lista = useComidas();
   const { repo, usuario, perfil } = useSesion();
   const hoy = claveDia();
   const recientes = [...perfil.resumen.dias].filter((d) => d !== fecha && d <= hoy).sort().reverse().slice(0, 6);
@@ -301,12 +317,12 @@ function TraerDe({ destino, fecha, alTraer }: { destino: TipoComida; fecha: stri
       <div>
         <div className="etiqueta mb-2">Qué comida</div>
         <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Comida de origen">
-          {COMIDAS.map((c) => <button key={c.id} role="radio" aria-checked={comida === c.id} className={`chip ${comida === c.id ? 'chip-on' : ''}`} onClick={() => setComida(c.id)}>{c.nombre}</button>)}
+          {lista.map((c) => <button key={c.id} role="radio" aria-checked={comida === c.id} className={`chip ${comida === c.id ? 'chip-on' : ''}`} onClick={() => setComida(c.id)}>{c.nombre}</button>)}
         </div>
       </div>
       <div className="rounded-[12px] border border-ln2 px-3 py-1" data-testid="traer-lista">
         {dia === undefined ? <Cargando forma="linea" /> : items.length === 0 ? (
-          <p className="py-3 text-[14px] text-mu">Ese día no tiene nada en {NOMBRE_COMIDA[comida].toLowerCase()}.</p>
+          <p className="py-3 text-[14px] text-mu">Ese día no tiene nada en {nombreComida(lista, comida).toLowerCase()}.</p>
         ) : items.map((i) => (
           <label key={i.id} className="fila cursor-pointer last:border-0">
             <input type="checkbox" className="h-4 w-4 shrink-0 accent-[var(--gold)]" checked={!fuera.has(i.id)} aria-label={i.nombre}
@@ -320,7 +336,7 @@ function TraerDe({ destino, fecha, alTraer }: { destino: TipoComida; fecha: stri
         ))}
       </div>
       <button className="btn w-full" disabled={!elegidos.length} onClick={() => alTraer(elegidos, desde)}>
-        {elegidos.length ? `Agregar a ${NOMBRE_COMIDA[destino].toLowerCase()} · ${formatoNumero(sumar(elegidos).kcal)} kcal` : 'Elegí al menos un alimento'}
+        {elegidos.length ? `Agregar a ${nombreComida(lista, destino).toLowerCase()} · ${formatoNumero(sumar(elegidos).kcal)} kcal` : 'Elegí al menos un alimento'}
       </button>
     </div>
   );

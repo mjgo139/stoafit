@@ -89,7 +89,8 @@ describe('reglas de Firestore', () => {
     await assertFails(setDoc(doc(ana, 'users/ana/days/2026-11-18'), dia('2026-11-17')));
     await assertFails(setDoc(doc(ana, 'users/ana/days/ayer'), dia('ayer')));
     await assertFails(setDoc(doc(ana, 'users/ana/days/2026-11-18'), { ...dia(), agua: 50000 }));
-    await assertFails(setDoc(doc(ana, 'users/ana/days/2026-11-18'), { ...dia(), comidas: { postre: [] } }));
+    await assertSucceeds(setDoc(doc(ana, 'users/ana/days/2026-11-18'), { ...dia(), comidas: { 'c-pre1': [item] } }));
+    await assertFails(setDoc(doc(ana, 'users/ana/days/2026-11-18'), { ...dia(), comidas: Object.fromEntries(Array.from({ length: 16 }, (_, i) => [`c-${i}`, []])) }));
   });
 
   it('la lista de admins se lee con sesión pero nadie la escribe desde la app', async () => {

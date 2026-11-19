@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { claveDia, formatoNumero, nuevoId } from '../lib/logica';
-import { ACTIVIDADES, COMIDAS, NOMBRE_COMIDA, OBJETIVOS, REPARTO, basal, calcularMetas, datosDelPerfil, gastoTotal, metasDe, reparto } from '../lib/nutricion';
+import { ACTIVIDADES, COMIDAS, OBJETIVOS, nombreComida, repartoDe, basal, calcularMetas, datosDelPerfil, gastoTotal, metasDe, reparto } from '../lib/nutricion';
 import { PLANTILLAS, itemsDePlantilla, totalesPlantilla, type Plantilla } from '../lib/plantillas';
 import type { ItemComida, Metas, Plan as TPlan, RegistroCuerpo, TipoComida } from '../lib/tipos';
 import { useSesion } from '../ui/contexto';
@@ -10,6 +10,7 @@ import { Icono } from '../ui/Icono';
 import { LineaMacros, textoCantidad } from '../ui/nutri';
 import { Cargando, Hoja } from '../ui/piezas';
 import { useDia } from '../ui/usarDia';
+import { useComidas } from '../ui/comidas';
 
 /** Plan: la meta diaria (calculada o a mano), días de ejemplo y planes propios o de su nutricionista */
 export default function Plan() {
@@ -21,6 +22,8 @@ export default function Plan() {
   const [editarPlan, setEditarPlan] = useState<TPlan | null>(null);
   const hoy = useDia(claveDia());
   const metas = metasDe(perfil);
+  const lista = useComidas();
+  const orden = (id: string) => { const i = lista.findIndex((c) => c.id === id); return i < 0 ? 99 : i; };
 
   useEffect(() => {
     repo.leerCuerpo(usuario.uid).then(setCuerpo).catch(() => setCuerpo([]));
@@ -41,7 +44,10 @@ export default function Plan() {
     const nuevos = itemsDePlantilla(p, nuevoId);
     const d = hoy.dia;
     const comidas = { ...(d?.comidas ?? {}) };
-    for (const [c, l] of Object.entries(nuevos) as [TipoComida, ItemComida[]][]) comidas[c] = [...(comidas[c] ?? []), ...l];
+    // Si la persona cambió sus comidas, cada una del ejemplo va a la suya en la misma posición
+    const destino = (c: TipoComida) => lista.some((x) => x.id === c) ? c
+      : lista[Math.min(lista.length - 1, Math.round((COMIDAS.findIndex((x) => x.id === c) / (COMIDAS.length - 1)) * (lista.length - 1)))].id;
+    for (const [c, l] of Object.entries(nuevos) as [TipoComida, ItemComida[]][]) { const k = destino(c); comidas[k] = [...(comidas[k] ?? []), ...l]; }
     await hoy.reemplazarComidas(comidas);
     setVerPlantilla(null);
     aviso(`"${p.nombre}" quedó cargado en tu diario de hoy`);
@@ -87,10 +93,10 @@ export default function Plan() {
           <Grupo n={2} className="mb-3">Reparto del día</Grupo>
           <div className="tarjeta lg:h-[calc(100%-36px)]">
             <ul className="flex flex-col">
-              {COMIDAS.map((c) => (
+              {lista.map((c) => (
                 <li key={c.id} className="fila last:border-0">
-                  <span className="flex-1"><b>{c.nombre}</b><span className="block text-[12px] text-mu">{c.hora}</span></span>
-                  <span className="text-right"><span className="num text-[18px]">{formatoNumero(Math.round(metas.kcal * REPARTO[c.id] / 10) * 10)}</span> <span className="text-[12px] text-mu">kcal</span></span>
+                  <span className="flex-1"><b>{c.nombre}</b><span className="block text-[12px] text-mu">{COMIDAS.find((x) => x.id === c.id)?.hora ?? 'A tu hora'}</span></span>
+                  <span className="text-right"><span className="num text-[18px]">{formatoNumero(Math.round(metas.kcal * repartoDe(lista)[c.id] / 10) * 10)}</span> <span className="text-[12px] text-mu">kcal</span></span>
                 </li>
               ))}
             </ul>
@@ -135,8 +141,8 @@ export default function Plan() {
                   {!p.asignadaPor && <button className="chip h-8 shrink-0 px-2.5 text-[12px]" onClick={() => setEditarPlan(p)}><Icono n="editar" size={14} />Editar</button>}
                 </div>
                 <dl className="mt-3 flex flex-col gap-2 text-[14px]">
-                  {COMIDAS.filter((c) => p.comidas[c.id]).map((c) => (
-                    <div key={c.id}><dt className="etiqueta">{c.nombre}</dt><dd className="mt-0.5">{p.comidas[c.id]}</dd></div>
+                  {Object.entries(p.comidas).filter(([, v]) => v).sort(([a], [b]) => orden(a) - orden(b)).map(([id, v]) => (
+                    <div key={id}><dt className="etiqueta">{nombreComida(lista, id)}</dt><dd className="mt-0.5">{v}</dd></div>
                   ))}
                 </dl>
               </li>
@@ -154,7 +160,7 @@ export default function Plan() {
           <div>
             {(Object.entries(itemsDePlantilla(verPlantilla, nuevoId)) as [TipoComida, ItemComida[]][]).map(([c, l]) => (
               <div key={c} className="mb-3">
-                <div className="etiqueta">{NOMBRE_COMIDA[c]}</div>
+                <div className="etiqueta">{nombreComida(lista, c)}</div>
                 <ul className="mt-1 text-[14px]">
                   {l.map((i) => <li key={i.id} className="flex justify-between gap-2 py-0.5"><span>{i.nombre} <span className="text-mu">· {textoCantidad(i)}</span></span><span className="shrink-0 text-mu">{formatoNumero(i.kcal)}</span></li>)}
                 </ul>
@@ -201,12 +207,13 @@ function EditarMeta({ inicial, alGuardar }: { inicial: Metas; alGuardar: (m: Met
 
 function EditarPlan({ plan, alGuardar, alBorrar }: { plan: TPlan; alGuardar: (p: TPlan) => void; alBorrar?: () => void }) {
   const [p, setP] = useState(plan);
+  const lista = useComidas();
   return (
     <div className="flex flex-col gap-3">
       <label className="block"><span className="etiqueta">Nombre</span>
         <input className="campo mt-1.5" value={p.nombre} onChange={(e) => setP({ ...p, nombre: e.target.value.slice(0, 80) })} aria-label="Nombre del plan" placeholder="Ej.: Semana liviana" />
       </label>
-      {COMIDAS.map((c) => (
+      {lista.map((c) => (
         <label key={c.id} className="block"><span className="etiqueta">{c.nombre}</span>
           <textarea className="campo mt-1.5 h-[68px] py-2" value={p.comidas[c.id] ?? ''} maxLength={400} aria-label={`Plan para ${c.nombre}`}
             onChange={(e) => setP({ ...p, comidas: { ...p.comidas, [c.id]: e.target.value } })} />

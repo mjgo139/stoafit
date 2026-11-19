@@ -1,6 +1,16 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.5.0',
+    fecha: '2026-11-19',
+    cambios: [
+      'Tus comidas, a tu manera: cambiá los nombres (Comida 1, Pre entreno…), ordenalas, quitá las que no hacés o agregá hasta 10. Diario → "Editar comidas" o "•••".',
+      'Lo que ya registraste nunca se borra: si quitás una comida, los días que la tienen la siguen mostrando.',
+      'Agregar: el título de la comida queda bien centrado y los atajos tienen diseño propio (Escanear · Solo calorías · Crear alimento).',
+      'En la PC: Agregar muestra a la derecha lo que ya tiene esa comida y el Diario lleva las calorías restantes y el resumen al costado.',
+    ],
+  },
+  {
     version: '1.4.0',
     fecha: '2026-11-19',
     cambios: [

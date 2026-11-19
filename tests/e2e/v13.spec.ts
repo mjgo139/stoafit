@@ -26,14 +26,14 @@ const atras = (page: Page) => page.evaluate(() => window.dispatchEvent(new Event
 test('agregar en gramos, ver la meta del día y sumarlo a varios días', async ({ page }) => {
   await entrar(page);
   await page.getByRole('link', { name: 'Agregar a Almuerzo' }).click();
-  await expect(page.getByTestId('accesos')).toBeVisible();
+  await expect(page.getByTestId(/^accesos/).filter({ visible: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Historial' })).toBeVisible();
   await captura(page, '88-agregar-ventana');
   // El "+" de una fila agrega directo, como la última vez
   await page.getByRole('button', { name: /^Agregar .+ ya$/ }).first().click();
   await expect(page.getByTestId('ya-en-comida')).toContainText('1 alimento');
-  // Adición rápida
-  await page.getByRole('button', { name: /Adición rápida/ }).click();
+  // Solo calorías
+  await page.getByRole('button', { name: /Solo calorías/ }).click();
   await page.getByLabel('Qué fue').fill('Empanada en la feria');
   await page.getByLabel('Calorías', { exact: true }).fill('280');
   await page.getByRole('button', { name: 'Agregar 280 kcal' }).click();
@@ -53,7 +53,7 @@ test('agregar en gramos, ver la meta del día y sumarlo a varios días', async (
   await expect(page.getByRole('status').filter({ hasText: 'agregado a 3 días' })).toBeVisible();
   await page.goto('/diario');
   await expect(page.getByTestId('diario-almuerzo')).toContainText('50 g');
-  await expect(page.getByTestId('diario-almuerzo')).toContainText('Adición rápida');
+  await expect(page.getByTestId('diario-almuerzo')).toContainText('Solo calorías');
   await expect(page.getByTestId('restantes')).toContainText('Meta');
   await page.getByRole('button', { name: 'Más opciones de almuerzo' }).click();
   await captura(page, '89-diario-opciones');
@@ -76,4 +76,33 @@ test('botón atrás: cierra la hoja, vuelve a Hoy y pide confirmar para salir', 
   await expect(page).toHaveURL(/\/$/);
   await atras(page);
   await expect(page.getByRole('status').filter({ hasText: 'Tocá atrás otra vez para salir' })).toBeVisible();
+});
+
+test('comidas propias: renombrar, agregar, quitar y usarlas al agregar', async ({ page }) => {
+  await entrar(page);
+  await page.goto('/diario');
+  await page.getByRole('button', { name: /^Editar comidas/ }).click();
+  const hoja = page.getByRole('dialog');
+  await hoja.getByLabel('Nombre de la comida 1').fill('Comida 1');
+  await hoja.getByRole('button', { name: 'Quitar Merienda' }).click();
+  await hoja.getByRole('button', { name: 'Agregar otra comida' }).click();
+  await hoja.getByLabel('Nombre de la comida 5').fill('Pre entreno');
+  await hoja.getByRole('button', { name: 'Subir Pre entreno' }).click();
+  await captura(page, '95-editar-comidas');
+  await hoja.getByRole('button', { name: 'Guardar comidas' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Tus comidas quedaron guardadas' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Comida 1', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Pre entreno', exact: true })).toBeVisible();
+  await captura(page, '96-diario-comidas-propias');
+  // Agregar en la comida nueva: el título es su nombre
+  const nueva = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Pre entreno', exact: true }) });
+  await nueva.getByRole('link', { name: 'Agregar alimento' }).click();
+  await expect(page.getByLabel('Comida', { exact: true })).toBeVisible();
+  await expect(page.locator('header')).toContainText('Pre entreno');
+  await page.getByRole('button', { name: /^Agregar .+ ya$/ }).first().click();
+  await expect(page.getByTestId('ya-en-comida')).toContainText('1 alimento');
+  await captura(page, '97-agregar-comida-propia');
+  // En Hoy aparecen las comidas propias
+  await page.goto('/');
+  await expect(page.getByRole('link', { name: 'Agregar a Pre entreno' })).toBeVisible();
 });

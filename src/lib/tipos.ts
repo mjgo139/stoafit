@@ -4,7 +4,11 @@ export type Unidad = 'kg' | 'lb';
 export type Genero = 'hombre' | 'mujer';
 export type Actividad = 'sedentario' | 'ligero' | 'moderado' | 'activo' | 'muy-activo';
 export type ObjetivoPeso = 'bajar' | 'mantener' | 'subir';
-export type TipoComida = 'desayuno' | 'almuerzo' | 'merienda' | 'cena' | 'colacion';
+/** Id de una comida del día: las de siempre (desayuno, almuerzo…) o una propia ("c-xxxx") */
+export type TipoComida = string;
+
+/** Una comida del día tal como la arma cada uno (nombre y orden propios) */
+export interface ComidaDelDia { id: TipoComida; nombre: string }
 
 /** Calorías y macronutrientes (gramos) */
 export interface Macros { kcal: number; prot: number; carb: number; gras: number }
@@ -159,4 +163,6 @@ export interface Perfil {
   metas?: Metas;
   metasManual?: boolean;
   favoritos?: string[];
+  /** Comidas del día con nombre y orden propios; si falta, las 5 de siempre */
+  comidas?: ComidaDelDia[];
 }

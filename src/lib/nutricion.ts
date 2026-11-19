@@ -1,6 +1,6 @@
 import { edad, redondear } from './logica';
 import type {
-  Actividad, Alimento, Dia, Genero, ItemComida, Macros, Metas, ObjetivoPeso, Perfil, Porcion, Receta, TipoComida,
+  Actividad, Alimento, ComidaDelDia, Dia, Genero, ItemComida, Macros, Metas, ObjetivoPeso, Perfil, Porcion, Receta, TipoComida,
 } from './tipos';
 
 export const COMIDAS: { id: TipoComida; nombre: string; hora: string }[] = [
@@ -11,6 +11,41 @@ export const COMIDAS: { id: TipoComida; nombre: string; hora: string }[] = [
   { id: 'colacion', nombre: 'Colaciones', hora: 'Entre comidas' },
 ];
 export const NOMBRE_COMIDA = Object.fromEntries(COMIDAS.map((c) => [c.id, c.nombre])) as Record<TipoComida, string>;
+
+/** Máximo de comidas por día (también lo controla la regla de Firestore) */
+export const MAX_COMIDAS = 10;
+
+/** Las comidas del día de la persona: las suyas, o las 5 de siempre */
+export function comidasDe(p?: Pick<Perfil, 'comidas'> | null): ComidaDelDia[] {
+  return p?.comidas?.length ? p.comidas : COMIDAS.map(({ id, nombre }) => ({ id, nombre }));
+}
+
+/** Nombre de una comida: el suyo, el de siempre, o "Otra comida" si la quitó */
+export function nombreComida(lista: ComidaDelDia[], id: TipoComida): string {
+  return lista.find((c) => c.id === id)?.nombre ?? NOMBRE_COMIDA[id] ?? 'Otra comida';
+}
+
+/** Las comidas que se muestran en un día: las de la persona y, al final, las quitadas que todavía tienen algo */
+export function comidasDelDia(lista: ComidaDelDia[], d?: Pick<Dia, 'comidas'> | null): ComidaDelDia[] {
+  const extra = Object.entries(d?.comidas ?? {}).filter(([id, l]) => (l?.length ?? 0) > 0 && !lista.some((c) => c.id === id))
+    .map(([id]) => ({ id, nombre: nombreComida(lista, id) }));
+  return [...lista, ...extra];
+}
+
+/** Reparto sugerido de calorías entre las comidas de la persona (suma 1) */
+export function repartoDe(lista: ComidaDelDia[]): Record<TipoComida, number> {
+  const pesos = lista.map((c) => REPARTO[c.id] ?? 1 / Math.max(1, lista.length));
+  const t = pesos.reduce((s, x) => s + x, 0) || 1;
+  return Object.fromEntries(lista.map((c, i) => [c.id, pesos[i] / t]));
+}
+
+/** Limpia la lista que arma la persona: nombres cortos y no vacíos, sin ids repetidos, como mucho MAX_COMIDAS */
+export function limpiarComidas(lista: ComidaDelDia[]): ComidaDelDia[] {
+  const vistos = new Set<string>();
+  return lista.map((c) => ({ id: c.id, nombre: c.nombre.trim().slice(0, 30) }))
+    .filter((c) => c.nombre && /^[a-z0-9-]{2,20}$/.test(c.id) && !vistos.has(c.id) && vistos.add(c.id))
+    .slice(0, MAX_COMIDAS);
+}
 
 export const ACTIVIDADES: { v: Actividad; t: string; linea: string; factor: number }[] = [
   { v: 'sedentario', t: 'Sedentario', linea: 'Trabajo sentado, casi sin ejercicio', factor: 1.2 },
@@ -112,7 +147,7 @@ export function cantidadItems(d: Dia): number {
 }
 
 export function comidasRegistradas(d: Dia): number {
-  return COMIDAS.filter((c) => (d.comidas[c.id]?.length ?? 0) > 0).length;
+  return Object.values(d.comidas).filter((l) => (l?.length ?? 0) > 0).length;
 }
 
 /**

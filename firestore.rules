@@ -62,7 +62,7 @@ service cloud.firestore {
     function perfilValido(uid) {
       let d = request.resource.data;
       return d.keys().hasOnly(['uid', 'nombre', 'email', 'tema', 'acento', 'unidad', 'recordatorio', 'creado', 'resumen',
-          'conocido', 'genero', 'nacimiento', 'altura', 'actividad', 'objetivo', 'metas', 'metasManual', 'favoritos'])
+          'conocido', 'genero', 'nacimiento', 'altura', 'actividad', 'objetivo', 'metas', 'metasManual', 'favoritos', 'comidas'])
         && (!('uid' in d) || d.uid == uid)
         && (!('nombre' in d) || (d.nombre is string && d.nombre.size() <= 80))
         && (!('tema' in d) || d.tema in ['claro', 'oscuro', 'sistema'])
@@ -78,14 +78,16 @@ service cloud.firestore {
         && (!('metas' in d) || (d.metas.kcal is number && d.metas.kcal > 0 && d.metas.kcal < 10000))
         && (!('metasManual' in d) || d.metasManual is bool)
         && (!('conocido' in d) || d.conocido is bool)
-        && (!('favoritos' in d) || (d.favoritos is list && d.favoritos.size() <= 100));
+        && (!('favoritos' in d) || (d.favoritos is list && d.favoritos.size() <= 100))
+        && (!('comidas' in d) || (d.comidas is list && d.comidas.size() <= 10));
     }
 
     // Un día del diario: el id es la fecha AAAA-MM-DD
     function diaValido(fecha) {
       let d = request.resource.data;
       return d.fecha == fecha && fecha.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
-        && d.comidas is map && d.comidas.keys().hasOnly(['desayuno', 'almuerzo', 'merienda', 'cena', 'colacion'])
+        // Comidas con nombre propio: hasta 10 de la persona + las quitadas que tenían algo ese día
+        && d.comidas is map && d.comidas.size() <= 15
         && d.agua is number && d.agua >= 0 && d.agua <= 10000
         && d.totales is map && d.totales.kcal is number;
     }
@@ -93,7 +95,7 @@ service cloud.firestore {
     function planValido() {
       let d = request.resource.data;
       return d.nombre is string && d.nombre.size() > 0 && d.nombre.size() <= 80
-        && d.comidas is map && d.comidas.keys().hasOnly(['desayuno', 'almuerzo', 'merienda', 'cena', 'colacion']);
+        && d.comidas is map && d.comidas.size() <= 15;
     }
 
     match /users/{uid} {

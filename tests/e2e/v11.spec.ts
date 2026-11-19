@@ -36,7 +36,7 @@ test('código de barras: producto encontrado y producto nuevo', async ({ page })
   // Sin cámara en las pruebas: se escribe el código a mano
   await page.getByLabel('Código de barras a mano').fill('7840000000017');
   await captura(page, '80-escaner');
-  await page.getByRole('button', { name: 'Buscar' }).click();
+  await page.getByRole('button', { name: 'Buscar', exact: true }).click();
   await expect(page.getByRole('dialog', { name: 'Galletitas de agua integrales' })).toContainText('Marca Ejemplo');
   await expect(page.getByTestId('aporte')).toContainText('126');
   await captura(page, '81-producto-escaneado');
@@ -50,7 +50,7 @@ test('código de barras: producto encontrado y producto nuevo', async ({ page })
   // Un código que no está: se carga la etiqueta "por porción"
   await page.getByTestId('boton-escanear').click();
   await page.getByLabel('Código de barras a mano').fill('7840000000994');
-  await page.getByRole('button', { name: 'Buscar' }).click();
+  await page.getByRole('button', { name: 'Buscar', exact: true }).click();
   await expect(page.getByTestId('aviso-codigo')).toContainText('todavía no está');
   await expect(page.getByTestId('codigo-fijo')).toContainText('7840000000994');
   await page.getByLabel('Nombre del alimento').fill('Mbejú congelado');
@@ -74,7 +74,7 @@ test('código de barras: producto encontrado y producto nuevo', async ({ page })
   // La próxima vez el mismo código lo encuentra entre los propios
   await page.getByTestId('boton-escanear').click();
   await page.getByLabel('Código de barras a mano').fill('7840000000994');
-  await page.getByRole('button', { name: 'Buscar' }).click();
+  await page.getByRole('button', { name: 'Buscar', exact: true }).click();
   await expect(page.getByRole('dialog', { name: 'Mbejú congelado' })).toBeVisible();
   // Sofía es admin (y cargadora): puede corregirlo y queda verificado
   await page.getByRole('button', { name: 'Corregir producto' }).click();
@@ -87,10 +87,10 @@ test('código de barras: producto encontrado y producto nuevo', async ({ page })
 test('repetir: día anterior, copiar a otro día y comidas guardadas', async ({ page }) => {
   await entrar(page);
   await ir(page, 'Diario');
-  await expect(page.getByTestId('repetir-dia')).toBeVisible();
+  await expect(page.getByTestId(/^repetir-dia/).filter({ visible: true })).toBeVisible();
   const items = page.getByTestId('item-comida');
   const antes = await items.count();
-  await page.getByTestId('repetir-dia').getByRole('button', { name: 'Repetir' }).click();
+  await page.getByTestId(/^repetir-dia/).filter({ visible: true }).getByRole('button', { name: 'Repetir' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Repetiste el día anterior' })).toBeVisible();
   expect(await items.count()).toBeGreaterThan(antes);
   await captura(page, '83-diario-repetir');

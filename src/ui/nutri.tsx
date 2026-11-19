@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { formatoNumero } from '../lib/logica';
-import { NOMBRE_COMIDA, REPARTO, estadoMeta } from '../lib/nutricion';
+import { estadoMeta } from '../lib/nutricion';
 import type { ItemComida, Macros, Metas, TipoComida } from '../lib/tipos';
 import { Icono } from './Icono';
 
@@ -65,7 +65,7 @@ export function LineaMacros({ m }: { m: Macros }) {
 }
 
 export function textoCantidad(i: Pick<ItemComida, 'cantidad' | 'porcion' | 'gramos'>): string {
-  if (i.porcion === 'rápida') return 'Adición rápida';
+  if (i.porcion === 'rápida') return 'Solo calorías';
   if (i.porcion === 'g' || i.porcion === 'ml') return `${formatoNumero(i.cantidad)} ${i.porcion}`;
   const c = i.cantidad === 0.5 ? '½' : i.cantidad === 0.25 ? '¼' : i.cantidad === 1.5 ? '1½' : formatoNumero(i.cantidad, 2);
   const p = i.cantidad === 1 ? i.porcion : `${c} × ${i.porcion}`;
@@ -73,9 +73,9 @@ export function textoCantidad(i: Pick<ItemComida, 'cantidad' | 'porcion' | 'gram
 }
 
 /** Tarjeta de una comida en Hoy: total, qué se comió y botón para agregar */
-export function TarjetaComida({ tipo, items, metas, fecha }: { tipo: TipoComida; items: ItemComida[]; metas: Metas; fecha: string }) {
+export function TarjetaComida({ tipo, nombre, parte, items, metas, fecha }: { tipo: TipoComida; nombre: string; parte: number; items: ItemComida[]; metas: Metas; fecha: string }) {
   const kcal = items.reduce((s, i) => s + i.kcal, 0);
-  const sugerido = Math.round(metas.kcal * REPARTO[tipo]);
+  const sugerido = Math.round(metas.kcal * parte);
   const vacia = items.length === 0;
   return (
     <div className="tarjeta flex items-center gap-3" data-testid={`comida-${tipo}`}>
@@ -84,12 +84,12 @@ export function TarjetaComida({ tipo, items, metas, fecha }: { tipo: TipoComida;
       </span>
       <Link to={`/diario?fecha=${fecha}#${tipo}`} className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
-          <span className="font-display text-[18px] font-semibold">{NOMBRE_COMIDA[tipo]}</span>
+          <span className="font-display text-[18px] font-semibold">{nombre}</span>
           <span className="text-[13px] text-mu">{vacia ? `~${formatoNumero(sugerido)} kcal sugeridas` : `${formatoNumero(kcal)} kcal`}</span>
         </div>
         <div className="truncate text-[13px] text-mu">{vacia ? 'Todavía nada' : items.map((i) => i.nombre).join(', ')}</div>
       </Link>
-      <Link to={`/agregar?comida=${tipo}&fecha=${fecha}`} className="btn-redondo h-10 w-10" aria-label={`Agregar a ${NOMBRE_COMIDA[tipo]}`}>
+      <Link to={`/agregar?comida=${tipo}&fecha=${fecha}`} className="btn-redondo h-10 w-10" aria-label={`Agregar a ${nombre}`}>
         <Icono n="mas" size={20} />
       </Link>
     </div>

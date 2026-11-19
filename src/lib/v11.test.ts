@@ -142,3 +142,27 @@ describe('v1.3: gramos sueltos y reparto de macros', () => {
     expect(repartoMacros({ kcal: 0, prot: 0, carb: 0, gras: 0 })).toEqual({ prot: 0, carb: 0, gras: 0 });
   });
 });
+
+import { comidasDe, comidasDelDia, limpiarComidas, nombreComida, repartoDe } from './nutricion';
+
+describe('v1.5: comidas propias', () => {
+  it('sin comidas propias usa las 5 de siempre', () => {
+    expect(comidasDe({}).map((c) => c.id)).toEqual(['desayuno', 'almuerzo', 'merienda', 'cena', 'colacion']);
+  });
+  it('nombres, reparto y comidas quitadas que tienen algo', () => {
+    const lista = [{ id: 'desayuno', nombre: 'Primera' }, { id: 'c-abc1', nombre: 'Pre entreno' }, { id: 'cena', nombre: 'Cena' }];
+    expect(nombreComida(lista, 'desayuno')).toBe('Primera');
+    expect(nombreComida(lista, 'almuerzo')).toBe('Almuerzo');
+    expect(nombreComida(lista, 'c-zzzz')).toBe('Otra comida');
+    const r = repartoDe(lista);
+    expect(Object.values(r).reduce((s, x) => s + x, 0)).toBeCloseTo(1);
+    const dia = { comidas: { almuerzo: [{} as never], merienda: [] } };
+    expect(comidasDelDia(lista, dia).map((c) => c.id)).toEqual(['desayuno', 'c-abc1', 'cena', 'almuerzo']);
+  });
+  it('limpiar: sin vacíos, sin repetidos, máximo 10', () => {
+    const l = limpiarComidas([{ id: 'desayuno', nombre: '  ' }, { id: 'cena', nombre: 'Cena' }, { id: 'cena', nombre: 'Otra' }, { id: 'MAL ID', nombre: 'x' },
+      ...Array.from({ length: 12 }, (_, i) => ({ id: `c-${i}x`, nombre: `C${i}` }))]);
+    expect(l[0]).toEqual({ id: 'cena', nombre: 'Cena' });
+    expect(l).toHaveLength(10);
+  });
+});

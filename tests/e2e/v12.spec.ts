@@ -23,7 +23,7 @@ async function entrar(page: Page, email: string, nombre: string) {
 async function escanear(page: Page, codigo: string) {
   await page.getByTestId('boton-escanear').click();
   await page.getByLabel('Código de barras a mano').fill(codigo);
-  await page.getByRole('button', { name: 'Buscar' }).click();
+  await page.getByRole('button', { name: 'Buscar', exact: true }).click();
 }
 
 test('usuario común: crea un producto "sin verificar", sin foto, y puede reportar errores', async ({ page }) => {
