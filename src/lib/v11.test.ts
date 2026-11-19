@@ -166,3 +166,18 @@ describe('v1.5: comidas propias', () => {
     expect(l).toHaveLength(10);
   });
 });
+
+import { alimentoDesdeItem, conPorcionDe } from './nutricion';
+
+describe('v1.5.2: editar desde el diario', () => {
+  it('arma el alimento desde lo registrado y conserva la medida', () => {
+    const it0 = { id: 'i1', alimentoId: 'p-x', nombre: 'Guiso', cantidad: 2, porcion: '1 plato', gramos: 600, kcal: 900, prot: 36, carb: 132, gras: 24 };
+    const a = alimentoDesdeItem(it0);
+    expect(a.por100.kcal).toBe(150);
+    expect(a.porciones[0]).toEqual({ nombre: '1 plato', gramos: 300 });
+    const de = itemDe(a, '1 plato', 2, 'i1');
+    expect(de.kcal).toBe(900);
+    const lib = buscarAlimento('chipa')!;
+    expect(conPorcionDe(lib, { ...it0, alimentoId: 'chipa', porcion: 'rara', cantidad: 1, gramos: 77 }).porciones[0]).toEqual({ nombre: 'rara', gramos: 77 });
+  });
+});

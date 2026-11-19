@@ -289,3 +289,22 @@ export function repartoMacros(m: Macros): { prot: number; carb: number; gras: nu
   const prot = Math.round((p / t) * 100), gras = Math.round((g / t) * 100);
   return { prot, carb: 100 - prot - gras, gras };
 }
+
+/**
+ * Un alimento armado desde lo que quedó registrado en el diario, para poder editarlo con la misma pantalla de agregar
+ * aunque no esté en la biblioteca ni en el teléfono (alimentos propios, productos compartidos). No lee nada.
+ */
+export function alimentoDesdeItem(i: ItemComida): Alimento {
+  const f = i.gramos > 0 ? 100 / i.gramos : 0;
+  const por100 = { kcal: Math.round(i.kcal * f), prot: redondear(i.prot * f, 1), carb: redondear(i.carb * f, 1), gras: redondear(i.gras * f, 1) };
+  const porciones: Porcion[] = esSuelta(i.porcion) || !i.cantidad
+    ? [{ nombre: '100 g', gramos: 100 }]
+    : [{ nombre: i.porcion, gramos: Math.round((i.gramos / i.cantidad) * 10) / 10 }, { nombre: '100 g', gramos: 100 }];
+  return { id: i.alimentoId, nombre: i.nombre, grupo: 'envasados', por100, porciones };
+}
+
+/** Para editar: el alimento del ítem tiene que incluir la medida con la que se registró */
+export function conPorcionDe(a: Alimento, i: ItemComida): Alimento {
+  if (esSuelta(i.porcion) || a.porciones.some((p) => p.nombre === i.porcion) || !i.cantidad) return a;
+  return { ...a, porciones: [{ nombre: i.porcion, gramos: Math.round((i.gramos / i.cantidad) * 10) / 10 }, ...a.porciones] };
+}

@@ -1,6 +1,13 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.5.2',
+    fecha: '2026-11-19',
+    cambios: [
+      'Tocar un alimento del Diario abre la misma pantalla que al agregarlo: medida o gramos, cantidad escrita, aporte y % de tu meta, con "Guardar cambios" y "Quitar del diario".',
+    ],
+  },
+  {
     version: '1.5.1',
     fecha: '2026-11-19',
     cambios: [

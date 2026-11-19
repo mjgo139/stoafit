@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { buscarAlimento } from '../lib/alimentos';
 import { claveDia, fechaCorta, fechaLarga, formatoNumero, nuevoId, semana, sumarDias } from '../lib/logica';
-import { comidasDelDia, nombreComida, cantidadItems, copiarItems, diaCumplido, esSuelta, itemDe, metasDe, sumar } from '../lib/nutricion';
-import type { Dia, ItemComida, Metas, TipoComida } from '../lib/tipos';
+import { alimentoDesdeItem, conPorcionDe, comidasDelDia, nombreComida, cantidadItems, copiarItems, diaCumplido, esSuelta, itemDe, metasDe, sumar } from '../lib/nutricion';
+import type { Alimento, Dia, ItemComida, Metas, TipoComida } from '../lib/tipos';
+import { productosEnCache } from '../lib/productos';
+import { ElegirPorcion } from '../ui/alimento';
 import { useSesion } from '../ui/contexto';
 import { CabeceraPagina } from '../ui/familia';
 import { Icono } from '../ui/Icono';
@@ -204,9 +206,15 @@ export default function Diario() {
         )}
       </Hoja>
 
-      <Hoja abierta={!!editar} alCerrar={() => setEditar(null)} etiqueta="Cambiar cantidad" titulo={editar?.item.nombre ?? ''}>
-        {editar && <EditarItem item={editar.item} alGuardar={async (i) => { setEditar(null); await reemplazar(editar.comida, i); }}
-          alQuitar={async () => { setEditar(null); await quitar(editar.comida, editar.item.id); }} />}
+      <Hoja abierta={!!editar} alCerrar={() => setEditar(null)} etiqueta={editar ? `Editar · ${nombre(editar.comida)}` : ''} titulo={editar?.item.nombre ?? ''}>
+        {editar && (editar.item.alimentoId === 'rapida'
+          // "Solo calorías" no tiene alimento detrás: se edita con el contador simple
+          ? <EditarItem item={editar.item} alGuardar={async (i) => { setEditar(null); await reemplazar(editar.comida, i); }}
+            alQuitar={async () => { setEditar(null); await quitar(editar.comida, editar.item.id); }} />
+          // El resto, con la misma pantalla que al agregar (medida, gramos, % de la meta…)
+          : <ElegirPorcion key={editar.item.id} alimento={alimentoParaEditar(editar.item)} inicial={editar.item} textoBoton="Guardar cambios"
+            alAgregar={async (i) => { setEditar(null); await reemplazar(editar.comida, { ...i, nombre: editar.item.nombre }); }}
+            alQuitar={async () => { setEditar(null); await quitar(editar.comida, editar.item.id); }} />)}
       </Hoja>
     </div>
   );
@@ -239,6 +247,12 @@ function EditarItem({ item, alGuardar, alQuitar }: { item: ItemComida; alGuardar
       </div>
     </div>
   );
+}
+
+/** El alimento de algo registrado: de la biblioteca, de los productos usados en este teléfono o armado desde lo registrado (sin leer nada) */
+function alimentoParaEditar(i: ItemComida): Alimento {
+  const a = buscarAlimento(i.alimentoId) ?? productosEnCache().find((p) => p.id === i.alimentoId) ?? alimentoDesdeItem(i);
+  return conPorcionDe(a, i);
 }
 
 /** Elegir día y comida de destino */

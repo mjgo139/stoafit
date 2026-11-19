@@ -155,8 +155,14 @@ test('diario: cambiar de día, editar y quitar', async ({ page }) => {
   const antes = await items.count();
   expect(antes).toBeGreaterThan(0);
   await items.first().getByRole('button').first().click();
-  await page.getByRole('button', { name: 'Más cantidad' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Guardar', exact: true }).click();
+  // Se edita con la misma pantalla que al agregar: medida, gramos, aporte y % de la meta
+  const hoja = page.getByRole('dialog');
+  await expect(hoja.getByLabel('Unidad')).toBeVisible();
+  await expect(hoja.getByTestId('de-tu-meta')).toBeVisible();
+  await expect(hoja.getByRole('button', { name: 'Quitar del diario' })).toBeVisible();
+  await hoja.getByRole('button', { name: 'Más cantidad' }).click();
+  await captura(page, '32-diario-editar');
+  await hoja.getByRole('button', { name: 'Guardar cambios' }).click();
   await expect(items.first()).toContainText('1½ ×');
   await captura(page, '30-diario');
   await items.first().getByRole('button', { name: /Quitar/ }).click();

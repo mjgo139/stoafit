@@ -18,20 +18,24 @@ const texto = (n: number) => String(Math.round(n * 100) / 100).replace('.', ',')
  * Agregar un alimento: cantidad libre (se escribe) en la porción que quieras o en gramos sueltos,
  * lo que aporta, cuánto es de tu meta del día y, si se pide, sumarlo a varios días de una vez.
  */
-export function ElegirPorcion({ alimento: a, favorito, alFavorito, alAgregar, alEditar, alReportar, textoBoton = 'Agregar', fecha }: {
+export function ElegirPorcion({ alimento: a, favorito, alFavorito, alAgregar, alEditar, alReportar, textoBoton = 'Agregar', fecha, inicial, alQuitar }: {
   alimento: Alimento; favorito?: boolean; alFavorito?: () => void; alAgregar: (i: ItemComida, otrosDias: string[]) => void;
   alEditar?: () => void; alReportar?: () => void; textoBoton?: string;
   /** Si viene, se puede sumar también a los 6 días siguientes */
   fecha?: string;
+  /** Editar algo ya registrado en el diario: arranca con su medida y cantidad (y conserva su id) */
+  inicial?: ItemComida;
+  alQuitar?: () => void;
 }) {
   const { perfil } = useSesion();
   const metas = metasDe(perfil);
   const suelta = unidadSuelta(a);
-  const [porcion, setPorcion] = useState(a.porciones[0]?.nombre ?? '100 g');
-  const [cant, setCant] = useState('1');
+  const [porcion, setPorcion] = useState(inicial?.porcion ?? a.porciones[0]?.nombre ?? '100 g');
+  const [cant, setCant] = useState(inicial ? texto(inicial.cantidad) : '1');
   const [dias, setDias] = useState<string[]>([]);
+  const [id] = useState(() => inicial?.id ?? nuevoId());
   const cantidad = num(cant);
-  const item = itemDe(a, porcion, cantidad, nuevoId());
+  const item = itemDe(a, porcion, cantidad, id);
   const enGramos = esSuelta(porcion);
   const r = repartoMacros(item);
 
@@ -143,6 +147,7 @@ export function ElegirPorcion({ alimento: a, favorito, alFavorito, alAgregar, al
           {dias.length ? `${textoBoton} a ${dias.length + 1} días` : textoBoton}
         </button>
       </div>
+      {alQuitar && <button className="btn-sec mt-2 w-full text-miss" onClick={alQuitar}><Icono n="basura" size={16} />Quitar del diario</button>}
     </div>
   );
 }
