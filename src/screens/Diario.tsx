@@ -1,25 +1,34 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { buscarAlimento } from '../lib/alimentos';
-import { claveDia, fechaLarga, formatoNumero, semana, sumarDias } from '../lib/logica';
-import { COMIDAS, diaCumplido, itemDe, metasDe, sumar } from '../lib/nutricion';
-import type { ItemComida, TipoComida } from '../lib/tipos';
+import { claveDia, fechaCorta, fechaLarga, formatoNumero, nuevoId, semana, sumarDias } from '../lib/logica';
+import { COMIDAS, NOMBRE_COMIDA, cantidadItems, copiarItems, diaCumplido, itemDe, metasDe, sumar } from '../lib/nutricion';
+import type { Dia, ItemComida, TipoComida } from '../lib/tipos';
 import { useSesion } from '../ui/contexto';
 import { CabeceraPagina, Grupo } from '../ui/familia';
 import { Icono } from '../ui/Icono';
 import { Anillo, LineaMacros, Macros3, Vasos, textoCantidad } from '../ui/nutri';
 import { Cargando, Hoja } from '../ui/piezas';
-import { useDia } from '../ui/usarDia';
+import { useCopiar, useDia } from '../ui/usarDia';
 
 /** Diario de comidas: un día a la vez, con todo lo registrado */
 export default function Diario() {
-  const { perfil } = useSesion();
+  const { repo, usuario, perfil, aviso } = useSesion();
   const [params, setParams] = useSearchParams();
   const loc = useLocation();
   const hoy = claveDia();
   const fecha = params.get('fecha') && params.get('fecha')! <= hoy ? params.get('fecha')! : hoy;
-  const { dia, quitar, reemplazar, agua } = useDia(fecha);
+  const { dia, quitar, reemplazar, agua, agregar, sumarDia } = useDia(fecha);
+  const copiarA = useCopiar();
   const [editar, setEditar] = useState<{ comida: TipoComida; item: ItemComida } | null>(null);
+  const [copiar, setCopiar] = useState<TipoComida | null>(null);
+  const [guardarComo, setGuardarComo] = useState<TipoComida | null>(null);
+  const [anterior, setAnterior] = useState<Dia | null>(null);
+
+  useEffect(() => {
+    setAnterior(null);
+    repo.leerDia(usuario.uid, sumarDias(fecha, -1)).then(setAnterior).catch(() => undefined);
+  }, [repo, usuario.uid, fecha]);
   const metas = metasDe(perfil);
   const ir = (f: string) => setParams(f === hoy ? {} : { fecha: f }, { replace: true });
 
@@ -51,6 +60,17 @@ export default function Diario() {
         ))}
       </div>
 
+      {dia && anterior && cantidadItems(anterior) > 0 && (
+        <div className="tarjeta mt-5 flex items-center gap-3" data-testid="repetir-dia">
+          <Icono n="repetir" className="shrink-0 oro" />
+          <span className="min-w-0 flex-1 text-[14px]">
+            <b>Repetir el día anterior</b>
+            <span className="block text-[13px] text-mu">{cantidadItems(anterior)} alimentos · {formatoNumero(anterior.totales.kcal)} kcal{cantidadItems(dia) > 0 ? ' · se suman a lo que ya tenés' : ''}</span>
+          </span>
+          <button className="btn h-10 shrink-0 px-4 text-[12px]" onClick={async () => { await sumarDia(anterior); aviso('Repetiste el día anterior'); }}>Repetir</button>
+        </div>
+      )}
+
       {!dia ? <Cargando forma="pagina" /> : (
         <div className="mt-6 grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)] lg:items-start lg:gap-6">
           <div className="flex flex-col gap-6">
@@ -76,9 +96,17 @@ export default function Diario() {
                         </button>
                       </div>
                     ))}
-                    <Link to={`/agregar?comida=${c.id}&fecha=${fecha}`} className={`flex min-h-[52px] items-center gap-2 text-[14px] font-semibold oro ${items.length ? 'border-t border-ln2' : ''}`}>
-                      <Icono n="mas" size={18} />Agregar a {c.nombre.toLowerCase()}
-                    </Link>
+                    <div className={`flex min-h-[52px] items-center gap-2 ${items.length ? 'border-t border-ln2' : ''}`}>
+                      <Link to={`/agregar?comida=${c.id}&fecha=${fecha}`} className="flex flex-1 items-center gap-2 text-[14px] font-semibold oro">
+                        <Icono n="mas" size={18} />Agregar
+                      </Link>
+                      {items.length > 0 && (
+                        <>
+                          <button className="chip h-8 px-2.5 text-[12px]" onClick={() => setCopiar(c.id)} aria-label={`Copiar ${c.nombre.toLowerCase()} a otro día`}><Icono n="copiar" size={14} />Copiar a…</button>
+                          <button className="chip h-8 px-2.5 text-[12px]" onClick={() => setGuardarComo(c.id)} aria-label={`Guardar ${c.nombre.toLowerCase()} como comida`}><Icono n="guardar" size={14} />Guardar</button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </section>
               );
@@ -107,6 +135,28 @@ export default function Diario() {
           </aside>
         </div>
       )}
+
+      <Hoja abierta={!!copiar} alCerrar={() => setCopiar(null)} etiqueta={copiar ? `${NOMBRE_COMIDA[copiar]} · ${fechaCorta(fecha)}` : ''} titulo="Copiar a otro día">
+        {copiar && dia && (
+          <CopiarA origen={copiar} hoy={hoy} alCopiar={async (f, c) => {
+            const items = dia.comidas[copiar] ?? [];
+            if (f === fecha) await agregar(c, copiarItems(items, nuevoId));
+            else await copiarA(f, c, items);
+            setCopiar(null);
+            aviso(`Copiado a ${NOMBRE_COMIDA[c].toLowerCase()} del ${fechaCorta(f)}`);
+          }} />
+        )}
+      </Hoja>
+
+      <Hoja abierta={!!guardarComo} alCerrar={() => setGuardarComo(null)} etiqueta="Comida guardada" titulo="Guardar para repetir">
+        {guardarComo && dia && (
+          <GuardarComo sugerido={`Mi ${NOMBRE_COMIDA[guardarComo].toLowerCase()} de siempre`} items={dia.comidas[guardarComo] ?? []} alGuardar={async (nombre) => {
+            await repo.guardarGuardada(usuario.uid, { id: nuevoId(), nombre, items: copiarItems(dia.comidas[guardarComo] ?? [], nuevoId), creado: Date.now() });
+            setGuardarComo(null);
+            aviso(`"${nombre}" guardada: la encontrás en Agregar → Guardadas`);
+          }} />
+        )}
+      </Hoja>
 
       <Hoja abierta={!!editar} alCerrar={() => setEditar(null)} etiqueta="Cambiar cantidad" titulo={editar?.item.nombre ?? ''}>
         {editar && <EditarItem item={editar.item} alGuardar={async (i) => { setEditar(null); await reemplazar(editar.comida, i); }}
@@ -140,6 +190,45 @@ function EditarItem({ item, alGuardar, alQuitar }: { item: ItemComida; alGuardar
         <button className="btn" onClick={() => alGuardar(nuevo)}>Guardar</button>
         <button className="btn-sec text-miss" onClick={alQuitar}><Icono n="basura" size={16} />Quitar del diario</button>
       </div>
+    </div>
+  );
+}
+
+/** Elegir día y comida de destino */
+function CopiarA({ origen, hoy, alCopiar }: { origen: TipoComida; hoy: string; alCopiar: (fecha: string, comida: TipoComida) => void }) {
+  const [destino, setDestino] = useState(hoy);
+  const [comida, setComida] = useState<TipoComida>(origen);
+  const rapidos: [string, string][] = [[sumarDias(hoy, -1), 'Ayer'], [hoy, 'Hoy'], [sumarDias(hoy, 1), 'Mañana']];
+  return (
+    <div className="flex flex-col gap-4">
+      <div>
+        <div className="etiqueta mb-2">Día</div>
+        <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Día de destino">
+          {rapidos.map(([f, t]) => <button key={f} role="radio" aria-checked={destino === f} className={`chip ${destino === f ? 'chip-on' : ''}`} onClick={() => setDestino(f)}>{t}</button>)}
+          <input type="date" className="campo h-8 w-auto rounded-full px-3 text-[13px]" value={destino} max={sumarDias(hoy, 7)} onChange={(e) => e.target.value && setDestino(e.target.value)} aria-label="Otra fecha" />
+        </div>
+      </div>
+      <div>
+        <div className="etiqueta mb-2">Comida</div>
+        <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Comida de destino">
+          {COMIDAS.map((c) => <button key={c.id} role="radio" aria-checked={comida === c.id} className={`chip ${comida === c.id ? 'chip-on' : ''}`} onClick={() => setComida(c.id)}>{c.nombre}</button>)}
+        </div>
+      </div>
+      <button className="btn w-full" onClick={() => alCopiar(destino, comida)}>Copiar a {NOMBRE_COMIDA[comida].toLowerCase()} · {fechaCorta(destino)}</button>
+    </div>
+  );
+}
+
+/** Nombre para una comida guardada */
+function GuardarComo({ sugerido, items, alGuardar }: { sugerido: string; items: ItemComida[]; alGuardar: (nombre: string) => void }) {
+  const [nombre, setNombre] = useState(sugerido);
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-[14px] text-mu">{items.map((i) => i.nombre).join(', ')} · {formatoNumero(sumar(items).kcal)} kcal</p>
+      <label className="block"><span className="etiqueta">Nombre</span>
+        <input className="campo mt-1.5" value={nombre} maxLength={80} onChange={(e) => setNombre(e.target.value)} aria-label="Nombre de la comida guardada" />
+      </label>
+      <button className="btn w-full" disabled={!nombre.trim()} onClick={() => alGuardar(nombre.trim())}>Guardar</button>
     </div>
   );
 }

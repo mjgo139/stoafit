@@ -20,7 +20,7 @@ export function Anillo({ valor, meta, tam = 148 }: { valor: number; meta: number
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
         <span className={`num leading-none ${pasado ? 'text-miss' : 'oro'}`} style={{ fontSize: tam * 0.22 }}>{formatoNumero(Math.abs(resta))}</span>
-        <span className="mt-1 text-[11px] font-bold uppercase tracking-[.12em] text-mu">{resta >= 0 ? 'kcal restan' : 'kcal de más'}</span>
+        <span className="mt-1 font-bold uppercase text-mu" style={{ fontSize: Math.min(11, tam * 0.078), letterSpacing: tam < 130 ? '.06em' : '.12em' }}>{resta >= 0 ? 'kcal restan' : 'kcal de más'}</span>
       </div>
     </div>
   );

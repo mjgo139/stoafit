@@ -17,6 +17,8 @@ export const GRUPOS: { v: GrupoAlimento; t: string }[] = [
   { v: 'grasas', t: 'Aceites y frutos secos' },
   { v: 'dulces', t: 'Dulces' },
   { v: 'rapida', t: 'Al paso' },
+  { v: 'envasados', t: 'Envasados' },
+  { v: 'recetas', t: 'Recetas' },
 ];
 
 const p = (nombre: string, gramos: number): Porcion => ({ nombre, gramos });
@@ -94,6 +96,13 @@ const FILAS: Fila[] = [
   ['harina-maiz', 'Polenta cocida', 'cereales', 85, 2, 18, 0.5, [p('1 porción', 200), g100], ['mbaipy sin queso']],
   ['granola', 'Granola', 'cereales', 450, 10, 64, 17, [p('½ taza', 50), g100]],
   ['tortilla-trigo', 'Tortilla de trigo (wrap)', 'cereales', 300, 8, 50, 7, [p('1 unidad', 45), g100], ['rapidita']],
+  // Ingredientes crudos para recetas
+  ['harina-maiz-cruda', 'Harina de maíz', 'cereales', 362, 8.1, 76.9, 3.6, [p('1 taza', 120), p('1 cucharada', 10), g100], ['harina', 'polenta cruda', 'avati']],
+  ['harina-trigo', 'Harina de trigo', 'cereales', 364, 10.3, 76.3, 1, [p('1 taza', 125), p('1 cucharada', 8), g100], ['harina']],
+  ['almidon-mandioca', 'Almidón de mandioca', 'cereales', 350, 0.2, 87, 0.1, [p('1 taza', 130), p('1 cucharada', 10), g100], ['aramirõ', 'fécula', 'almidon']],
+  ['arroz-crudo', 'Arroz crudo', 'cereales', 360, 6.7, 79, 0.6, [p('1 taza', 190), g100]],
+  ['fideo-crudo', 'Fideos secos (crudos)', 'cereales', 371, 13, 75, 1.5, [p('1 paquete', 500), p('1 porción', 80), g100], ['pasta seca']],
+  ['carne-picada-cruda', 'Carne picada (cruda)', 'carnes', 230, 18, 0, 17, [p('1 kilo', 1000), p('½ kilo', 500), g100]],
   // ── Legumbres ──
   ['poroto', 'Poroto cocido', 'legumbres', 130, 8.5, 22, 0.6, [p('1 taza', 170), p('1 cucharón', 120), g100], ['frijol', 'feijao']],
   ['lenteja', 'Lenteja cocida', 'legumbres', 115, 9, 20, 0.4, [p('1 taza', 200), p('1 cucharón', 120), g100]],

@@ -1,6 +1,6 @@
 import { edad, redondear } from './logica';
 import type {
-  Actividad, Alimento, Dia, Genero, ItemComida, Macros, Metas, ObjetivoPeso, Perfil, TipoComida,
+  Actividad, Alimento, Dia, Genero, ItemComida, Macros, Metas, ObjetivoPeso, Perfil, Porcion, Receta, TipoComida,
 } from './tipos';
 
 export const COMIDAS: { id: TipoComida; nombre: string; hora: string }[] = [
@@ -149,4 +149,91 @@ export function reparto(m: Macros): { prot: number; carb: number; gras: number }
 export function imc(peso: number, alturaCm: number): number {
   const m = alturaCm / 100;
   return redondear(peso / (m * m), 1);
+}
+
+// ── Repetir, recetas y etiquetas (v1.1.0) ──
+
+/** Resumen del perfil después de cambiar un día: días con registros, días cumplidos y total */
+export function nuevoResumen(r: Perfil['resumen'], antes: Dia, nuevo: Dia, metas: Metas): Perfil['resumen'] {
+  const conAntes = cantidadItems(antes) > 0;
+  const conAhora = cantidadItems(nuevo) > 0;
+  const f = nuevo.fecha;
+  const sin = (l: string[]) => l.filter((d) => d !== f);
+  const con = (l: string[]) => [...new Set([...l, f])].sort().slice(-120);
+  return {
+    dias: conAhora ? con(r.dias) : sin(r.dias),
+    cumplidos: diaCumplido(nuevo, metas) ? con(r.cumplidos) : sin(r.cumplidos),
+    total: Math.max(0, r.total + (conAhora && !conAntes ? 1 : !conAhora && conAntes ? -1 : 0)),
+  };
+}
+
+/** Copia ítems con ids nuevos (para repetir sin que dos registros compartan id) */
+export function copiarItems(items: ItemComida[], nuevoId: () => string): ItemComida[] {
+  return items.map((i) => ({ ...i, id: nuevoId() }));
+}
+
+/** Suma todas las comidas de un día a otro (repetir el día de ayer) */
+export function sumarComidas(destino: Dia['comidas'], origen: Dia['comidas'], nuevoId: () => string): Dia['comidas'] {
+  const r: Dia['comidas'] = { ...destino };
+  for (const [c, l] of Object.entries(origen) as [TipoComida, ItemComida[] | undefined][]) {
+    if (l?.length) r[c] = [...(r[c] ?? []), ...copiarItems(l, nuevoId)];
+  }
+  return r;
+}
+
+/**
+ * Convierte una receta en un alimento propio: los macros del total se pasan a "cada 100 g"
+ * usando el peso de la fuente terminada (o la suma de los ingredientes).
+ */
+export function alimentoDeReceta(id: string, nombre: string, receta: Receta): Alimento {
+  const total = sumar(receta.ingredientes);
+  const crudo = receta.ingredientes.reduce((s, i) => s + i.gramos, 0);
+  const peso = receta.pesoTotal && receta.pesoTotal > 0 ? receta.pesoTotal : crudo || 100;
+  const f = 100 / peso;
+  const porciones = Math.max(1, receta.porciones);
+  return {
+    id, nombre, grupo: 'recetas', propio: true, fuente: 'receta', receta,
+    por100: { kcal: Math.round(total.kcal * f), prot: redondear(total.prot * f, 1), carb: redondear(total.carb * f, 1), gras: redondear(total.gras * f, 1) },
+    porciones: [{ nombre: '1 porción', gramos: Math.round(peso / porciones) }, { nombre: 'Receta entera', gramos: Math.round(peso) }, { nombre: '100 g', gramos: 100 }],
+  };
+}
+
+/** Lo que se copia de una etiqueta nutricional */
+export interface Etiqueta {
+  nombre: string;
+  marca?: string;
+  codigo?: string;
+  /** 'porcion' = los valores son de la porción indicada; '100' = cada 100 g / 100 ml */
+  modo: 'porcion' | '100';
+  porcion: string;
+  gramos: number;
+  kcal: number; prot: number; carb: number; gras: number;
+  /** Otras medidas caseras: "1 paquete" = 200 g */
+  otras?: Porcion[];
+}
+
+/** Arma un alimento propio a partir de la etiqueta del envase */
+export function alimentoDeEtiqueta(id: string, e: Etiqueta, fuente: Alimento['fuente'] = 'manual'): Alimento {
+  const f = e.modo === '100' ? 1 : 100 / Math.max(1, e.gramos);
+  const porciones: Porcion[] = [];
+  if (e.porcion.trim() && e.gramos > 0) porciones.push({ nombre: e.porcion.trim(), gramos: Math.round(e.gramos) });
+  for (const o of e.otras ?? []) if (o.nombre.trim() && o.gramos > 0 && !porciones.some((p) => p.nombre === o.nombre.trim())) porciones.push({ nombre: o.nombre.trim(), gramos: Math.round(o.gramos) });
+  if (!porciones.some((p) => p.nombre === '100 g')) porciones.push({ nombre: '100 g', gramos: 100 });
+  return {
+    id, nombre: e.nombre.trim().slice(0, 80), grupo: e.codigo ? 'envasados' : 'tipicos', propio: true, fuente,
+    ...(e.marca?.trim() ? { marca: e.marca.trim().slice(0, 60) } : {}),
+    ...(e.codigo?.trim() ? { codigo: e.codigo.trim() } : {}),
+    por100: { kcal: Math.round(e.kcal * f), prot: redondear(e.prot * f, 1), carb: redondear(e.carb * f, 1), gras: redondear(e.gras * f, 1) },
+    porciones,
+  };
+}
+
+/** Para editar: vuelve a armar la etiqueta "por porción" desde un alimento propio */
+export function etiquetaDe(a: Alimento): Etiqueta {
+  const p = a.porciones[0] ?? { nombre: '100 g', gramos: 100 };
+  const m = macrosDe(a, p.gramos);
+  return {
+    nombre: a.nombre, marca: a.marca, codigo: a.codigo, modo: 'porcion', porcion: p.nombre, gramos: p.gramos, ...m,
+    otras: a.porciones.slice(1).filter((x) => x.nombre !== '100 g'),
+  };
 }

@@ -1,7 +1,7 @@
 {
   "name": "stoafit",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -19,6 +19,7 @@
     "@capacitor/core": "^6.2.0",
     "@fontsource/inter": "^5.1.0",
     "@fontsource/playfair-display": "^5.1.0",
+    "barcode-detector": "^3.2.4",
     "firebase": "^11.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

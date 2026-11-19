@@ -1,4 +1,4 @@
-import type { Alimento, Dia, Perfil, Plan, RegistroCuerpo } from '../lib/tipos';
+import type { Alimento, ComidaGuardada, Dia, Perfil, Plan, RegistroCuerpo } from '../lib/tipos';
 import { ErrorApp, type Repo, type Usuario } from './repo';
 import { CLAVE_PRUEBA, USUARIO_PRUEBA, datosDePrueba, perfilInicial } from './semilla';
 import type { Codigo, Comentario, Objetivo, Profesional, Solicitud, TipoProfesional, Vinculo } from '../pro/tipos';
@@ -10,6 +10,7 @@ interface Datos {
   propios: Map<string, Alimento>;
   cuerpo: Map<string, RegistroCuerpo>;
   planes: Map<string, Plan>;
+  guardadas: Map<string, ComidaGuardada>;
   comentarios: Map<string, Comentario>;
   objetivos: Map<string, Objetivo>;
 }
@@ -26,7 +27,7 @@ const espera = (ms = 120) => new Promise((r) => setTimeout(r, ms));
 export const CLAVE_SESION = 'stoafit-prueba-datos';
 
 type DatosPlanos = {
-  perfil?: Perfil; dias: Dia[]; propios: Alimento[]; cuerpo: RegistroCuerpo[]; planes: Plan[];
+  perfil?: Perfil; dias: Dia[]; propios: Alimento[]; cuerpo: RegistroCuerpo[]; planes: Plan[]; guardadas?: ComidaGuardada[];
   comentarios?: Comentario[]; objetivos?: Objetivo[];
 };
 type ComunPlano = { profesionales: Profesional[]; solicitudes: Solicitud[]; codigos: Codigo[]; vinculos: Vinculo[] };
@@ -56,7 +57,7 @@ export class RepoMemoria implements Repo {
       for (const [uid, d] of this.datos) {
         datos[uid] = {
           perfil: d.perfil, dias: [...d.dias.values()], propios: [...d.propios.values()], cuerpo: [...d.cuerpo.values()],
-          planes: [...d.planes.values()], comentarios: [...d.comentarios.values()], objetivos: [...d.objetivos.values()],
+          planes: [...d.planes.values()], guardadas: [...d.guardadas.values()], comentarios: [...d.comentarios.values()], objetivos: [...d.objetivos.values()],
         };
       }
       const c = this.comun;
@@ -83,6 +84,7 @@ export class RepoMemoria implements Repo {
           propios: new Map((d.propios ?? []).map((x) => [x.id, x])),
           cuerpo: new Map((d.cuerpo ?? []).map((x) => [x.id, x])),
           planes: new Map((d.planes ?? []).map((x) => [x.id, x])),
+          guardadas: new Map((d.guardadas ?? []).map((x) => [x.id, x])),
           comentarios: new Map((d.comentarios ?? []).map((x) => [x.id, x])),
           objetivos: new Map((d.objetivos ?? []).map((x) => [x.id, x])),
         });
@@ -105,6 +107,7 @@ export class RepoMemoria implements Repo {
       propios: new Map(),
       cuerpo: new Map(s.cuerpo.map((c) => [c.id, c])),
       planes: new Map(s.planes.map((p) => [p.id, p])),
+      guardadas: new Map(s.guardadas.map((g) => [g.id, g])),
       comentarios: new Map(),
       objetivos: new Map(),
     });
@@ -113,7 +116,7 @@ export class RepoMemoria implements Repo {
   protected d(uid: string): Datos {
     let x = this.datos.get(uid);
     if (!x) {
-      x = { dias: new Map(), propios: new Map(), cuerpo: new Map(), planes: new Map(), comentarios: new Map(), objetivos: new Map() };
+      x = { dias: new Map(), propios: new Map(), cuerpo: new Map(), planes: new Map(), guardadas: new Map(), comentarios: new Map(), objetivos: new Map() };
       this.datos.set(uid, x);
     }
     return x;
@@ -237,6 +240,10 @@ export class RepoMemoria implements Repo {
   async guardarPropio(uid: string, a: Alimento) { this.propio(uid); this.d(uid).propios.set(a.id, copia({ ...a, propio: true })); this.guardar(); }
   async borrarPropio(uid: string, id: string) { this.propio(uid); this.d(uid).propios.delete(id); this.guardar(); }
 
+  async leerGuardadas(uid: string) { this.ver(uid); return copia([...this.d(uid).guardadas.values()].sort((a, b) => a.nombre.localeCompare(b.nombre))); }
+  async guardarGuardada(uid: string, c: ComidaGuardada) { this.propio(uid); this.d(uid).guardadas.set(c.id, copia(c)); this.guardar(); }
+  async borrarGuardada(uid: string, id: string) { this.propio(uid); this.d(uid).guardadas.delete(id); this.guardar(); }
+
   async leerCuerpo(uid: string) { this.ver(uid); return copia([...this.d(uid).cuerpo.values()].sort((a, b) => a.fecha - b.fecha)); }
   async guardarCuerpo(uid: string, r: RegistroCuerpo) { this.propio(uid); this.d(uid).cuerpo.set(r.id, copia(r)); this.guardar(); }
   async borrarCuerpo(uid: string, id: string) { this.propio(uid); this.d(uid).cuerpo.delete(id); this.guardar(); }
@@ -261,7 +268,7 @@ export class RepoMemoria implements Repo {
     const d = this.d(uid);
     return copia({
       perfil: d.perfil, dias: [...d.dias.values()], alimentosPropios: [...d.propios.values()], cuerpo: [...d.cuerpo.values()],
-      planes: [...d.planes.values()], comentarios: [...d.comentarios.values()], objetivos: [...d.objetivos.values()],
+      planes: [...d.planes.values()], comidasGuardadas: [...d.guardadas.values()], comentarios: [...d.comentarios.values()], objetivos: [...d.objetivos.values()],
       vinculos: [...this.comun.vinculos.values()].filter((v) => v.clienteId === uid || v.profesionalId === uid),
     });
   }

@@ -25,10 +25,34 @@ export interface Alimento {
   /** Palabras extra para la búsqueda */
   alias?: string[];
   propio?: boolean;
+  marca?: string;
+  /** Código de barras (EAN/UPC) del envase */
+  codigo?: string;
+  /** De dónde salió: cargado a mano, Open Food Facts o una receta */
+  fuente?: 'manual' | 'off' | 'receta';
+  /** Si es una receta: sus ingredientes y cuánto rinde */
+  receta?: Receta;
+}
+
+/** Receta casera: ingredientes de la biblioteca, en cuántas porciones se divide y (opcional) el peso de la fuente terminada */
+export interface Receta {
+  ingredientes: ItemComida[];
+  porciones: number;
+  /** Peso total cocido en gramos; si falta, se usa la suma de los ingredientes */
+  pesoTotal?: number;
+}
+
+/** Combinación guardada con nombre ("Mi desayuno de siempre"): users/{uid}/savedMeals/{id} */
+export interface ComidaGuardada {
+  id: string;
+  nombre: string;
+  items: ItemComida[];
+  creado: number;
 }
 
 export type GrupoAlimento =
-  | 'tipicos' | 'carnes' | 'lacteos' | 'cereales' | 'legumbres' | 'verduras' | 'frutas' | 'bebidas' | 'grasas' | 'dulces' | 'rapida';
+  | 'tipicos' | 'carnes' | 'lacteos' | 'cereales' | 'legumbres' | 'verduras' | 'frutas' | 'bebidas' | 'grasas' | 'dulces' | 'rapida'
+  | 'envasados' | 'recetas';
 
 /** Lo que se comió: guarda sus macros calculados, así no cambia si se edita el alimento */
 export interface ItemComida extends Macros {

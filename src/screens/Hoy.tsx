@@ -51,7 +51,11 @@ export default function Hoy() {
 
       <div className="mt-7 grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:gap-6">
         <section>
-          <Grupo n={1} className="mb-3" extra={<Link to="/diario" className="text-[13px] font-semibold oro">Ver diario →</Link>}>Comidas de hoy</Grupo>
+          <Grupo n={1} className="mb-3" extra={
+            <span className="flex items-center gap-3">
+              <Link to="/agregar?escanear=1" className="flex items-center gap-1 text-[13px] font-semibold oro" aria-label="Escanear un producto"><Icono n="barras" size={16} />Escanear</Link>
+              <Link to="/diario" className="text-[13px] font-semibold oro">Ver diario →</Link>
+            </span>}>Comidas de hoy</Grupo>
           {!dia ? <Cargando /> : (
             <div className="flex flex-col gap-2.5">
               {COMIDAS.map((c) => <TarjetaComida key={c.id} tipo={c.id} items={dia.comidas[c.id] ?? []} metas={metas} fecha={hoy} />)}

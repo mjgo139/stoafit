@@ -1,4 +1,4 @@
-import type { Alimento, Dia, Perfil, Plan, RegistroCuerpo } from '../lib/tipos';
+import type { Alimento, ComidaGuardada, Dia, Perfil, Plan, RegistroCuerpo } from '../lib/tipos';
 import type { Comentario, Objetivo, Profesional, Solicitud, TipoProfesional, Vinculo } from '../pro/tipos';
 
 export interface Usuario {
@@ -41,6 +41,11 @@ export interface Repo {
   leerPropios(uid: string): Promise<Alimento[]>;
   guardarPropio(uid: string, a: Alimento): Promise<void>;
   borrarPropio(uid: string, id: string): Promise<void>;
+
+  /** Combinaciones guardadas con nombre ("Mi desayuno de siempre") */
+  leerGuardadas(uid: string): Promise<ComidaGuardada[]>;
+  guardarGuardada(uid: string, c: ComidaGuardada): Promise<void>;
+  borrarGuardada(uid: string, id: string): Promise<void>;
 
   leerCuerpo(uid: string): Promise<RegistroCuerpo[]>;
   guardarCuerpo(uid: string, r: RegistroCuerpo): Promise<void>;

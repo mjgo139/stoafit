@@ -155,7 +155,7 @@ test('diario: cambiar de día, editar y quitar', async ({ page }) => {
   expect(antes).toBeGreaterThan(0);
   await items.first().getByRole('button').first().click();
   await page.getByRole('button', { name: 'Más cantidad' }).click();
-  await page.getByRole('button', { name: 'Guardar' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Guardar', exact: true }).click();
   await expect(items.first()).toContainText('1½ ×');
   await captura(page, '30-diario');
   await items.first().getByRole('button', { name: /Quitar/ }).click();
@@ -210,7 +210,7 @@ test('perfil: apariencia, unidades, versión y exportar', async ({ page }) => {
   await page.getByRole('radio', { name: 'Terracota' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-acento', 'terracota');
   await page.getByRole('radio', { name: 'Libras (lb)' }).click();
-  await expect(page.getByTestId('version')).toContainText('1.0.0');
+  await expect(page.getByTestId('version')).toContainText('1.1.0');
   await captura(page, '60-perfil-oscuro');
   const descarga = page.waitForEvent('download');
   await page.getByRole('button', { name: /Exportar mis datos/ }).click();

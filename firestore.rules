@@ -94,7 +94,17 @@ service cloud.firestore {
         allow delete: if esDueno(uid);
         allow create, update: if esDueno(uid)
           && request.resource.data.nombre is string && request.resource.data.nombre.size() <= 80
-          && request.resource.data.por100.kcal is number && request.resource.data.porciones is list;
+          && request.resource.data.por100.kcal is number && request.resource.data.porciones is list
+          && (!('codigo' in request.resource.data) || (request.resource.data.codigo is string && request.resource.data.codigo.size() <= 14))
+          && (!('receta' in request.resource.data) || request.resource.data.receta.ingredientes.size() <= 60);
+      }
+      // Combinaciones guardadas ("Mi desayuno de siempre"): solo la persona
+      match /savedMeals/{id} {
+        allow read: if puedeVer(uid);
+        allow delete: if esDueno(uid);
+        allow create, update: if esDueno(uid)
+          && request.resource.data.nombre is string && request.resource.data.nombre.size() > 0 && request.resource.data.nombre.size() <= 80
+          && request.resource.data.items is list && request.resource.data.items.size() <= 40;
       }
       match /bodyLogs/{id} {
         allow read: if puedeVer(uid);

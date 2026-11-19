@@ -32,7 +32,7 @@ export function Marco() {
   const ir = useNavegarSuave();
   useEffect(() => { window.scrollTo({ top: 0 }); }, [loc.pathname]);
   useRecordatorio(perfil);
-  const activa = (a: string) => (a === '/' ? loc.pathname === '/' : loc.pathname.startsWith(a)) || (a === '/diario' && loc.pathname === '/agregar');
+  const activa = (a: string) => (a === '/' ? loc.pathname === '/' : loc.pathname.startsWith(a)) || (a === '/diario' && (loc.pathname === '/agregar' || loc.pathname === '/receta'));
 
   return (
     <div className="min-h-screen lg:flex">

@@ -2,7 +2,7 @@ import { buscarAlimento } from '../lib/alimentos';
 import { agregarDia, claveDia, sumarDias } from '../lib/logica';
 import { calcularMetas, diaCumplido, itemDe, totalesDia } from '../lib/nutricion';
 import { PLANTILLAS } from '../lib/plantillas';
-import type { Dia, ItemComida, Perfil, Plan, RegistroCuerpo, TipoComida } from '../lib/tipos';
+import type { ComidaGuardada, Dia, ItemComida, Perfil, Plan, RegistroCuerpo, TipoComida } from '../lib/tipos';
 import type { Usuario } from './repo';
 
 /** Cuenta de ejemplo del modo prueba (datos inventados) */
@@ -61,7 +61,7 @@ const OPCIONES: Record<TipoComida, [string, string, number][][]> = {
   ],
 };
 
-export interface DatosEjemplo { dias: Dia[]; cuerpo: RegistroCuerpo[]; perfil: Perfil; planes: Plan[] }
+export interface DatosEjemplo { dias: Dia[]; cuerpo: RegistroCuerpo[]; perfil: Perfil; planes: Plan[]; guardadas: ComidaGuardada[] }
 
 /**
  * 6 semanas de registros inventados: casi todos los días con 3 a 5 comidas, algunos días sin registrar,
@@ -124,7 +124,11 @@ export function datosDePrueba(u: Usuario, nombre: string, ahora = Date.now(), op
     creado: ahora - 20 * 86_400_000,
   }];
   void p;
-  return { dias, cuerpo, perfil, planes };
+  const fila = (aid: string, por: string, c: number) => { const a = buscarAlimento(aid)!; return itemDe(a, por, c, id()); };
+  const guardadas: ComidaGuardada[] = [
+    { id: 'g-desayuno', nombre: 'Mi desayuno de siempre', creado: ahora - 30 * 86_400_000, items: [fila('cocido-leche', '1 taza', 1), fila('chipa', '1 unidad mediana', 1), fila('banana', '1 unidad', 1)] },
+  ];
+  return { dias, cuerpo, perfil, planes, guardadas };
 }
 
 export type { ItemComida };

@@ -64,6 +64,13 @@ describe('reglas de Firestore', () => {
     await assertSucceeds(setDoc(doc(ana, 'users/ana/bodyLogs/2026-11-18'), { fecha: 1, peso: 68 }));
     await assertSucceeds(setDoc(doc(ana, 'users/ana/customFoods/p1'), { nombre: 'Guiso de la abuela', grupo: 'tipicos', por100: { kcal: 150, prot: 6, carb: 22, gras: 4 }, porciones: [{ nombre: '1 plato', gramos: 300 }] }));
     await assertSucceeds(setDoc(doc(ana, 'users/ana/plans/pl1'), { nombre: 'Mi semana', comidas: { desayuno: 'Cocido' }, creado: 1 }));
+    await assertSucceeds(setDoc(doc(ana, 'users/ana/customFoods/p3'), { nombre: 'Galletitas', grupo: 'envasados', codigo: '7840000000017', por100: { kcal: 420, prot: 11, carb: 68, gras: 11 }, porciones: [{ nombre: '100 g', gramos: 100 }] }));
+    await assertFails(setDoc(doc(ana, 'users/ana/customFoods/p4'), { nombre: 'x', por100: { kcal: 1 }, porciones: [], codigo: '1234567890123456789' }));
+    await assertSucceeds(setDoc(doc(ana, 'users/ana/customFoods/r1'), { nombre: 'Sopa de mamá', grupo: 'recetas', por100: { kcal: 290, prot: 9, carb: 28, gras: 16 }, porciones: [{ nombre: '1 porción', gramos: 120 }], receta: { ingredientes: [item], porciones: 8 } }));
+    await assertSucceeds(setDoc(doc(ana, 'users/ana/savedMeals/g1'), { nombre: 'Mi desayuno', items: [item], creado: 1 }));
+    await assertFails(setDoc(doc(ana, 'users/ana/savedMeals/g2'), { nombre: '', items: [], creado: 1 }));
+    await assertFails(setDoc(doc(beto, 'users/ana/savedMeals/g3'), { nombre: 'x', items: [], creado: 1 }));
+    await assertFails(getDocs(collection(beto, 'users/ana/savedMeals')));
     await assertSucceeds(getDocs(collection(ana, 'users/ana/days')));
     await assertFails(getDocs(collection(beto, 'users/ana/days')));
     await assertFails(getDoc(doc(beto, 'users/ana/bodyLogs/2026-11-18')));

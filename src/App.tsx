@@ -10,6 +10,7 @@ const Hoy = lazy(() => import('./screens/Hoy'));
 const Diario = lazy(() => import('./screens/Diario'));
 const Agregar = lazy(() => import('./screens/Agregar'));
 const Plan = lazy(() => import('./screens/Plan'));
+const Receta = lazy(() => import('./screens/Receta'));
 const Progreso = lazy(() => import('./screens/Progreso'));
 const Perfil = lazy(() => import('./screens/Perfil'));
 
@@ -38,6 +39,7 @@ export default function App() {
             <Route path="/" element={<Hoy />} />
             <Route path="/diario" element={<Diario />} />
             <Route path="/agregar" element={<Agregar />} />
+            <Route path="/receta" element={<Receta />} />
             <Route path="/plan" element={<Plan />} />
             <Route path="/progreso" element={<Progreso />} />
             <Route path="/perfil" element={<Perfil />} />

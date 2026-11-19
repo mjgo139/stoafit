@@ -9,7 +9,7 @@ import {
   persistentLocalCache, persistentMultipleTabManager, query, setDoc, where,
   writeBatch, type Firestore,
 } from 'firebase/firestore';
-import type { Alimento, Dia, Perfil, Plan, RegistroCuerpo } from '../lib/tipos';
+import type { Alimento, ComidaGuardada, Dia, Perfil, Plan, RegistroCuerpo } from '../lib/tipos';
 import { firebaseConfig } from '../firebaseConfig';
 import { ErrorApp, type Repo, type Usuario } from './repo';
 import type { Comentario, Objetivo, Profesional, Solicitud, TipoProfesional, Vinculo, Codigo } from '../pro/tipos';
@@ -26,7 +26,7 @@ function sinBloquear(p: Promise<unknown>, ms = 2500): Promise<void> {
   return Promise.race([p.then(() => undefined), new Promise<void>((r) => setTimeout(r, ms))]);
 }
 
-const SUBCOLECCIONES = ['days', 'customFoods', 'bodyLogs', 'plans', 'comments', 'goals'];
+const SUBCOLECCIONES = ['days', 'customFoods', 'savedMeals', 'bodyLogs', 'plans', 'comments', 'goals'];
 
 export class RepoFirebase implements Repo {
   readonly modo = 'firebase' as const;
@@ -172,6 +172,17 @@ export class RepoFirebase implements Repo {
     await sinBloquear(deleteDoc(doc(this.col(uid, 'customFoods'), id)));
   }
 
+  async leerGuardadas(uid: string) {
+    const s = await getDocs(this.col(uid, 'savedMeals'));
+    return s.docs.map((d) => ({ ...(d.data() as ComidaGuardada), id: d.id })).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }
+  async guardarGuardada(uid: string, c: ComidaGuardada) {
+    await sinBloquear(setDoc(doc(this.col(uid, 'savedMeals'), c.id), limpio(c)));
+  }
+  async borrarGuardada(uid: string, id: string) {
+    await sinBloquear(deleteDoc(doc(this.col(uid, 'savedMeals'), id)));
+  }
+
   async leerCuerpo(uid: string) {
     const s = await getDocs(query(this.col(uid, 'bodyLogs'), orderBy('fecha', 'asc')));
     return s.docs.map((d) => ({ ...(d.data() as RegistroCuerpo), id: d.id }));
@@ -201,6 +212,7 @@ export class RepoFirebase implements Repo {
       perfil,
       dias: await leer('days'),
       alimentosPropios: await leer('customFoods'),
+      comidasGuardadas: await leer('savedMeals'),
       cuerpo: await leer('bodyLogs'),
       planes: await leer('plans'),
       comentarios: await leer('comments'),

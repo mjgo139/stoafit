@@ -1,20 +1,39 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { agregarDia, claveDia, quitarDia } from '../lib/logica';
-import { cantidadItems, diaCumplido, diaVacio, metasDe, totalesDia } from '../lib/nutricion';
-import type { Dia, ItemComida, TipoComida } from '../lib/tipos';
+import { claveDia, nuevoId } from '../lib/logica';
+import { copiarItems, diaCumplido, diaVacio, metasDe, nuevoResumen, sumarComidas, totalesDia } from '../lib/nutricion';
+import type { Dia, ItemComida, Perfil, TipoComida } from '../lib/tipos';
+import type { Repo } from '../data/repo';
 import { useSesion } from './contexto';
 
-/**
- * Un día del diario con sus cambios. Cada cambio guarda el día entero + el resumen del perfil
- * en una sola tanda (2 escrituras en Firestore).
- */
+/** El resumen más reciente, compartido por todas las pantallas, para que dos cambios seguidos no se pisen */
+let resumenVivo: { uid: string; r: Perfil['resumen'] } | null = null;
+
+/** Aplica un cambio a un día y guarda el día + el resumen del perfil en una sola tanda (2 escrituras) */
+async function cambiarDia(
+  repo: Repo, uid: string, perfil: Perfil, fecha: string, antes: Dia, cambio: (d: Dia) => Dia,
+  local: (r: Perfil['resumen']) => void,
+) {
+  const metas = metasDe(perfil);
+  const nuevo = cambio(antes);
+  nuevo.totales = totalesDia(nuevo.comidas);
+  nuevo.metas = metas;
+  nuevo.actualizado = Date.now();
+  nuevo.fecha = fecha;
+  const base = resumenVivo?.uid === uid ? resumenVivo.r : perfil.resumen;
+  const resumen = nuevoResumen(base, antes, nuevo, metas);
+  resumenVivo = { uid, r: resumen };
+  local(resumen);
+  await repo.guardarDia(uid, nuevo, resumen);
+  return { nuevo, antes: diaCumplido(antes, metas), ahora: diaCumplido(nuevo, metas) };
+}
+
+/** Un día del diario con sus cambios */
 export function useDia(fecha = claveDia()) {
   const { repo, usuario, perfil, cambiarPerfilLocal } = useSesion();
   const [dia, setDia] = useState<Dia | null>(null);
   const ultimo = useRef<Dia | null>(null);
-  // El resumen más reciente, para que dos cambios seguidos no se pisen
-  const resumenRef = useRef(perfil.resumen);
-  useEffect(() => { resumenRef.current = perfil.resumen; }, [perfil.resumen]);
+
+  useEffect(() => { resumenVivo = { uid: usuario.uid, r: perfil.resumen }; }, [usuario.uid, perfil.resumen]);
 
   useEffect(() => {
     let vivo = true;
@@ -30,25 +49,10 @@ export function useDia(fecha = claveDia()) {
 
   const guardar = useCallback(async (cambio: (d: Dia) => Dia) => {
     const antes = ultimo.current ?? diaVacio(fecha);
-    const metas = metasDe(perfil);
-    const nuevo = cambio(antes);
-    nuevo.totales = totalesDia(nuevo.comidas);
-    nuevo.metas = metas;
-    nuevo.actualizado = Date.now();
-    ultimo.current = nuevo;
-    setDia(nuevo);
-    const r = resumenRef.current;
-    const conAntes = cantidadItems(antes) > 0;
-    const conAhora = cantidadItems(nuevo) > 0;
-    const resumen = {
-      dias: conAhora ? agregarDia(r.dias, fecha) : quitarDia(r.dias, fecha),
-      cumplidos: diaCumplido(nuevo, metas) ? agregarDia(r.cumplidos, fecha) : quitarDia(r.cumplidos, fecha),
-      total: Math.max(0, r.total + (conAhora && !conAntes ? 1 : !conAhora && conAntes ? -1 : 0)),
-    };
-    resumenRef.current = resumen;
-    cambiarPerfilLocal({ resumen });
-    await repo.guardarDia(usuario.uid, nuevo, resumen);
-    return { antes: diaCumplido(antes, metas), ahora: diaCumplido(nuevo, metas) };
+    const r = await cambiarDia(repo, usuario.uid, perfil, fecha, antes, cambio, (resumen) => cambiarPerfilLocal({ resumen }));
+    ultimo.current = r.nuevo;
+    setDia(r.nuevo);
+    return { antes: r.antes, ahora: r.ahora };
   }, [repo, usuario.uid, perfil, fecha, cambiarPerfilLocal]);
 
   const agregar = useCallback((comida: TipoComida, items: ItemComida[]) =>
@@ -64,5 +68,19 @@ export function useDia(fecha = claveDia()) {
 
   const reemplazarComidas = useCallback((comidas: Dia['comidas']) => guardar((d) => ({ ...d, comidas })), [guardar]);
 
-  return { dia, agregar, quitar, reemplazar, agua, reemplazarComidas };
+  /** Suma todas las comidas de otro día a este (repetir el día de ayer) */
+  const sumarDia = useCallback((origen: Dia) => guardar((d) => ({ ...d, comidas: sumarComidas(d.comidas, origen.comidas, nuevoId) })), [guardar]);
+
+  return { dia, agregar, quitar, reemplazar, agua, reemplazarComidas, sumarDia };
+}
+
+/** Copiar ítems a cualquier día y comida (copiar a mañana, la cena de ayer al almuerzo de hoy…) */
+export function useCopiar() {
+  const { repo, usuario, perfil, cambiarPerfilLocal } = useSesion();
+  return useCallback(async (fecha: string, comida: TipoComida, items: ItemComida[]) => {
+    const antes = (await repo.leerDia(usuario.uid, fecha)) ?? diaVacio(fecha);
+    await cambiarDia(repo, usuario.uid, perfil, fecha, antes,
+      (d) => ({ ...d, comidas: { ...d.comidas, [comida]: [...(d.comidas[comida] ?? []), ...copiarItems(items, nuevoId)] } }),
+      (resumen) => cambiarPerfilLocal({ resumen }));
+  }, [repo, usuario.uid, perfil, cambiarPerfilLocal]);
 }

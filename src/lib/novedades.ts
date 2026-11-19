@@ -1,6 +1,17 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.1.0',
+    fecha: '2026-11-19',
+    cambios: [
+      'Código de barras gratis: escaneá el envase con la cámara (o escribí el código) y busca en Open Food Facts; si no está, cargás la etiqueta una vez.',
+      'Repetir: el día anterior entero, "Copiar a…" otro día o comida, y comidas guardadas ("Mi desayuno de siempre").',
+      'Recetas: ingredientes, en cuántas porciones se reparte y el peso cocido; se buscan como cualquier alimento.',
+      'Crear alimento mejorado: valores "por porción" o "cada 100 g", marca, código, otras medidas, editar y borrar.',
+      'Ingredientes crudos nuevos para recetas: harinas, almidón de mandioca, arroz y fideos secos, carne picada.',
+    ],
+  },
+  {
     version: '1.0.0',
     fecha: '2026-11-19',
     cambios: [
