@@ -1,6 +1,14 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.6.0',
+    fecha: '2026-11-19',
+    cambios: [
+      'Planificá: el Diario ahora va a días futuros (hasta 60 días). Lo planificado se marca con un punto dorado y cuenta para tu racha recién cuando llega el día.',
+      'Gráficos más claros: cada comida tiene su propio color en "Calorías por comida", y proteínas, carbohidratos y grasas usan colores bien distintos (también para daltonismo).',
+    ],
+  },
+  {
     version: '1.5.2',
     fecha: '2026-11-19',
     cambios: [

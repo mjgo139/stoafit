@@ -225,6 +225,9 @@ test('perfil: apariencia, unidades, versión y exportar', async ({ page }) => {
   // Las otras pantallas en oscuro y terracota, para comparar acentos
   await ir(page, 'Hoy');
   await captura(page, '61-hoy-oscuro-terracota');
+  await page.goto('/diario?fecha=' + new Date(Date.now() - 86400000).toLocaleDateString('sv'));
+  await expect(page.getByTestId('por-comida')).toBeVisible();
+  await captura(page, '62-diario-oscuro');
   await page.getByRole('button', { name: 'Salir' }).filter({ visible: true }).count();
 });
 

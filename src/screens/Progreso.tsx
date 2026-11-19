@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { aKg, aUnidad, claveDia, fechaCorta, fechaDeClave, formatoNumero, racha, sumarDias } from '../lib/logica';
+import { aKg, aUnidad, claveDia, fechaCorta, fechaDeClave, formatoNumero, hastaHoy, racha, sumarDias } from '../lib/logica';
 import { cantidadItems, diaCumplido, metasDe, promedio, reparto } from '../lib/nutricion';
 import type { Dia, RegistroCuerpo } from '../lib/tipos';
 import { useSesion } from '../ui/contexto';
@@ -23,6 +23,8 @@ export default function Progreso() {
   const [registrar, setRegistrar] = useState(false);
   const [cuantos, setCuantos] = useState(14);
   const hoy = claveDia();
+  const cumplidosHasta = hastaHoy(perfil.resumen.cumplidos, hoy);
+  const diasHasta = hastaHoy(perfil.resumen.dias, hoy);
   const u = perfil.unidad;
   const metas = metasDe(perfil);
 
@@ -41,7 +43,7 @@ export default function Progreso() {
   const semanas = Array.from({ length: 8 }, (_, i) => {
     const desde = sumarDias(lunes, -(7 - i) * 7 + 7);
     const claves = Array.from({ length: 7 }, (_, k) => sumarDias(desde, k));
-    return { fecha: +fechaDeClave(desde), y: claves.filter((c) => perfil.resumen.cumplidos.includes(c)).length, registrados: claves.filter((c) => perfil.resumen.dias.includes(c)).length };
+    return { fecha: +fechaDeClave(desde), y: claves.filter((c) => cumplidosHasta.includes(c)).length, registrados: claves.filter((c) => diasHasta.includes(c)).length };
   });
 
   const enRango = (dias ?? []).filter((d) => d.fecha > sumarDias(hoy, -Number(rango)));
@@ -57,8 +59,8 @@ export default function Progreso() {
       <div className="mt-6 grid grid-cols-2 gap-2.5 lg:grid-cols-4" data-testid="resumen-progreso">
         <Dato t="Peso actual" v={actual ? `${formatoNumero(aUnidad(actual, u), 1)} ${u}` : '—'} />
         <Dato t="Desde el inicio" v={actual && inicial ? `${actual - inicial > 0 ? '+' : ''}${formatoNumero(aUnidad(actual - inicial, u), 1)} ${u}` : '—'} />
-        <Dato t="Días cumplidos" v={formatoNumero(perfil.resumen.cumplidos.length)} />
-        <Dato t="Racha" v={`${racha(perfil.resumen.cumplidos, hoy)} días`} />
+        <Dato t="Días cumplidos" v={formatoNumero(cumplidosHasta.length)} />
+        <Dato t="Racha" v={`${racha(cumplidosHasta, hoy)} días`} />
       </div>
 
       <div className="mt-7 grid grid-cols-1 gap-7 lg:grid-cols-2 lg:gap-6">

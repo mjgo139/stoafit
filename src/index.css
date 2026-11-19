@@ -22,7 +22,11 @@
   --f-display:'Playfair Display', Georgia, serif;
   --f-body:Inter, system-ui, sans-serif;
   --acento:#5e6b33; --acentobg:#e6e8d3;
-  --prot:#9c3f2e; --carb:#a9884f; --gras:#5e6b33;
+  /* Macros: tres colores bien distintos (validados para daltonismo); no cambian con el acento */
+  --prot:#c4553b; --carb:#2f6fb8; --gras:#a87a0a;
+  /* Gráficos con varias series (ej. calorías por comida): orden fijo, validado para daltonismo y contraste */
+  --serie-1:#2f6fb8; --serie-2:#d0632f; --serie-3:#16967a; --serie-4:#c98f00;
+  --serie-5:#c9618d; --serie-6:#3d7a2c; --serie-7:#6a58c4; --serie-8:#c43d3b; --serie-otras:#9a907f;
   color-scheme: light;
 }
 :root[data-theme='dark'] {
@@ -37,11 +41,13 @@
   --sombra: 0 8px 22px rgba(0,0,0,.35);
   --lateral:#0f0d0a;
   --acento:#a3b06c; --acentobg:#262a1b;
-  --prot:#d48a74; --carb:#c9a66b; --gras:#a3b06c;
+  --prot:#d96a52; --carb:#4f8fdc; --gras:#b5840c;
+  --serie-1:#4f8fdc; --serie-2:#de7040; --serie-3:#24ab8a; --serie-4:#b5840c;
+  --serie-5:#cf6b96; --serie-6:#5ea64a; --serie-7:#8476dc; --serie-8:#e06a68; --serie-otras:#6f6656;
   color-scheme: dark;
 }
-:root[data-acento='terracota'] { --acento:#a4512f; --acentobg:#f1dccf; --gras:#a4512f; --prot:#5e6b33; }
-:root[data-theme='dark'][data-acento='terracota'] { --acento:#d9875f; --acentobg:#33211a; --gras:#d9875f; --prot:#a3b06c; }
+:root[data-acento='terracota'] { --acento:#a4512f; --acentobg:#f1dccf; }
+:root[data-theme='dark'][data-acento='terracota'] { --acento:#d9875f; --acentobg:#33211a; }
 :root[data-acento='bronce'] { --acento:var(--gold); --acentobg:var(--goldbg); }
 
 html, body, #root { min-height: 100%; }

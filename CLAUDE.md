@@ -6,7 +6,7 @@ App de nutrición de la familia estoica, hermana de **Stoica** (https://stoica-a
 
 | Dato | Valor |
 |---|---|
-| Fase | 1 (usarla sola) en v1.0.0; v1.1.0 = código de barras, repetir comidas, recetas y crear alimento mejorado; v1.2.0 = base compartida de productos, cargadores y lectura de etiquetas con IA; v1.3.0 = agregar en gramos, % de la meta, varios días y botón atrás de Android; v1.4.0 = Agregar con ventana por comida, "+" rápido, adición rápida y Diario en tarjetas; v1.5.0 = comidas propias (nombres, orden, agregar y quitar) y mejor uso de la PC. Fase 2 (nutricionista) y 3 (logros, recordatorios, admin) pendientes |
+| Fase | 1 (usarla sola) en v1.0.0; v1.1.0 = código de barras, repetir comidas, recetas y crear alimento mejorado; v1.2.0 = base compartida de productos, cargadores y lectura de etiquetas con IA; v1.3.0 = agregar en gramos, % de la meta, varios días y botón atrás de Android; v1.4.0 = Agregar con ventana por comida, "+" rápido, adición rápida y Diario en tarjetas; v1.5.0 = comidas propias (nombres, orden, agregar y quitar) y mejor uso de la PC; v1.6.0 = días futuros para planificar y colores de gráficos validados. Fase 2 (nutricionista) y 3 (logros, recordatorios, admin) pendientes |
 | Repositorio | `mjgo139/stoafit` (privado), rama `main` |
 | Proyecto Firebase | `stoafit-app` (plan Spark, gratis) |
 | Firestore | Standard, modo producción, región `southamerica-east1` (São Paulo) |
@@ -50,13 +50,15 @@ App de nutrición de la familia estoica, hermana de **Stoica** (https://stoica-a
 ## Diseño (familia estoica)
 
 - Igual que Stoica: modo claro **"Mármol"** (piedra `#ECE6DB`, tarjetas `#FAF7F1`, bronce `#7E5D22`), oscuro (`#14120E`, bronce `#C9A66B`) y sistema. Playfair Display para títulos y números, Inter para textos, etiquetas en MAYÚSCULAS espaciadas. Verde `#3F6E38` = cumplido, rojo ladrillo `#9C3F2E` = no cumplido / pasado.
-- Detalle propio: **color de acento** (`data-acento` = `oliva` | `terracota` | `bronce`, en Perfil → Apariencia) para el agua, las comidas registradas y las grasas. **Pendiente que el dueño elija el predeterminado** (hoy: oliva). Capturas `70-acento-*`.
+- Detalle propio: **color de acento** (`data-acento` = `oliva` | `terracota` | `bronce`, en Perfil → Apariencia) para el agua y las comidas registradas (desde v1.6.0 ya no cambia las grasas).
+- **Colores de datos (v1.6.0, pedido del dueño: la paleta sola no distinguía bien):** macros fijos `--prot` (rojo terracota) / `--carb` (azul) / `--gras` (ocre); series `--serie-1…8` + `--serie-otras` en orden fijo, el color sigue a la comida (su lugar en la lista), nunca se repite (la 9.ª en adelante = "Otras"). Validados con el skill dataviz (`validate_palette.js`) en claro (`#FAF7F1`) y oscuro (`#1D1A15`): si se cambian, volver a validar. **Pendiente que el dueño elija el predeterminado** (hoy: oliva). Capturas `70-acento-*`.
 - PC (≥1024 px): contenido hasta 1480 px, barra lateral 248 px, tarjetas radio 16. Celular: máximo 480 px y pestañas abajo (Hoy · Diario · Plan · Progreso · Perfil).
 - Ícono: igual al de Stoica (cuadrado `#14120E`, laurel dorado `#C9A66B`) con una **manzana marfil** `#F3EDDF` en lugar de letra (decisión del dueño). Cambiar el ícono obliga a reinstalar la APK.
 - Esqueletos (`Cargando`) en vez de "Cargando…". Tarjetas lado a lado siempre del mismo alto.
 - Hoy y Diario no repiten lo mismo (pedido del dueño): Hoy = anillo + barras de macros + comidas + tu semana (sin agua); Diario = calorías restantes, "Nutrientes del día" en tabla (comido · meta · quedan), "Calorías por comida" y el agua (solo ahí).
 - Las grillas llevan `grid-cols-1` en celular: sin eso se estiran al contenido y la página queda más ancha que la pantalla (hay prueba).
 - Día cumplido = 2 comidas o más y calorías entre el 85 % y el 110 % de la meta.
+- **Días futuros (v1.6.0):** el Diario llega hasta `DIAS_PLAN` (60) días adelante con aviso "Planificando" y punto dorado en la semana. `resumen` guarda también los días futuros, pero racha, Tu semana y Progreso usan `hastaHoy()`: lo planificado cuenta recién cuando llega el día.
 
 ## Reglas de trabajo
 

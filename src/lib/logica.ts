@@ -44,6 +44,14 @@ export function romano(n: number): string {
   return s;
 }
 
+/** Cuántos días hacia adelante se puede planificar en el Diario */
+export const DIAS_PLAN = 60;
+
+/** Solo los días que ya pasaron (o hoy): lo planificado a futuro no cuenta para racha, semana ni progreso */
+export function hastaHoy(lista: string[], hoy = claveDia()): string[] {
+  return lista.filter((d) => d <= hoy);
+}
+
 /** Días seguidos cumplidos hasta hoy (si hoy todavía no se cumplió, cuenta hasta ayer) */
 export function racha(cumplidos: string[], hoy = claveDia()): number {
   const s = new Set(cumplidos);

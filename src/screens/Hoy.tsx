@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { fraseDelDia } from '../lib/frases';
-import { claveDia, fechaLarga, formatoNumero, racha, romano, saludo, semana } from '../lib/logica';
+import { claveDia, fechaLarga, hastaHoy, formatoNumero, racha, romano, saludo, semana } from '../lib/logica';
 import { comidasDelDia, comidasRegistradas, metasDe, repartoDe } from '../lib/nutricion';
 import { useComidas } from '../ui/comidas';
 import { useSesion } from '../ui/contexto';
@@ -18,7 +18,7 @@ export default function Hoy() {
   const metas = metasDe(perfil);
   const lista = useComidas();
   const reparto = repartoDe(lista);
-  const cumplidos = perfil.resumen.cumplidos;
+  const cumplidos = hastaHoy(perfil.resumen.cumplidos, hoy);
   const r = racha(cumplidos, hoy);
   const sem = semana(hoy);
   const enSemana = sem.filter((d) => cumplidos.includes(d.clave)).length;

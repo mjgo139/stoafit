@@ -106,3 +106,23 @@ test('comidas propias: renombrar, agregar, quitar y usarlas al agregar', async (
   await page.goto('/');
   await expect(page.getByRole('link', { name: 'Agregar a Pre entreno' })).toBeVisible();
 });
+
+test('días futuros: planificar comidas sin que cuenten para la racha', async ({ page }) => {
+  await entrar(page);
+  const semana = (await page.getByTestId('tu-semana').textContent()) ?? '';
+  await page.goto('/diario');
+  await page.getByRole('button', { name: 'Día siguiente' }).click();
+  await expect(page.getByRole('heading', { name: 'Mañana' })).toBeVisible();
+  await expect(page.getByTestId('planificando')).toBeVisible();
+  await expect(page.getByTestId(/^restantes/).filter({ visible: true })).toContainText('Planificado');
+  await page.getByTestId('diario-almuerzo').getByRole('link', { name: 'Agregar alimento' }).click();
+  await expect(page.getByTestId('ya-en-comida')).not.toContainText('Hoy');
+  await page.getByRole('button', { name: /^Agregar .+ ya$/ }).first().click();
+  await expect(page.getByTestId('ya-en-comida')).toContainText('1 alimento');
+  await atras(page);
+  await expect(page.getByTestId('diario-almuerzo').getByTestId('item-comida')).toHaveCount(1);
+  await expect(page.getByTestId('por-comida')).toContainText('Almuerzo');
+  await captura(page, '98-diario-futuro');
+  await page.goto('/');
+  await expect(page.getByTestId('tu-semana')).toHaveText(semana);
+});

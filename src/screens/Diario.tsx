@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { buscarAlimento } from '../lib/alimentos';
-import { claveDia, fechaCorta, fechaLarga, formatoNumero, nuevoId, semana, sumarDias } from '../lib/logica';
+import { DIAS_PLAN, claveDia, fechaCorta, fechaLarga, formatoNumero, nuevoId, semana, sumarDias } from '../lib/logica';
 import { alimentoDesdeItem, conPorcionDe, comidasDelDia, nombreComida, cantidadItems, copiarItems, diaCumplido, esSuelta, itemDe, metasDe, sumar } from '../lib/nutricion';
 import type { Alimento, Dia, ItemComida, Metas, TipoComida } from '../lib/tipos';
 import { productosEnCache } from '../lib/productos';
@@ -20,7 +20,11 @@ export default function Diario() {
   const [params, setParams] = useSearchParams();
   const loc = useLocation();
   const hoy = claveDia();
-  const fecha = params.get('fecha') && params.get('fecha')! <= hoy ? params.get('fecha')! : hoy;
+  // Se puede ir a días futuros para planificar (hasta DIAS_PLAN días)
+  const limite = sumarDias(hoy, DIAS_PLAN);
+  const pedida = params.get('fecha');
+  const fecha = pedida && /^\d{4}-\d{2}-\d{2}$/.test(pedida) && pedida <= limite ? pedida : hoy;
+  const futuro = fecha > hoy;
   const { dia, quitar, reemplazar, agua, agregar, sumarDia } = useDia(fecha);
   const copiarA = useCopiar();
   const [editar, setEditar] = useState<{ comida: TipoComida; item: ItemComida } | null>(null);
@@ -44,16 +48,16 @@ export default function Diario() {
     document.getElementById(loc.hash.slice(1))?.scrollIntoView({ block: 'start' });
   }, [dia, loc.hash]);
 
-  const cumplido = dia ? diaCumplido(dia, metas) : false;
+  const cumplido = dia && !futuro ? diaCumplido(dia, metas) : false;
   const nombre = (id: TipoComida) => nombreComida(lista, id);
   // En el celular van arriba; en la PC, en la columna de la derecha
   const restantes = (id: string) => dia && (
     <section className="tarjeta" data-testid={id}>
-      <div className="etiqueta">Calorías restantes</div>
+      <div className="etiqueta">{futuro ? 'Calorías planificadas' : 'Calorías restantes'}</div>
       <div className="mt-3 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-start text-center">
         <div><div className="num text-[20px]">{formatoNumero(metas.kcal)}</div><div className="text-[12px] text-mu">Meta</div></div>
         <div className="num px-1 text-[20px] text-mu">−</div>
-        <div><div className="num text-[20px]">{formatoNumero(dia.totales.kcal)}</div><div className="text-[12px] text-mu">Comido</div></div>
+        <div><div className="num text-[20px]">{formatoNumero(dia.totales.kcal)}</div><div className="text-[12px] text-mu">{futuro ? 'Planificado' : 'Comido'}</div></div>
         <div className="num px-1 text-[20px] text-mu">=</div>
         <div><div className={`num text-[24px] ${metas.kcal - dia.totales.kcal < 0 ? 'text-miss' : 'oro'}`}>{formatoNumero(Math.abs(metas.kcal - dia.totales.kcal))}</div>
           <div className="text-[12px] text-mu">{metas.kcal - dia.totales.kcal < 0 ? 'De más' : 'Restan'}</div></div>
@@ -72,25 +76,34 @@ export default function Diario() {
   );
   return (
     <div className="pt-6 lg:pt-10">
-      <CabeceraPagina etiqueta="Diario" titulo={fecha === hoy ? 'Hoy' : fecha === sumarDias(hoy, -1) ? 'Ayer' : <span className="first-letter:uppercase">{fechaLarga(fecha).split(',')[0]}</span>}
+      <CabeceraPagina etiqueta="Diario" titulo={fecha === hoy ? 'Hoy' : fecha === sumarDias(hoy, -1) ? 'Ayer' : fecha === sumarDias(hoy, 1) ? 'Mañana' : <span className="first-letter:uppercase">{fechaLarga(fecha).split(',')[0]}</span>}
         linea={<span className="first-letter:uppercase">{fechaLarga(fecha)}</span>}
         accion={
           <div className="flex gap-1.5">
             <button className="btn-sec h-10 w-10 px-0" aria-label="Día anterior" onClick={() => ir(sumarDias(fecha, -1))}><Icono n="izq" size={18} /></button>
-            <button className="btn-sec h-10 w-10 px-0" aria-label="Día siguiente" disabled={fecha >= hoy} onClick={() => ir(sumarDias(fecha, 1))}><Icono n="der" size={18} /></button>
+            <button className="btn-sec h-10 w-10 px-0" aria-label="Día siguiente" disabled={fecha >= limite} onClick={() => ir(sumarDias(fecha, 1))}><Icono n="der" size={18} /></button>
           </div>
         } />
 
       <div className="mt-5 flex justify-between gap-1 lg:max-w-[520px]" aria-label="Elegir día">
         {semana(fecha).map((d) => (
-          <button key={d.clave} disabled={d.clave > hoy} onClick={() => ir(d.clave)} aria-current={d.clave === fecha ? 'date' : undefined}
+          <button key={d.clave} disabled={d.clave > limite} onClick={() => ir(d.clave)} aria-current={d.clave === fecha ? 'date' : undefined}
             className={`flex h-14 flex-1 flex-col items-center justify-center rounded-[12px] border text-[12px] transition-colors disabled:opacity-35 ${d.clave === fecha ? 'border-gold bg-sf oro' : 'border-transparent text-mu'}`}>
             <span className="font-bold">{d.letra}</span>
             <span className="num text-[16px]">{d.numero}</span>
-            <span className={`mt-0.5 h-1 w-1 rounded-full ${perfil.resumen.cumplidos.includes(d.clave) ? 'bg-ok' : perfil.resumen.dias.includes(d.clave) ? 'bg-ln3' : 'bg-transparent'}`} style={perfil.resumen.cumplidos.includes(d.clave) ? { background: 'var(--verde)' } : undefined} />
+            {/* Punto: verde = cumplido; dorado = planificado (día futuro con comidas); gris = con registros */}
+            <span className={`mt-0.5 h-1 w-1 rounded-full ${d.clave > hoy ? (perfil.resumen.dias.includes(d.clave) ? 'bg-gold' : 'bg-transparent') : perfil.resumen.cumplidos.includes(d.clave) ? 'bg-ok' : perfil.resumen.dias.includes(d.clave) ? 'bg-ln3' : 'bg-transparent'}`}
+              style={d.clave <= hoy && perfil.resumen.cumplidos.includes(d.clave) ? { background: 'var(--verde)' } : undefined} />
           </button>
         ))}
       </div>
+
+      {futuro && (
+        <p className="mt-5 flex items-center gap-2.5 rounded-[14px] border border-gold2 bg-goldbg px-4 py-3 text-[13.5px]" data-testid="planificando">
+          <Icono n="plan" size={18} className="shrink-0 oro" />
+          <span><b>Planificando.</b> Lo que anotes acá es tu plan; cuenta para tu racha y tu semana recién cuando llegue el día.</span>
+        </p>
+      )}
 
       {dia && <div className="mt-5 flex flex-col gap-4 lg:hidden">{restantes('restantes')}{repetir('repetir-dia')}</div>}
 
@@ -143,7 +156,7 @@ export default function Diario() {
 
           <aside className="flex flex-col gap-6 lg:sticky lg:top-8 lg:gap-4">
             <div className="hidden flex-col gap-4 lg:flex">{restantes('restantes-pc')}{repetir('repetir-dia-pc')}</div>
-            <Nutrientes dia={dia} metas={metas} cumplido={cumplido} comidas={comidasDelDia(lista, dia)} />
+            <Nutrientes dia={dia} metas={metas} cumplido={cumplido} futuro={futuro} comidas={comidasDelDia(lista, dia)} />
             <section className="tarjeta" data-testid="agua">
               <div className="etiqueta mb-3">Agua</div>
               <Vasos ml={dia.agua} meta={metas.agua} alCambiar={(ml) => agua(ml)} />
@@ -260,14 +273,14 @@ function CopiarA({ origen, hoy, alCopiar }: { origen: TipoComida; hoy: string; a
   const lista = useComidas();
   const [destino, setDestino] = useState(hoy);
   const [comida, setComida] = useState<TipoComida>(origen);
-  const rapidos: [string, string][] = [[sumarDias(hoy, -1), 'Ayer'], [hoy, 'Hoy'], [sumarDias(hoy, 1), 'Mañana']];
+  const rapidos: [string, string][] = [[sumarDias(hoy, -1), 'Ayer'], [hoy, 'Hoy'], [sumarDias(hoy, 1), 'Mañana'], [sumarDias(hoy, 2), 'Pasado mañana']];
   return (
     <div className="flex flex-col gap-4">
       <div>
         <div className="etiqueta mb-2">Día</div>
         <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label="Día de destino">
           {rapidos.map(([f, t]) => <button key={f} role="radio" aria-checked={destino === f} className={`chip ${destino === f ? 'chip-on' : ''}`} onClick={() => setDestino(f)}>{t}</button>)}
-          <input type="date" className="campo h-8 w-auto rounded-full px-3 text-[13px]" value={destino} max={sumarDias(hoy, 7)} onChange={(e) => e.target.value && setDestino(e.target.value)} aria-label="Otra fecha" />
+          <input type="date" className="campo h-8 w-auto rounded-full px-3 text-[13px]" value={destino} max={sumarDias(hoy, DIAS_PLAN)} onChange={(e) => e.target.value && setDestino(e.target.value)} aria-label="Otra fecha" />
         </div>
       </div>
       <div>
@@ -347,11 +360,14 @@ function TraerDe({ destino, fecha, alTraer }: { destino: TipoComida; fecha: stri
  * Resumen del Diario, distinto del panel de Hoy: tabla de nutrientes (comido · meta · quedan)
  * y en qué comidas se fueron las calorías del día.
  */
-function Nutrientes({ dia, metas, cumplido, comidas }: { dia: Dia; metas: Metas; cumplido: boolean; comidas: { id: string; nombre: string }[] }) {
+function Nutrientes({ dia, metas, cumplido, comidas, futuro }: { dia: Dia; metas: Metas; cumplido: boolean; comidas: { id: string; nombre: string }[]; futuro: boolean }) {
   const filas = [['prot', 'Proteínas'], ['carb', 'Carbohidratos'], ['gras', 'Grasas']] as const;
-  const porComida = comidas.map((c) => ({ ...c, kcal: sumar(dia.comidas[c.id] ?? []).kcal })).filter((c) => c.kcal > 0);
+  // El color sigue a la comida (su lugar en tu lista), no a cuánto comiste: no cambia de un día a otro.
+  // Más de 8 comidas: la 9.ª en adelante se juntan en "Otras" (nunca se repite un color).
+  const conColor = comidas.map((c, i) => ({ ...c, kcal: sumar(dia.comidas[c.id] ?? []).kcal, color: i < 8 ? `var(--serie-${i + 1})` : 'var(--serie-otras)' }));
+  const otras = conColor.slice(8).reduce((s, c) => s + c.kcal, 0);
+  const porComida = [...conColor.slice(0, 8), ...(otras ? [{ id: 'otras', nombre: 'Otras', kcal: otras, color: 'var(--serie-otras)' }] : [])].filter((c) => c.kcal > 0);
   const total = porComida.reduce((s, c) => s + c.kcal, 0);
-  const tonos = [1, 0.75, 0.55, 0.4, 0.28, 0.85, 0.65, 0.48, 0.34, 0.22];
   return (
     <section className="tarjeta" data-testid="resumen-dia">
       <div className="flex items-center justify-between">
@@ -362,7 +378,7 @@ function Nutrientes({ dia, metas, cumplido, comidas }: { dia: Dia; metas: Metas;
         <thead>
           <tr className="text-[11px] uppercase tracking-[.08em] text-mu">
             <th className="pb-1.5 text-left font-semibold" scope="col"><span className="sr-only">Nutriente</span></th>
-            <th className="pb-1.5 text-right font-semibold" scope="col">Comido</th>
+            <th className="pb-1.5 text-right font-semibold" scope="col">{futuro ? 'Plan' : 'Comido'}</th>
             <th className="pb-1.5 text-right font-semibold" scope="col">Meta</th>
             <th className="pb-1.5 text-right font-semibold" scope="col">Quedan</th>
           </tr>
@@ -385,13 +401,13 @@ function Nutrientes({ dia, metas, cumplido, comidas }: { dia: Dia; metas: Metas;
         <div className="etiqueta mb-2">Calorías por comida</div>
         {total ? (
           <>
-            <div className="flex h-3 overflow-hidden rounded-full bg-ln2" aria-hidden>
-              {porComida.map((c, i) => <div key={c.id} style={{ width: `${(c.kcal / total) * 100}%`, background: 'var(--gold)', opacity: tonos[i % tonos.length] }} className="border-r border-sf last:border-0" />)}
+            <div className="flex h-3 gap-[2px]" aria-hidden>
+              {porComida.map((c) => <div key={c.id} title={`${c.nombre}: ${formatoNumero(c.kcal)} kcal`} style={{ width: `${(c.kcal / total) * 100}%`, background: c.color }} className="min-w-[3px] first:rounded-l-[4px] last:rounded-r-[4px]" />)}
             </div>
             <ul className="mt-2.5 flex flex-col gap-1 text-[13px]" data-testid="por-comida">
-              {porComida.map((c, i) => (
+              {porComida.map((c) => (
                 <li key={c.id} className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: 'var(--gold)', opacity: tonos[i % tonos.length] }} />
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: c.color }} />
                   <span className="min-w-0 flex-1 truncate">{c.nombre}</span>
                   <span className="num">{formatoNumero(c.kcal)}</span>
                   <span className="w-10 text-right text-mu">{Math.round((c.kcal / total) * 100)} %</span>
