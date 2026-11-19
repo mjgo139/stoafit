@@ -1,6 +1,13 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.6.1',
+    fecha: '2026-11-19',
+    cambios: [
+      'Ícono nuevo: el laurel y la manzana más grandes, igual que el resto de la familia de íconos.',
+    ],
+  },
+  {
     version: '1.6.0',
     fecha: '2026-11-19',
     cambios: [

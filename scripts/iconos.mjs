@@ -22,7 +22,8 @@ export function svg(forma = 'cuadrado') {
   const fondo = forma === 'circulo' ? '<circle cx="256" cy="256" r="256" fill="#14120E"/>'
     : forma === 'lleno' ? '<rect width="512" height="512" fill="#14120E"/>'
     : '<rect width="512" height="512" rx="112" fill="#14120E"/>';
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">${fondo}${laurel}${manzana}</svg>`;
+  // v1.6.1: laurel y manzana agrandados ×1,42 desde el centro (como el resto de la familia de íconos: mancuerna, check, libro, busto)
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">${fondo}<g transform="translate(256 256) scale(1.42) translate(-256 -256)">${laurel}${manzana}</g></svg>`;
 }
 
 const navegador = await chromium.launch({ executablePath: process.env.PW_CHROME || undefined });
