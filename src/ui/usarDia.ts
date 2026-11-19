@@ -71,7 +71,8 @@ export function useDia(fecha = claveDia()) {
   /** Suma todas las comidas de otro día a este (repetir el día de ayer) */
   const sumarDia = useCallback((origen: Dia) => guardar((d) => ({ ...d, comidas: sumarComidas(d.comidas, origen.comidas, nuevoId) })), [guardar]);
 
-  return { dia, agregar, quitar, reemplazar, agua, reemplazarComidas, sumarDia };
+  // Al cambiar de día, hasta que llega el nuevo no se muestra el anterior (evita ver un instante las comidas de otro día)
+  return { dia: dia && dia.fecha === fecha ? dia : null, agregar, quitar, reemplazar, agua, reemplazarComidas, sumarDia };
 }
 
 /** Copiar ítems a cualquier día y comida (copiar a mañana, la cena de ayer al almuerzo de hoy…) */
