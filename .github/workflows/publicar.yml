@@ -1,0 +1,131 @@
+name: Publicar
+
+# En cada push a main: pruebas web → pruebas de reglas → APK → deploy a Firebase.
+# Si una prueba falla, no se publica.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: publicar
+  cancel-in-progress: false
+
+env:
+  PROYECTO: stoafit-app
+
+jobs:
+  pruebas-web:
+    name: 1 · Pruebas web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - name: Lógica (vitest)
+        run: npm test
+      - name: Tipos y armado
+        run: npm run build
+      - name: Instalar navegador de pruebas
+        run: npx playwright install --with-deps chromium
+      - name: Pantallas en celular y PC (Playwright)
+        run: npm run test:e2e
+      # Si el espacio de GitHub para adjuntos está lleno, no frena la publicación
+      - name: Guardar capturas
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas
+          path: |
+            capturas/
+            playwright-report/
+          retention-days: 2
+
+  pruebas-reglas:
+    name: 2 · Pruebas de reglas (emulador)
+    needs: pruebas-web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - run: npm ci
+      - name: Reglas de Firestore
+        run: npm run test:reglas
+
+  apk:
+    name: 3 · APK de Android
+    needs: pruebas-reglas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17, cache: gradle }
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync android
+      - name: Armar APK
+        working-directory: android
+        run: chmod +x gradlew && ./gradlew assembleDebug --no-daemon
+      - run: cp android/app/build/outputs/apk/debug/app-debug.apk stoafit.apk
+      # La APK pasa al paso de deploy por la caché (no usa el cupo de adjuntos de GitHub)
+      - uses: actions/cache/save@v4
+        with:
+          path: stoafit.apk
+          key: apk-${{ github.sha }}
+
+  deploy:
+    name: 4 · Deploy a Firebase
+    needs: apk
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npm run build
+      - name: Revisar credencial
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$SA" ]; then
+            echo "::error::Falta el secreto FIREBASE_SERVICE_ACCOUNT en GitHub (Settings → Secrets and variables → Actions). Las pruebas pasaron, pero no se puede publicar sin él."
+            exit 1
+          fi
+      - name: Publicar hosting, reglas e índices
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          echo "$SA" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          npx firebase deploy --only hosting,firestore --project "$PROYECTO" --non-interactive --force
+          rm -f "$RUNNER_TEMP/sa.json"
+
+      # El plan gratis de Firebase no permite archivos .apk en Hosting: la APK se publica como Release de GitHub
+      - name: Bajar la APK armada
+        uses: actions/cache/restore@v4
+        with:
+          path: stoafit.apk
+          key: apk-${{ github.sha }}
+          fail-on-cache-miss: true
+      - run: mkdir -p apk && mv stoafit.apk apk/stoafit.apk
+      - name: Publicar la APK en GitHub (Release "apk-ultima")
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          NOTAS="StoaFit v$VERSION · commit ${GITHUB_SHA::7} · $(date -u +%Y-%m-%d)"
+          if gh release view apk-ultima >/dev/null 2>&1; then
+            gh release upload apk-ultima apk/stoafit.apk --clobber
+            gh release edit apk-ultima --title "StoaFit v$VERSION (APK)" --notes "$NOTAS"
+          else
+            gh release create apk-ultima apk/stoafit.apk --title "StoaFit v$VERSION (APK)" --notes "$NOTAS" --target "$GITHUB_SHA"
+          fi

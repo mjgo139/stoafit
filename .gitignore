@@ -1,0 +1,13 @@
+node_modules
+dist
+capturas
+playwright-report
+test-results
+*.log
+.firebase
+android/app/build
+android/build
+android/.gradle
+android/local.properties
+.env.local
+*.apk

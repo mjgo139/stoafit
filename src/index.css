@@ -1,0 +1,181 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  StoaFit · familia estoica (Stoica y TITANUS).
+  "Mármol" (claro): piedra #ECE6DB y bronce #7E5D22. Oscuro: #14120E y bronce #C9A66B.
+  Detalle propio: un color de acento para las comidas y macros (oliva, terracota o bronce).
+*/
+:root, :root[data-theme='light'] {
+  --bg:#ece6db; --bg2:#e4dccd; --bg3:#f3eee5;
+  --sf:#faf7f1; --sf2:#f4efe6; --nav:#f6f2ea;
+  --ln:#e0d7c5; --ln2:#e8e0d0; --ln3:#c9b994;
+  --tx:#1b1712; --tx2:#2f2a22; --mu:#5a5244; --mu2:#7a705e;
+  --gold:#7e5d22; --goldh:#6a4d1b; --gold2:#a9884f; --goldbg:#efe3c8; --on:#fbf8f1;
+  --oro-grad: linear-gradient(#8a6829, #7e5d22);
+  --panel-grad: var(--sf);
+  --ok:#3f6e38; --okbg:#e3ecd9; --verde:#3f6e38; --miss:#9c3f2e; --missbg:#f4ded6;
+  --sombra: 0 1px 2px rgba(60,45,20,.05), 0 6px 18px rgba(60,45,20,.07);
+  --lateral:#1b1813;
+  --f-marca:'Playfair Display', Georgia, serif;
+  --f-display:'Playfair Display', Georgia, serif;
+  --f-body:Inter, system-ui, sans-serif;
+  --acento:#5e6b33; --acentobg:#e6e8d3;
+  --prot:#9c3f2e; --carb:#a9884f; --gras:#5e6b33;
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  --bg:#14120e; --bg2:#1a1813; --bg3:#1d1a14;
+  --sf:#1d1a15; --sf2:#24201a; --nav:#18150f;
+  --ln:#353026; --ln2:#2b261f; --ln3:#5a4c33;
+  --tx:#f3eddf; --tx2:#e2d9c6; --mu:#b9ad97; --mu2:#8f846f;
+  --gold:#c9a66b; --goldh:#dbbb84; --gold2:#8a6d3c; --goldbg:#2c2417; --on:#14120e;
+  --oro-grad: linear-gradient(#d2b179, #c9a66b);
+  --panel-grad: var(--sf);
+  --ok:#8bb37f; --okbg:#1f2a1c; --verde:#8bb37f; --miss:#d48a74; --missbg:#33201a;
+  --sombra: 0 8px 22px rgba(0,0,0,.35);
+  --lateral:#0f0d0a;
+  --acento:#a3b06c; --acentobg:#262a1b;
+  --prot:#d48a74; --carb:#c9a66b; --gras:#a3b06c;
+  color-scheme: dark;
+}
+:root[data-acento='terracota'] { --acento:#a4512f; --acentobg:#f1dccf; --gras:#a4512f; --prot:#5e6b33; }
+:root[data-theme='dark'][data-acento='terracota'] { --acento:#d9875f; --acentobg:#33211a; --gras:#d9875f; --prot:#a3b06c; }
+:root[data-acento='bronce'] { --acento:var(--gold); --acentobg:var(--goldbg); }
+
+html, body, #root { min-height: 100%; }
+body {
+  margin: 0;
+  color: var(--tx);
+  font-family: var(--f-body);
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  background: var(--bg);
+}
+#root { position: relative; z-index: 1; }
+input, select, textarea, button { font: inherit; color: inherit; }
+::selection { background: var(--goldbg); }
+input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+@layer components {
+  .marca { font-family: var(--f-marca); font-weight: 700; letter-spacing: .06em; }
+  .etiqueta { @apply text-[11.5px] font-bold uppercase text-mu; letter-spacing: .14em; }
+  /* Familia estoica (igual que Stoica): título de sección, fichas, panel del día y laurel de fondo */
+  .grupo { @apply text-[11.5px] font-bold uppercase whitespace-nowrap; letter-spacing: .14em; color: var(--gold); }
+  .ficha {
+    @apply inline-flex items-center gap-2 rounded-full border border-ln2 px-3 text-[12.5px] font-bold text-tx;
+    height: 32px; background: color-mix(in srgb, var(--bg) 70%, transparent);
+  }
+  a.ficha:hover, button.ficha:hover { border-color: var(--gold); }
+  .panel-dia {
+    @apply relative overflow-hidden rounded-[20px] border border-gold2;
+    background: linear-gradient(120deg, color-mix(in srgb, var(--gold) 12%, var(--sf)) 0%, var(--sf) 62%);
+    box-shadow: var(--sombra);
+    padding: 20px 20px 18px;
+  }
+  @media (min-width: 1024px) { .panel-dia { padding: 30px 34px; } }
+  .laurel-fondo { position: absolute; right: -30px; top: -20px; opacity: .13; pointer-events: none; }
+  .titulo { font-family: var(--f-display); @apply font-semibold text-tx; font-size: 30px; line-height: 1.12; letter-spacing: -.005em; }
+  @media (min-width: 1024px) { .titulo { font-size: 36px; } }
+  .titulo-tarjeta { font-family: var(--f-display); @apply font-semibold text-tx text-[20px] leading-tight; }
+  .num { font-family: var(--f-display); @apply font-semibold; font-variant-numeric: tabular-nums; }
+  .oro { color: var(--gold); }
+  .tarjeta {
+    background: var(--panel-grad);
+    @apply rounded-[16px] border border-ln; box-shadow: var(--sombra); padding: 15px 16px;
+  }
+  @media (min-width: 1024px) { .tarjeta { padding: 18px 20px; } }
+  .hero {
+    @apply rounded-[16px] border border-gold2 relative overflow-hidden text-center bg-sf;
+    padding: 20px 14px;
+  }
+  .acento { color: var(--acento); }
+  .divisor { height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full font-bold text-[14px] uppercase px-6 transition-transform select-none border;
+    letter-spacing: .1em; height: 52px; background: var(--gold); color: var(--on); border-color: var(--gold);
+  }
+  .btn:hover { background: var(--goldh); }
+  .btn:active { transform: scale(.98); }
+  .btn:disabled { opacity: .5; }
+  .btn-sec {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-ln3 text-tx font-semibold text-[14px] px-5 transition-colors select-none;
+    height: 44px; background: transparent;
+  }
+  .btn-sec:hover { border-color: var(--gold); }
+  .btn-redondo {
+    @apply inline-flex items-center justify-center rounded-full border shrink-0;
+    width: 48px; height: 48px; background: var(--gold); color: var(--on); border-color: var(--gold);
+  }
+  .campo { @apply w-full rounded-[12px] border border-ln bg-sf px-3 outline-none text-tx; height: 48px; }
+  .campo:focus { border-color: var(--gold); }
+  .fila { @apply flex items-center gap-3 border-b border-ln2; min-height: 56px; }
+  .chip { @apply inline-flex items-center justify-center rounded-full border border-ln px-3 h-8 text-[13px] font-medium text-tx2; background: var(--sf); }
+  .chip-on { border-color: var(--gold); color: var(--on); font-weight: 700; background: var(--gold); }
+  .toque { min-width: 44px; min-height: 44px; }
+}
+
+@keyframes entrar { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.entrar { animation: entrar .32s ease both; }
+@keyframes rebote { 0% { transform: scale(.6); opacity: 0 } 60% { transform: scale(1.08); opacity: 1 } 100% { transform: scale(1) } }
+.rebote { animation: rebote .38s ease both; }
+@keyframes subir { from { transform: translateY(100%); } to { transform: none; } }
+.subir { animation: subir .34s cubic-bezier(.22,1,.36,1) both; }
+@keyframes bajar { from { transform: none; } to { transform: translateY(100%); } }
+@keyframes aparecer { from { opacity: 0; } to { opacity: 1; } }
+@keyframes desaparecer { from { opacity: 1; } to { opacity: 0; } }
+@keyframes zoom-in { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes zoom-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(10px) scale(.97); } }
+.velo-entra { animation: aparecer .3s ease both; }
+.velo-sale { animation: desaparecer .22s ease both; }
+.hoja-entra { animation: subir .34s cubic-bezier(.22,1,.36,1) both; }
+.hoja-sale { animation: bajar .22s cubic-bezier(.4,0,1,1) both; }
+@media (min-width: 1024px) {
+  .hoja-entra { animation: zoom-in .28s cubic-bezier(.22,1,.36,1) both; }
+  .hoja-sale { animation: zoom-out .2s ease both; }
+}
+/* Cambio de pantalla: aparece suave y sube apenas (sin dejar transform al terminar) */
+@keyframes pagina { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.pagina { animation: pagina .38s cubic-bezier(.2,.8,.2,1) backwards; }
+@media (prefers-reduced-motion: reduce) {
+  .pagina, .hoja-entra, .hoja-sale, .velo-entra, .velo-sale, .subir, .entrar { animation-duration: 1ms !important; }
+}
+.pb-seguro { padding-bottom: calc(env(safe-area-inset-bottom) + 92px); }
+@media (min-width: 1024px) { .pb-seguro { padding-bottom: 48px; } }
+.mascara-izq { mask-image: linear-gradient(to right, transparent, #000 40%); -webkit-mask-image: linear-gradient(to right, transparent, #000 40%); }
+.mascara-vert { mask-image: linear-gradient(to bottom, transparent 0%, #000 12%, #000 82%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 12%, #000 82%, transparent 100%); }
+
+/* Regla deslizable de la bienvenida: sin barra de desplazamiento, con imán suave */
+.regla { scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); }
+.regla::-webkit-scrollbar { display: none; }
+
+/* Esqueletos: silueta de lo que carga, con un brillo dorado muy suave que recorre */
+.esqueleto {
+  border-radius: 12px;
+  background: linear-gradient(100deg, var(--sf2) 30%, color-mix(in srgb, var(--gold) 9%, var(--sf2)) 50%, var(--sf2) 70%);
+  background-size: 220% 100%;
+  animation: brillo 1.5s ease-in-out infinite;
+}
+@keyframes brillo { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+.aparece { animation: aparecer .3s ease both; }
+
+/* Fundido cruzado entre pantallas (navegadores con View Transitions); la barra de pestañas queda quieta */
+::view-transition-old(root) { animation: .22s ease both desaparecer; }
+::view-transition-new(root) { animation: .32s cubic-bezier(.2,.8,.2,1) both pagina; }
+.pestanas-fijas { view-transition-name: pestanas; }
+.lateral-fija { view-transition-name: lateral; }
+::view-transition-group(pestanas), ::view-transition-group(lateral) { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto { animation: none; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+}
+
+/* Anillo de calorías del panel del día */
+.anillo-pista { stroke: var(--ln2); }
+.anillo-valor { stroke: var(--gold); transition: stroke-dashoffset .6s cubic-bezier(.2,.8,.2,1); }
+.anillo-pasado { stroke: var(--miss); }
+/* Vasos de agua */
+.vaso { @apply flex h-10 w-8 items-end justify-center rounded-b-[8px] rounded-t-[3px] border-2 border-ln3 transition-colors; }
+.vaso-lleno { border-color: var(--acento); background: linear-gradient(to top, color-mix(in srgb, var(--acento) 55%, transparent) 70%, transparent 70%); }
