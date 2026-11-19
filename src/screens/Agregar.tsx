@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { BIBLIOTECA, GRUPOS, buscar, buscarAlimento } from '../lib/alimentos';
 import { claveDia, fechaCorta, formatoNumero, nuevoId, sumarDias } from '../lib/logica';
-import { COMIDAS, NOMBRE_COMIDA, alimentoDeEtiqueta, copiarItems, etiquetaDe, macrosDe, sumar, type Etiqueta } from '../lib/nutricion';
+import { COMIDAS, NOMBRE_COMIDA, alimentoDeEtiqueta, copiarItems, etiquetaDe, itemDe, sumar, type Etiqueta } from '../lib/nutricion';
 import { FUENTE_OFF, PRODUCTOS_PRUEBA, buscarEnOFF } from '../lib/openfoodfacts';
 import { alimentoDeProducto, codigoDeId, productosEnCache, recordarProducto } from '../lib/productos';
 import type { Alimento, ComidaGuardada, Dia, GrupoAlimento, ItemComida, TipoComida } from '../lib/tipos';
@@ -10,12 +10,13 @@ import { ElegirPorcion, FormEtiqueta } from '../ui/alimento';
 import { useSesion } from '../ui/contexto';
 import { Escaner } from '../ui/Escaner';
 import { Icono } from '../ui/Icono';
-import { Celebracion, Encabezado, Hoja, Vacio } from '../ui/piezas';
+import { Celebracion, Hoja, Vacio } from '../ui/piezas';
+import { textoCantidad } from '../ui/nutri';
 import { useCopiar, useDia } from '../ui/usarDia';
 import { useProductos } from '../ui/usarProductos';
 import { mensajeError } from '../data/repo';
 
-type Pestana = 'recientes' | 'favoritos' | 'ayer' | 'guardadas' | 'mios' | 'todos';
+type Pestana = 'recientes' | 'favoritos' | 'comidas' | 'mios' | 'todos';
 
 /** Buscar alimentos (o escanear el código de barras) y sumarlos a una comida */
 export default function Agregar() {
@@ -28,7 +29,11 @@ export default function Agregar() {
   const copiarA = useCopiar();
   const [texto, setTexto] = useState('');
   const [grupo, setGrupo] = useState<GrupoAlimento | null>(null);
-  const [pestana, setPestana] = useState<Pestana>((params.get('ver') as Pestana) || 'recientes');
+  const [pestana, setPestana] = useState<Pestana>(() => {
+    const v = params.get('ver');
+    return v === 'guardadas' || v === 'ayer' ? 'comidas' : (v as Pestana) || 'recientes';
+  });
+  const [rapida, setRapida] = useState(false);
   const [propios, setPropios] = useState<Alimento[]>([]);
   const [guardadas, setGuardadas] = useState<ComidaGuardada[]>([]);
   const [previos, setPrevios] = useState<Dia[]>([]);
@@ -54,6 +59,14 @@ export default function Agregar() {
   const favoritos = perfil.favoritos ?? [];
   const ayer = previos.find((d) => d.fecha === sumarDias(fecha, -1));
   const deAyer = ayer?.comidas[comida] ?? [];
+  // La última vez que comiste cada alimento: con eso el "+" lo agrega igual, de un toque
+  const ultimaVez = useMemo(() => {
+    const m = new Map<string, ItemComida>();
+    for (const d of [...previos].sort((a, b) => (a.fecha < b.fecha ? 1 : -1))) {
+      for (const l of Object.values(d.comidas)) for (const i of l ?? []) if (!m.has(i.alimentoId)) m.set(i.alimentoId, i);
+    }
+    return m;
+  }, [previos]);
   const recientes = useMemo(() => {
     const vistos = new Map<string, number>();
     for (const d of previos) for (const l of Object.values(d.comidas)) for (const i of l ?? []) vistos.set(i.alimentoId, (vistos.get(i.alimentoId) ?? 0) + 1);
@@ -135,136 +148,177 @@ export default function Agregar() {
 
   const cambiarComida = (c: TipoComida) => setParams({ comida: c, fecha }, { replace: true });
   const yaHay = dia?.comidas[comida] ?? [];
-  const PESTANAS: [Pestana, string][] = [['recientes', 'Recientes'], ['favoritos', 'Favoritos'], ['ayer', 'Lo de ayer'], ['guardadas', 'Guardadas'], ['mios', 'Míos'], ['todos', 'Todos']];
+  const PESTANAS: [Pestana, string][] = [['recientes', 'Recientes'], ['favoritos', 'Favoritos'], ['comidas', 'Mis comidas'], ['mios', 'Mis alimentos'], ['todos', 'Todos']];
+  const buscandoTexto = !!texto.trim();
+  /** Cómo se agrega con el "+": como la última vez, o la primera porción */
+  const rapido = (a: Alimento) => {
+    const u = ultimaVez.get(a.id);
+    return itemDe(a, u?.porcion ?? a.porciones[0]?.nombre ?? '100 g', u?.cantidad ?? 1, nuevoId());
+  };
 
   return (
     <div className="lg:mx-auto lg:max-w-[880px]">
-      <Encabezado atras etiqueta={`${fecha === claveDia() ? 'Hoy' : fechaCorta(fecha)} · ${NOMBRE_COMIDA[comida]}`} titulo="¿Qué comiste?"
-        linea={yaHay.length ? `${yaHay.length} alimento${yaHay.length > 1 ? 's' : ''} · ${formatoNumero(sumar(yaHay).kcal)} kcal en ${NOMBRE_COMIDA[comida].toLowerCase()}` : 'Buscá por nombre, escaneá el código o elegí de tus recientes.'}
-        accion={agregados > 0 ? <button className="btn h-10 px-4 text-[12px]" onClick={() => nav(-1)}>Listo</button> : undefined} />
-
-      <div className="-mx-[17px] flex gap-1.5 overflow-x-auto px-[17px] pb-1 lg:mx-0 lg:px-0" role="radiogroup" aria-label="Comida">
-        {COMIDAS.map((c) => (
-          <button key={c.id} role="radio" aria-checked={c.id === comida} onClick={() => cambiarComida(c.id)} className={`chip shrink-0 ${c.id === comida ? 'chip-on' : ''}`}>{c.nombre}</button>
-        ))}
-      </div>
-
-      <div className="mt-4 flex gap-2">
-        <div className="relative flex-1">
-          <Icono n="buscar" size={19} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-mu" />
-          <input className="campo pl-11" placeholder="Chipa, arroz, banana…" value={texto} onChange={(e) => { setTexto(e.target.value); setGrupo(null); }}
-            aria-label="Buscar alimento" />
+      <header className="entrar sticky top-0 z-20 -mx-[17px] bg-bg px-[17px] pb-3 pt-4 lg:static lg:mx-0 lg:px-0 lg:pt-8">
+        <div className="flex min-h-[48px] items-center gap-1">
+          <button aria-label="Volver" className="toque -ml-3 flex shrink-0 items-center justify-center oro" onClick={() => nav(-1)}><Icono n="atras" /></button>
+          <div className="relative min-w-0 flex-1 text-center">
+            <h1 className="sr-only">¿Qué comiste?</h1>
+            <label className="relative inline-flex max-w-full items-center gap-1.5">
+              <span className="font-display truncate text-[26px] font-semibold leading-none oro">{NOMBRE_COMIDA[comida]}</span>
+              <Icono n="abajo" size={20} className="shrink-0 oro" />
+              <select className="absolute inset-0 cursor-pointer opacity-0" value={comida} onChange={(e) => cambiarComida(e.target.value as TipoComida)} aria-label="Comida">
+                {COMIDAS.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+              </select>
+            </label>
+            <div className="mt-1 truncate text-[12.5px] text-mu" data-testid="ya-en-comida">
+              {fecha === claveDia() ? 'Hoy' : fechaCorta(fecha)}{yaHay.length ? ` · ${yaHay.length} alimento${yaHay.length > 1 ? 's' : ''} · ${formatoNumero(sumar(yaHay).kcal)} kcal` : ' · todavía nada'}
+            </div>
+          </div>
+          <div className="flex w-[72px] shrink-0 justify-end">
+            {agregados > 0 && <button className="btn h-10 px-4 text-[12px]" onClick={() => nav(-1)}>Listo</button>}
+          </div>
         </div>
-        <button className="btn h-12 w-12 shrink-0 px-0" aria-label="Escanear código de barras" onClick={() => setEscanear(true)} data-testid="boton-escanear">
-          <Icono n="barras" size={21} />
-        </button>
-      </div>
-      {buscando && <p className="mt-2 text-[13px] text-mu" role="status">Buscando el código {buscando}…</p>}
-
-      {!texto.trim() && (
-        <>
-          <div className="-mx-[17px] mt-4 flex gap-1 overflow-x-auto border-b border-ln2 px-[17px] lg:mx-0 lg:px-0" role="tablist">
+        <div className="relative mt-3">
+          <Icono n="buscar" size={19} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-mu" />
+          <input className="campo h-12 rounded-full pl-11 pr-14" placeholder="Buscá un alimento" value={texto} onChange={(e) => { setTexto(e.target.value); setGrupo(null); }}
+            aria-label="Buscar alimento" />
+          <button className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full oro hover:bg-goldbg" aria-label="Escanear código de barras" onClick={() => setEscanear(true)} data-testid="boton-escanear">
+            <Icono n="barras" size={20} />
+          </button>
+        </div>
+        {!buscandoTexto && (
+          <div className="-mx-[17px] mt-2 flex overflow-x-auto border-b border-ln2 px-[17px] lg:mx-0 lg:px-0" role="tablist">
             {PESTANAS.map(([v, t]) => (
-              <button key={v} role="tab" aria-selected={pestana === v && !grupo} onClick={() => { setPestana(v); setGrupo(null); }}
-                className={`h-10 shrink-0 border-b-2 px-2.5 text-[13.5px] font-semibold ${pestana === v && !grupo ? 'border-gold oro' : 'border-transparent text-mu'}`}>{t}</button>
+              <button key={v} role="tab" aria-selected={pestana === v} onClick={() => { setPestana(v); setGrupo(null); }}
+                className={`h-11 shrink-0 border-b-2 px-3 text-[14px] font-semibold ${pestana === v ? 'border-gold oro' : 'border-transparent text-mu'}`}>{t}</button>
             ))}
           </div>
-          <div className="-mx-[17px] mt-3 flex gap-1.5 overflow-x-auto px-[17px] pb-1 lg:mx-0 lg:flex-wrap lg:px-0">
-            {GRUPOS.map((g) => (
-              <button key={g.v} onClick={() => setGrupo(grupo === g.v ? null : g.v)} className={`chip h-7 shrink-0 text-[12px] ${grupo === g.v ? 'chip-on' : ''}`}>{g.t}</button>
-            ))}
-          </div>
-        </>
+        )}
+      </header>
+      {buscando && <p className="mb-2 text-[13px] text-mu" role="status">Buscando el código {buscando}…</p>}
+
+      {!buscandoTexto && pestana === 'recientes' && (
+        <div className="mt-2 grid grid-cols-2 gap-3" data-testid="accesos">
+          <button className="tarjeta flex min-h-[112px] flex-col items-center justify-center gap-2 text-center oro hover:border-gold2" onClick={() => setEscanear(true)}>
+            <Icono n="barras" size={30} />
+            <span className="text-[14px] font-semibold leading-tight">Escanear un código<br />de barras</span>
+          </button>
+          <button className="tarjeta flex min-h-[112px] flex-col items-center justify-center gap-2 text-center oro hover:border-gold2" onClick={() => setRapida(true)}>
+            <Icono n="llama" size={30} />
+            <span className="text-[14px] font-semibold leading-tight">Adición rápida<br /><span className="font-normal text-mu">solo calorías</span></span>
+          </button>
+        </div>
       )}
 
-      <div className="mt-4">
-        {!texto.trim() && !grupo && pestana === 'ayer' ? (
-          deAyer.length ? (
-            <div className="tarjeta" data-testid="lo-de-ayer">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <div className="font-display text-[18px] font-semibold">{NOMBRE_COMIDA[comida]} de ayer</div>
-                  <div className="text-[13px] text-mu">{formatoNumero(sumar(deAyer).kcal)} kcal · {deAyer.length} alimentos</div>
+      {!buscandoTexto && pestana === 'todos' && (
+        <div className="-mx-[17px] mt-3 flex gap-1.5 overflow-x-auto px-[17px] pb-1 lg:mx-0 lg:flex-wrap lg:px-0">
+          {GRUPOS.map((g) => (
+            <button key={g.v} onClick={() => setGrupo(grupo === g.v ? null : g.v)} className={`chip h-8 shrink-0 text-[12.5px] ${grupo === g.v ? 'chip-on' : ''}`}>{g.t}</button>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-5">
+        {!buscandoTexto && pestana === 'comidas' ? (
+          <div className="flex flex-col gap-5">
+            <section>
+              <h2 className="titulo-tarjeta mb-2.5">{NOMBRE_COMIDA[comida]} de ayer</h2>
+              {deAyer.length ? (
+                <div className="tarjeta" data-testid="lo-de-ayer">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-[14px] text-mu">{formatoNumero(sumar(deAyer).kcal)} kcal · {deAyer.length} alimentos</div>
+                    <button className="btn h-10 px-4 text-[12px]" onClick={() => sumarItems(copiarItems(deAyer, nuevoId), `Repetiste ${NOMBRE_COMIDA[comida].toLowerCase()} de ayer`)}>
+                      <Icono n="repetir" size={16} />Repetir
+                    </button>
+                  </div>
+                  <ul className="mt-3 border-t border-ln2 pt-2 text-[14px]">
+                    {deAyer.map((i) => <li key={i.id} className="flex justify-between gap-3 py-1"><span className="min-w-0 truncate">{i.nombre}</span><span className="shrink-0 text-mu">{formatoNumero(i.kcal)} kcal</span></li>)}
+                  </ul>
                 </div>
-                <button className="btn h-10 px-4 text-[12px]" onClick={() => sumarItems(copiarItems(deAyer, nuevoId), `Repetiste ${NOMBRE_COMIDA[comida].toLowerCase()} de ayer`)}>
-                  <Icono n="repetir" size={16} />Repetir
-                </button>
-              </div>
-              <ul className="mt-3 border-t border-ln2 pt-2 text-[14px]">
-                {deAyer.map((i) => <li key={i.id} className="flex justify-between py-1"><span>{i.nombre}</span><span className="text-mu">{formatoNumero(i.kcal)} kcal</span></li>)}
-              </ul>
-            </div>
-          ) : <p className="tarjeta py-6 text-center text-[14px] text-mu">Ayer no registraste {NOMBRE_COMIDA[comida].toLowerCase()}. En el Diario podés repetir el día entero o copiar otra comida.</p>
-        ) : !texto.trim() && !grupo && pestana === 'guardadas' ? (
-          guardadas.length ? (
-            <ul className="grid grid-cols-1 gap-2.5 lg:grid-cols-2" aria-label="Comidas guardadas">
-              {guardadas.map((g) => {
-                const t = sumar(g.items);
-                return (
-                  <li key={g.id} className="tarjeta" data-testid="guardada">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="font-display text-[18px] font-semibold">{g.nombre}</div>
-                        <div className="text-[13px] text-mu">{formatoNumero(t.kcal)} kcal · {g.items.map((i) => i.nombre).join(', ')}</div>
-                      </div>
-                      <button className="btn h-10 shrink-0 px-4 text-[12px]" onClick={() => sumarItems(copiarItems(g.items, nuevoId), `"${g.nombre}" agregada`)}>Agregar</button>
-                    </div>
-                    <button className="mt-2 text-[12px] text-mu2 hover:text-miss" onClick={async () => {
-                      await repo.borrarGuardada(usuario.uid, g.id);
-                      setGuardadas((l) => l.filter((x) => x.id !== g.id));
-                      aviso(`"${g.nombre}" borrada`);
-                    }}>Borrar</button>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <Vacio titulo="Comidas guardadas" linea='En el Diario, tocá "Guardar" debajo de una comida (por ejemplo tu desayuno de siempre) y la agregás de un toque cualquier día.' />
-          )
-        ) : lista.length === 0 ? (
-          pestana === 'mios' && !texto.trim() && !grupo ? (
-            <Vacio titulo="Tus alimentos y recetas" linea="Cargá productos con su etiqueta (o escaneándolos) y las recetas de tu casa: quedan para la próxima.">
-              <div className="flex flex-wrap justify-center gap-2">
-                <button className="btn" onClick={() => setForm({ inicial: {} })}><Icono n="mas" size={18} />Crear alimento</button>
-                <Link className="btn-sec h-[52px]" to="/receta"><Icono n="receta" size={18} />Crear receta</Link>
-              </div>
-            </Vacio>
-          ) : (
-            <div className="tarjeta py-6 text-center text-[14px] text-mu">
-              {texto.trim() ? <>No encontramos “{texto}”.</> : pestana === 'favoritos' ? 'Tocá la estrella de un alimento para tenerlo acá.' : 'Todavía no hay recientes. Buscá un alimento arriba.'}
-              {texto.trim() && <button className="mt-3 block w-full font-semibold oro" onClick={() => setForm({ inicial: { nombre: texto } })}>Crear “{texto}” como alimento propio →</button>}
-            </div>
-          )
+              ) : <p className="tarjeta py-5 text-center text-[14px] text-mu">Ayer no registraste {NOMBRE_COMIDA[comida].toLowerCase()}. En el Diario, "Repetir…" trae cualquier comida de otro día.</p>}
+            </section>
+            <section>
+              <h2 className="titulo-tarjeta mb-2.5">Guardadas</h2>
+              {guardadas.length ? (
+                <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2" aria-label="Comidas guardadas">
+                  {guardadas.map((g) => {
+                    const t = sumar(g.items);
+                    return (
+                      <li key={g.id} className="tarjeta" data-testid="guardada">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="font-display text-[18px] font-semibold">{g.nombre}</div>
+                            <div className="text-[13px] text-mu">{formatoNumero(t.kcal)} kcal · {g.items.map((i) => i.nombre).join(', ')}</div>
+                          </div>
+                          <button className="btn h-10 shrink-0 px-4 text-[12px]" onClick={() => sumarItems(copiarItems(g.items, nuevoId), `"${g.nombre}" agregada`)}>Agregar</button>
+                        </div>
+                        <button className="mt-2 text-[12px] text-mu2 hover:text-miss" onClick={async () => {
+                          await repo.borrarGuardada(usuario.uid, g.id);
+                          setGuardadas((l) => l.filter((x) => x.id !== g.id));
+                          aviso(`"${g.nombre}" borrada`);
+                        }}>Borrar</button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : <Vacio titulo="Comidas guardadas" linea='En el Diario, tocá "•••" en una comida y "Guardar como comida" (por ejemplo tu desayuno de siempre): la agregás de un toque cualquier día.' />}
+            </section>
+          </div>
         ) : (
-          <ul className="grid grid-cols-1 gap-2 lg:grid-cols-2" aria-label="Alimentos">
-            {lista.slice(0, 80).map((a) => {
-              const p = a.porciones[0];
-              const m = macrosDe(a, p.gramos);
-              return (
-                <li key={a.id}>
-                  <button className="tarjeta flex w-full items-center gap-3 py-3 text-left transition-colors hover:border-gold2" onClick={() => setElegido(a)} data-testid="alimento">
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-semibold">{a.nombre}
-                        {(a.propio || a.compartido) && <span className="ml-1.5 text-[11px] font-bold uppercase tracking-[.1em] acento">{a.receta ? 'receta' : a.codigo ? 'envasado' : 'propio'}</span>}
-                      </span>
-                      <span className="block truncate text-[13px] text-mu">{a.marca ? `${a.marca} · ` : ''}{p.nombre} · {formatoNumero(m.kcal)} kcal</span>
-                    </span>
-                    {favoritos.includes(a.id) && <Icono n="estrella" size={16} className="shrink-0 oro" />}
-                    <Icono n="mas" size={20} className="shrink-0 oro" />
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+          <>
+            {!buscandoTexto && pestana === 'mios' && (
+              <div className="mb-4 grid grid-cols-2 gap-3">
+                <button className="btn-sec" onClick={() => setForm({ inicial: {} })}><Icono n="mas" size={18} />Crear alimento</button>
+                <Link className="btn-sec" to="/receta"><Icono n="receta" size={18} />Crear receta</Link>
+              </div>
+            )}
+            {!buscandoTexto && lista.length > 0 && (
+              <h2 className="titulo-tarjeta mb-2.5">{pestana === 'recientes' ? 'Historial' : pestana === 'favoritos' ? 'Tus favoritos' : pestana === 'mios' ? 'Tus alimentos y recetas' : grupo ? GRUPOS.find((g) => g.v === grupo)?.t : 'Todos los alimentos'}</h2>
+            )}
+            {lista.length === 0 ? (
+              pestana === 'mios' && !buscandoTexto ? (
+                <Vacio titulo="Tus alimentos y recetas" linea="Cargá productos con su etiqueta (o escaneándolos) y las recetas de tu casa: quedan para la próxima." />
+              ) : (
+                <div className="tarjeta py-6 text-center text-[14px] text-mu">
+                  {buscandoTexto ? <>No encontramos “{texto}”.</> : pestana === 'favoritos' ? 'Tocá la estrella de un alimento para tenerlo acá.' : 'Todavía no hay historial. Buscá un alimento arriba.'}
+                  {buscandoTexto && <button className="mt-3 block w-full font-semibold oro" onClick={() => setForm({ inicial: { nombre: texto } })}>Crear “{texto}” como alimento propio →</button>}
+                </div>
+              )
+            ) : (
+              <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2" aria-label="Alimentos">
+                {lista.slice(0, 80).map((a) => {
+                  const it = rapido(a);
+                  return (
+                    <li key={a.id} className="tarjeta flex items-center gap-2 py-0 pr-3 transition-colors hover:border-gold2">
+                      <button className="min-w-0 flex-1 py-3.5 text-left" onClick={() => setElegido(a)} data-testid="alimento">
+                        <span className="flex items-center gap-1.5 font-semibold">
+                          <span className="truncate">{a.nombre}</span>
+                          {a.verificado && <span className="shrink-0" style={{ color: 'var(--verde)' }} aria-label="Verificado"><Icono n="check" size={14} /></span>}
+                          {favoritos.includes(a.id) && <Icono n="estrella" size={14} className="shrink-0 oro" />}
+                        </span>
+                        <span className="mt-0.5 block truncate text-[13px] text-mu">
+                          <b className="font-semibold text-tx">{formatoNumero(it.kcal)} kcal</b>{a.marca ? ` · ${a.marca}` : ''} · {textoCantidad(it)}
+                          {(a.propio || a.compartido) && <span className="ml-1.5 text-[10.5px] font-bold uppercase tracking-[.1em] acento">{a.receta ? 'receta' : a.codigo ? 'envasado' : 'propio'}</span>}
+                        </span>
+                      </button>
+                      <button className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-goldbg oro transition-transform active:scale-95" aria-label={`Agregar ${a.nombre} ya`}
+                        onClick={() => agregarElegido(a, it)}>
+                        <Icono n="mas" size={22} />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </>
         )}
       </div>
 
-      <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <button className="btn-sec" onClick={() => setEscanear(true)}><Icono n="barras" size={18} />Escanear código</button>
-        <button className="btn-sec" onClick={() => setForm({ inicial: { nombre: texto } })}><Icono n="mas" size={18} />Crear alimento</button>
-        <Link className="btn-sec" to="/receta"><Icono n="receta" size={18} />Crear receta</Link>
-      </div>
-      <p className="mt-3 text-center text-[12px] text-mu2">Valores aproximados de tablas generales. {FUENTE_OFF}.</p>
+      <p className="mt-6 text-center text-[12px] text-mu2">Valores aproximados de tablas generales. {FUENTE_OFF}.</p>
+
+      <Hoja abierta={rapida} alCerrar={() => setRapida(false)} etiqueta={NOMBRE_COMIDA[comida]} titulo="Adición rápida">
+        {rapida && <AdicionRapida alAgregar={async (it) => { setRapida(false); await sumarItems([it], `${it.nombre} agregado`); }} />}
+      </Hoja>
 
       <Hoja abierta={escanear} alCerrar={() => setEscanear(false)} etiqueta={NOMBRE_COMIDA[comida]} titulo="Escanear código de barras">
         {escanear && <Escaner alLeer={leerCodigo} />}
@@ -354,6 +408,32 @@ function sugerirComida(): TipoComida {
   if (h < 15) return 'almuerzo';
   if (h < 19) return 'merienda';
   return 'cena';
+}
+
+/** Sumar calorías (y si querés, macros) sin buscar el alimento */
+function AdicionRapida({ alAgregar }: { alAgregar: (i: ItemComida) => void }) {
+  const [nombre, setNombre] = useState('');
+  const [v, setV] = useState({ kcal: '', prot: '', carb: '', gras: '' });
+  const n = (s: string) => Math.max(0, Number(s.replace(',', '.')) || 0);
+  const campo = (k: keyof typeof v, t: string) => (
+    <label className="block min-w-0"><span className="etiqueta">{t}</span>
+      <input className="campo mt-1.5" inputMode="decimal" value={v[k]} onChange={(e) => setV((x) => ({ ...x, [k]: e.target.value.replace(/[^0-9.,]/g, '') }))} aria-label={t} />
+    </label>
+  );
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-[14px] text-mu">Para cuando sabés las calorías pero no querés buscar el alimento (una comida afuera, un antojo).</p>
+      <label className="block"><span className="etiqueta">Qué fue (opcional)</span>
+        <input className="campo mt-1.5" maxLength={60} value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej.: empanada en la feria" aria-label="Qué fue" />
+      </label>
+      {campo('kcal', 'Calorías')}
+      <div className="grid grid-cols-3 gap-2">{campo('prot', 'Prot. (g)')}{campo('carb', 'Carb. (g)')}{campo('gras', 'Grasas (g)')}</div>
+      <button className="btn w-full" disabled={!n(v.kcal)} onClick={() => alAgregar({
+        id: nuevoId(), alimentoId: 'rapida', nombre: nombre.trim() || 'Adición rápida', cantidad: 1, porcion: 'rápida', gramos: 0,
+        kcal: Math.round(n(v.kcal)), prot: n(v.prot), carb: n(v.carb), gras: n(v.gras),
+      })}>Agregar {n(v.kcal) ? `${formatoNumero(n(v.kcal))} kcal` : ''}</button>
+    </div>
+  );
 }
 
 function Reportar({ alEnviar }: { alEnviar: (motivo: string) => void }) {

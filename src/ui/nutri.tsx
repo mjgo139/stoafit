@@ -65,6 +65,7 @@ export function LineaMacros({ m }: { m: Macros }) {
 }
 
 export function textoCantidad(i: Pick<ItemComida, 'cantidad' | 'porcion' | 'gramos'>): string {
+  if (i.porcion === 'rápida') return 'Adición rápida';
   if (i.porcion === 'g' || i.porcion === 'ml') return `${formatoNumero(i.cantidad)} ${i.porcion}`;
   const c = i.cantidad === 0.5 ? '½' : i.cantidad === 0.25 ? '¼' : i.cantidad === 1.5 ? '1½' : formatoNumero(i.cantidad, 2);
   const p = i.cantidad === 1 ? i.porcion : `${c} × ${i.porcion}`;

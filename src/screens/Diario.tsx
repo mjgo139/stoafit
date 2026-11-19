@@ -5,7 +5,7 @@ import { claveDia, fechaCorta, fechaLarga, formatoNumero, nuevoId, semana, sumar
 import { COMIDAS, NOMBRE_COMIDA, cantidadItems, copiarItems, diaCumplido, esSuelta, itemDe, metasDe, sumar } from '../lib/nutricion';
 import type { Dia, ItemComida, TipoComida } from '../lib/tipos';
 import { useSesion } from '../ui/contexto';
-import { CabeceraPagina, Grupo } from '../ui/familia';
+import { CabeceraPagina } from '../ui/familia';
 import { Icono } from '../ui/Icono';
 import { Anillo, LineaMacros, Macros3, Vasos, textoCantidad } from '../ui/nutri';
 import { Cargando, Hoja } from '../ui/piezas';
@@ -23,6 +23,7 @@ export default function Diario() {
   const [editar, setEditar] = useState<{ comida: TipoComida; item: ItemComida } | null>(null);
   const [copiar, setCopiar] = useState<TipoComida | null>(null);
   const [traer, setTraer] = useState<TipoComida | null>(null);
+  const [menu, setMenu] = useState<TipoComida | null>(null);
   const [guardarComo, setGuardarComo] = useState<TipoComida | null>(null);
   const [anterior, setAnterior] = useState<Dia | null>(null);
 
@@ -61,6 +62,20 @@ export default function Diario() {
         ))}
       </div>
 
+      {dia && (
+        <section className="tarjeta mt-5" data-testid="restantes">
+          <div className="etiqueta">Calorías restantes</div>
+          <div className="mt-3 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-start text-center">
+            <div><div className="num text-[20px]">{formatoNumero(metas.kcal)}</div><div className="text-[12px] text-mu">Meta</div></div>
+            <div className="num px-1 text-[20px] text-mu">−</div>
+            <div><div className="num text-[20px]">{formatoNumero(dia.totales.kcal)}</div><div className="text-[12px] text-mu">Comido</div></div>
+            <div className="num px-1 text-[20px] text-mu">=</div>
+            <div><div className={`num text-[24px] ${metas.kcal - dia.totales.kcal < 0 ? 'text-miss' : 'oro'}`}>{formatoNumero(Math.abs(metas.kcal - dia.totales.kcal))}</div>
+              <div className="text-[12px] text-mu">{metas.kcal - dia.totales.kcal < 0 ? 'De más' : 'Restan'}</div></div>
+          </div>
+        </section>
+      )}
+
       {dia && anterior && cantidadItems(anterior) > 0 && (
         <div className="tarjeta mt-5 flex items-center gap-3" data-testid="repetir-dia">
           <Icono n="repetir" className="shrink-0 oro" />
@@ -74,41 +89,42 @@ export default function Diario() {
 
       {!dia ? <Cargando forma="pagina" /> : (
         <div className="mt-6 grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1.5fr)_minmax(320px,1fr)] lg:items-start lg:gap-6">
-          <div className="flex flex-col gap-6">
-            {COMIDAS.map((c, n) => {
+          <div className="flex flex-col gap-4">
+            {COMIDAS.map((c) => {
               const items = dia.comidas[c.id] ?? [];
               const t = sumar(items);
               return (
-                <section key={c.id} id={c.id} className="scroll-mt-6" data-testid={`diario-${c.id}`}>
-                  <Grupo n={n + 1} className="mb-2.5" extra={<span className="text-[13px] text-mu">{formatoNumero(t.kcal)} kcal</span>}>{c.nombre}</Grupo>
-                  <div className="tarjeta py-1">
-                    {items.map((i) => (
-                      <div key={i.id} className="fila last:border-0" data-testid="item-comida">
-                        <button className="min-w-0 flex-1 py-2 text-left" onClick={() => setEditar({ comida: c.id, item: i })}>
-                          <span className="block truncate font-semibold">{i.nombre}</span>
-                          <span className="block text-[13px] text-mu">{textoCantidad(i)}</span>
-                        </button>
-                        <span className="shrink-0 text-right">
-                          <span className="num block text-[16px]">{formatoNumero(i.kcal)}</span>
-                          <LineaMacros m={i} />
-                        </span>
-                        <button className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] text-mu2 hover:text-miss" aria-label={`Quitar ${i.nombre}`} onClick={() => quitar(c.id, i.id)}>
-                          <Icono n="basura" size={17} />
-                        </button>
-                      </div>
-                    ))}
-                    <div className={`flex min-h-[52px] flex-wrap items-center gap-2 py-2 ${items.length ? 'border-t border-ln2' : ''}`}>
-                      <Link to={`/agregar?comida=${c.id}&fecha=${fecha}`} className="flex flex-1 items-center gap-2 text-[14px] font-semibold oro">
-                        <Icono n="mas" size={18} />Agregar
-                      </Link>
-                      <button className="chip h-8 px-2.5 text-[12px]" onClick={() => setTraer(c.id)} aria-label={`Repetir ${c.nombre.toLowerCase()} de otro día`}><Icono n="repetir" size={14} />Repetir…</button>
-                      {items.length > 0 && (
-                        <>
-                          <button className="chip h-8 px-2.5 text-[12px]" onClick={() => setCopiar(c.id)} aria-label={`Copiar ${c.nombre.toLowerCase()} a otro día`}><Icono n="copiar" size={14} /><span className="hidden lg:inline">Copiar</span></button>
-                          <button className="chip h-8 px-2.5 text-[12px]" onClick={() => setGuardarComo(c.id)} aria-label={`Guardar ${c.nombre.toLowerCase()} como comida`}><Icono n="guardar" size={14} /><span className="hidden lg:inline">Guardar</span></button>
-                        </>
-                      )}
+                <section key={c.id} id={c.id} className="tarjeta scroll-mt-6 p-0" data-testid={`diario-${c.id}`}>
+                  <div className="flex items-baseline justify-between gap-3 border-b border-ln2 px-[18px] py-3.5">
+                    <h2 className="font-display text-[21px] font-semibold">{c.nombre}</h2>
+                    <span className="num text-[18px]">{formatoNumero(t.kcal)}<span className="ml-1 font-sans text-[12px] text-mu">kcal</span></span>
+                  </div>
+                  {items.length > 0 && (
+                    <div className="px-[18px]">
+                      {items.map((i) => (
+                        <div key={i.id} className="fila last:border-0" data-testid="item-comida">
+                          <button className="min-w-0 flex-1 py-2 text-left" onClick={() => setEditar({ comida: c.id, item: i })}>
+                            <span className="block truncate font-semibold">{i.nombre}</span>
+                            <span className="block text-[13px] text-mu">{textoCantidad(i)}</span>
+                          </button>
+                          <span className="shrink-0 text-right">
+                            <span className="num block text-[16px]">{formatoNumero(i.kcal)}</span>
+                            <LineaMacros m={i} />
+                          </span>
+                          <button className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] text-mu2 hover:text-miss" aria-label={`Quitar ${i.nombre}`} onClick={() => quitar(c.id, i.id)}>
+                            <Icono n="basura" size={17} />
+                          </button>
+                        </div>
+                      ))}
                     </div>
+                  )}
+                  <div className="flex min-h-[54px] items-center border-t border-ln2 pl-[18px] pr-2">
+                    <Link to={`/agregar?comida=${c.id}&fecha=${fecha}`} className="flex h-12 flex-1 items-center gap-2 text-[13px] font-bold uppercase tracking-[.1em] oro">
+                      <Icono n="mas" size={18} />Agregar alimento
+                    </Link>
+                    <button className="flex h-11 w-11 items-center justify-center rounded-full text-mu hover:bg-sf2" aria-label={`Más opciones de ${c.nombre.toLowerCase()}`} onClick={() => setMenu(c.id)}>
+                      <Icono n="puntos" size={22} className="rotate-90" />
+                    </button>
                   </div>
                 </section>
               );
@@ -147,6 +163,23 @@ export default function Diario() {
             setCopiar(null);
             aviso(`Copiado a ${NOMBRE_COMIDA[c].toLowerCase()} del ${fechaCorta(f)}`);
           }} />
+        )}
+      </Hoja>
+
+      <Hoja abierta={!!menu} alCerrar={() => setMenu(null)} etiqueta={menu ? `${NOMBRE_COMIDA[menu]} · ${fechaCorta(fecha)}` : ''} titulo="Opciones">
+        {menu && (
+          <div className="-mx-1 flex flex-col">
+            {([
+              ['repetir', 'Repetir de otro día', 'Traé esta u otra comida de cualquier día', () => setTraer(menu), true],
+              ['copiar', 'Copiar a otro día', 'Mandá lo que hay acá a otro día o comida', () => setCopiar(menu), (dia?.comidas[menu] ?? []).length > 0],
+              ['guardar', 'Guardar como comida', 'Para agregarla de un toque cuando quieras', () => setGuardarComo(menu), (dia?.comidas[menu] ?? []).length > 0],
+            ] as const).filter((o) => o[4]).map(([ic, t, l, f]) => (
+              <button key={t} className="flex items-center gap-3 rounded-[12px] px-2 py-3 text-left hover:bg-sf2" onClick={() => { setMenu(null); f(); }}>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-goldbg oro"><Icono n={ic} size={18} /></span>
+                <span className="min-w-0"><span className="block font-semibold">{t}</span><span className="block text-[13px] text-mu">{l}</span></span>
+              </button>
+            ))}
+          </div>
         )}
       </Hoja>
 

@@ -26,6 +26,18 @@ const atras = (page: Page) => page.evaluate(() => window.dispatchEvent(new Event
 test('agregar en gramos, ver la meta del día y sumarlo a varios días', async ({ page }) => {
   await entrar(page);
   await page.getByRole('link', { name: 'Agregar a Almuerzo' }).click();
+  await expect(page.getByTestId('accesos')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Historial' })).toBeVisible();
+  await captura(page, '88-agregar-ventana');
+  // El "+" de una fila agrega directo, como la última vez
+  await page.getByRole('button', { name: /^Agregar .+ ya$/ }).first().click();
+  await expect(page.getByTestId('ya-en-comida')).toContainText('1 alimento');
+  // Adición rápida
+  await page.getByRole('button', { name: /Adición rápida/ }).click();
+  await page.getByLabel('Qué fue').fill('Empanada en la feria');
+  await page.getByLabel('Calorías', { exact: true }).fill('280');
+  await page.getByRole('button', { name: 'Agregar 280 kcal' }).click();
+  await expect(page.getByTestId('ya-en-comida')).toContainText('2 alimentos');
   await page.getByLabel('Buscar alimento').fill('mbeju');
   await page.getByTestId('alimento').first().click();
   const hoja = page.getByRole('dialog');
@@ -41,6 +53,10 @@ test('agregar en gramos, ver la meta del día y sumarlo a varios días', async (
   await expect(page.getByRole('status').filter({ hasText: 'agregado a 3 días' })).toBeVisible();
   await page.goto('/diario');
   await expect(page.getByTestId('diario-almuerzo')).toContainText('50 g');
+  await expect(page.getByTestId('diario-almuerzo')).toContainText('Adición rápida');
+  await expect(page.getByTestId('restantes')).toContainText('Meta');
+  await page.getByRole('button', { name: 'Más opciones de almuerzo' }).click();
+  await captura(page, '89-diario-opciones');
 });
 
 test('botón atrás: cierra la hoja, vuelve a Hoy y pide confirmar para salir', async ({ page }) => {

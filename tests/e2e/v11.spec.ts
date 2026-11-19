@@ -96,13 +96,15 @@ test('repetir: día anterior, copiar a otro día y comidas guardadas', async ({ 
   await captura(page, '83-diario-repetir');
 
   // Guardar el desayuno como comida
-  await page.getByRole('button', { name: 'Guardar desayuno como comida' }).click();
+  await page.getByRole('button', { name: 'Más opciones de desayuno' }).click();
+  await page.getByRole('button', { name: /^Guardar como comida/ }).click();
   await page.getByLabel('Nombre de la comida guardada').fill('Desayuno de feria');
   await page.getByRole('button', { name: 'Guardar', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Desayuno de feria' })).toBeVisible();
 
   // Copiar el desayuno de hoy al de mañana… y al almuerzo de hoy
-  await page.getByRole('button', { name: 'Copiar desayuno a otro día' }).click();
+  await page.getByRole('button', { name: 'Más opciones de desayuno' }).click();
+  await page.getByRole('button', { name: /^Copiar a otro día/ }).click();
   await page.getByRole('radio', { name: 'Hoy' }).click();
   await page.getByRole('radiogroup', { name: 'Comida de destino' }).getByRole('radio', { name: 'Almuerzo' }).click();
   await captura(page, '84-copiar-a');
@@ -114,7 +116,7 @@ test('repetir: día anterior, copiar a otro día y comidas guardadas', async ({ 
 
   // En Agregar → Guardadas aparece la nueva y la de ejemplo
   await page.goto('/agregar?comida=cena');
-  await page.getByRole('tab', { name: 'Guardadas' }).click();
+  await page.getByRole('tab', { name: 'Mis comidas' }).click();
   await expect(page.getByTestId('guardada')).toHaveCount(2);
   await page.getByTestId('guardada').filter({ hasText: 'Mi desayuno de siempre' }).getByRole('button', { name: 'Agregar' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'agregada' })).toBeVisible();
@@ -126,7 +128,8 @@ test('repetir una comida de cualquier día, eligiendo qué alimentos', async ({ 
   await ir(page, 'Diario');
   const cena = page.getByTestId('diario-cena').getByTestId('item-comida');
   const antes = await cena.count();
-  await page.getByRole('button', { name: 'Repetir cena de otro día' }).click();
+  await page.getByRole('button', { name: 'Más opciones de cena' }).click();
+  await page.getByRole('button', { name: /^Repetir de otro día/ }).click();
   await page.getByRole('radiogroup', { name: 'Comida de origen' }).getByRole('radio', { name: 'Desayuno' }).click();
   const lista = page.getByTestId('traer-lista').getByRole('checkbox');
   await expect(lista.first()).toBeVisible();
@@ -142,6 +145,7 @@ test('repetir una comida de cualquier día, eligiendo qué alimentos', async ({ 
 test('recetas: ingredientes, porciones y peso cocido', async ({ page }) => {
   await entrar(page);
   await page.goto('/agregar?comida=almuerzo');
+  await page.getByRole('tab', { name: 'Mis alimentos' }).click();
   await page.getByRole('link', { name: 'Crear receta' }).last().click();
   await expect(page.getByRole('heading', { name: 'Nueva receta' })).toBeVisible();
   await page.getByLabel('Nombre de la receta').fill('Sopa paraguaya de mamá');

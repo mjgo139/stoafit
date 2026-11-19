@@ -120,8 +120,8 @@ test('registrar comidas: buscar, favorito, lo de ayer y alimento propio', async 
   await page.getByRole('tab', { name: 'Favoritos' }).click();
   await expect(page.getByTestId('alimento').filter({ hasText: 'Mbejú' })).toBeVisible();
   // Lo de ayer, en la cena
-  await page.getByRole('radio', { name: 'Cena' }).click();
-  await page.getByRole('tab', { name: 'Lo de ayer' }).click();
+  await page.getByLabel('Comida', { exact: true }).selectOption('cena');
+  await page.getByRole('tab', { name: 'Mis comidas' }).click();
   await captura(page, '21-agregar');
   const ayer = page.getByTestId('lo-de-ayer');
   if (await ayer.count()) await ayer.getByRole('button', { name: 'Repetir' }).click();

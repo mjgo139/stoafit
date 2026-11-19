@@ -1,6 +1,16 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.4.0',
+    fecha: '2026-11-19',
+    cambios: [
+      'Agregar tiene su ventana por comida: arriba "Desayuno ▾" (se cambia ahí), cuánto llevás en esa comida y el buscador con el escáner adentro.',
+      'Pestañas más claras: Recientes · Favoritos · Mis comidas · Mis alimentos · Todos. En Recientes, "Escanear" y "Adición rápida" (solo calorías).',
+      'Cada alimento tiene su "+" para agregarlo de un toque, como la última vez que lo comiste.',
+      'Diario más ordenado: "Calorías restantes" (meta − comido = restan) y cada comida en su tarjeta con "Agregar alimento" y "•••" (repetir, copiar, guardar).',
+    ],
+  },
+  {
     version: '1.3.0',
     fecha: '2026-11-19',
     cambios: [
