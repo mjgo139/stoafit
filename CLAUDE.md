@@ -53,7 +53,8 @@ App de nutrición de la familia estoica, hermana de **Stoica** (https://stoica-a
 - Detalle propio: **color de acento** (`data-acento` = `oliva` | `terracota` | `bronce`, en Perfil → Apariencia) para el agua, las comidas registradas y las grasas. **Pendiente que el dueño elija el predeterminado** (hoy: oliva). Capturas `70-acento-*`.
 - PC (≥1024 px): contenido hasta 1480 px, barra lateral 248 px, tarjetas radio 16. Celular: máximo 480 px y pestañas abajo (Hoy · Diario · Plan · Progreso · Perfil).
 - Ícono: igual al de Stoica (cuadrado `#14120E`, laurel dorado `#C9A66B`) con una **manzana marfil** `#F3EDDF` en lugar de letra (decisión del dueño). Cambiar el ícono obliga a reinstalar la APK.
-- Esqueletos (`Cargando`) en vez de "Cargando…". Tarjetas lado a lado siempre del mismo alto (hay prueba: Agua y Tu semana en Hoy).
+- Esqueletos (`Cargando`) en vez de "Cargando…". Tarjetas lado a lado siempre del mismo alto.
+- Hoy y Diario no repiten lo mismo (pedido del dueño): Hoy = anillo + barras de macros + comidas + tu semana (sin agua); Diario = calorías restantes, "Nutrientes del día" en tabla (comido · meta · quedan), "Calorías por comida" y el agua (solo ahí).
 - Las grillas llevan `grid-cols-1` en celular: sin eso se estiran al contenido y la página queda más ancha que la pantalla (hay prueba).
 - Día cumplido = 2 comidas o más y calorías entre el 85 % y el 110 % de la meta.
 

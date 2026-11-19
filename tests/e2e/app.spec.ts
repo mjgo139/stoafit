@@ -81,25 +81,26 @@ test('invitado: conocerte calcula la meta y llega a Hoy', async ({ page }) => {
   await expect(page.getByTestId('comida-desayuno')).toContainText('Todavía nada');
 });
 
-test('hoy: panel del día, agua y semana', async ({ page }) => {
+test('hoy: panel del día y semana; el agua y los nutrientes en el Diario', async ({ page }) => {
   await entrar(page);
   await expect(page.getByTestId('panel-dia')).toBeVisible();
   await expect(page.getByTestId('anillo')).toBeVisible();
   await expect(page.getByTestId('comida-desayuno')).not.toContainText('Todavía nada');
+  await expect(page.getByTestId('agua')).toHaveCount(0);
+  await expect(page.getByTestId('tu-semana')).toContainText('/7 días cumplidos');
+  if (test.info().project.name === 'pc') await expect(page.getByTestId('persona-lateral')).toContainText('Sofía');
+  await captura(page, '10-hoy');
+  // En el Diario: agua, y un resumen distinto al de Hoy (tabla de nutrientes y calorías por comida, sin anillo)
+  await page.goto('/diario');
   const agua = page.getByTestId('agua');
   await agua.getByRole('button', { name: 'Agregar un vaso' }).click();
   await expect(agua).toContainText('0,25');
   await agua.getByRole('button', { name: 'Vaso 4' }).click();
   await expect(agua).toContainText('1 de');
-  await expect(page.getByTestId('tu-semana')).toContainText('/7 días cumplidos');
-  if (test.info().project.name === 'pc') {
-    // tarjetas lado a lado: Agua y Tu semana miden lo mismo
-    const a = (await page.getByTestId('agua').boundingBox())!;
-    const s = (await page.getByTestId('tu-semana').boundingBox())!;
-    expect(Math.abs(a.height - s.height)).toBeLessThan(2);
-    await expect(page.getByTestId('persona-lateral')).toContainText('Sofía');
-  }
-  await captura(page, '10-hoy');
+  await expect(page.getByTestId('anillo')).toHaveCount(0);
+  await expect(page.getByTestId('resumen-dia')).toContainText('Quedan');
+  await expect(page.getByTestId('por-comida')).toContainText('Desayuno');
+  await captura(page, '31-diario-resumen');
 });
 
 test('registrar comidas: buscar, favorito, lo de ayer y alimento propio', async ({ page }) => {
@@ -149,7 +150,7 @@ test('diario: cambiar de día, editar y quitar', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Hoy' })).toBeVisible();
   await page.getByRole('button', { name: 'Día anterior' }).click();
   await expect(page.getByRole('heading', { name: 'Ayer' })).toBeVisible();
-  await expect(page.getByTestId('resumen-dia')).toContainText('kcal');
+  await expect(page.getByTestId('resumen-dia')).toContainText('Quedan');
   const items = page.getByTestId('item-comida');
   const antes = await items.count();
   expect(antes).toBeGreaterThan(0);

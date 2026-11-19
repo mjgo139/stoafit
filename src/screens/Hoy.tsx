@@ -6,15 +6,15 @@ import { useComidas } from '../ui/comidas';
 import { useSesion } from '../ui/contexto';
 import { Ficha, Grupo, Laurel } from '../ui/familia';
 import { Icono } from '../ui/Icono';
-import { Anillo, Macros3, TarjetaComida, Vasos } from '../ui/nutri';
+import { Anillo, Macros3, TarjetaComida } from '../ui/nutri';
 import { Cargando } from '../ui/piezas';
 import { useDia } from '../ui/usarDia';
 
-/** Inicio: panel del día, comidas, agua, racha y tu semana */
+/** Inicio: panel del día, comidas, racha y tu semana (el agua está en el Diario) */
 export default function Hoy() {
   const { perfil } = useSesion();
   const hoy = claveDia();
-  const { dia, agua } = useDia(hoy);
+  const { dia } = useDia(hoy);
   const metas = metasDe(perfil);
   const lista = useComidas();
   const reparto = repartoDe(lista);
@@ -37,7 +37,6 @@ export default function Hoy() {
             <div className="mt-4 flex flex-wrap gap-2">
               <Ficha><Icono n="fuego" size={15} className="oro" />{r ? `${r} día${r > 1 ? 's' : ''} de racha` : 'Empezá tu racha'}</Ficha>
               <Ficha><Icono n="plato" size={15} className="acento" />{dia ? comidasRegistradas(dia) : 0}/{lista.length} comidas</Ficha>
-              <Ficha><Icono n="agua" size={15} className="acento" />{dia ? formatoNumero(dia.agua / 1000, 2) : 0} L</Ficha>
             </div>
           </div>
           {dia ? (
@@ -68,14 +67,8 @@ export default function Hoy() {
 
         <div className="flex flex-col gap-7 lg:gap-6">
           <section>
-            <Grupo n={2} className="mb-3">Agua</Grupo>
-            <div className="tarjeta flex flex-col justify-center lg:h-[232px]" data-testid="agua">
-              {dia ? <Vasos ml={dia.agua} meta={metas.agua} alCambiar={(ml) => agua(ml)} /> : <Cargando forma="linea" />}
-            </div>
-          </section>
-          <section>
-            <Grupo n={3} className="mb-3">Tu semana</Grupo>
-            <div className="tarjeta lg:h-[232px]" data-testid="tu-semana">
+            <Grupo n={2} className="mb-3">Tu semana</Grupo>
+            <div className="tarjeta" data-testid="tu-semana">
               <div className="flex justify-between">
                 {sem.map((d) => {
                   const ok = cumplidos.includes(d.clave);

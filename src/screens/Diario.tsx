@@ -3,11 +3,11 @@ import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { buscarAlimento } from '../lib/alimentos';
 import { claveDia, fechaCorta, fechaLarga, formatoNumero, nuevoId, semana, sumarDias } from '../lib/logica';
 import { comidasDelDia, nombreComida, cantidadItems, copiarItems, diaCumplido, esSuelta, itemDe, metasDe, sumar } from '../lib/nutricion';
-import type { Dia, ItemComida, TipoComida } from '../lib/tipos';
+import type { Dia, ItemComida, Metas, TipoComida } from '../lib/tipos';
 import { useSesion } from '../ui/contexto';
 import { CabeceraPagina } from '../ui/familia';
 import { Icono } from '../ui/Icono';
-import { Anillo, LineaMacros, Macros3, Vasos, textoCantidad } from '../ui/nutri';
+import { LineaMacros, Vasos, textoCantidad } from '../ui/nutri';
 import { Cargando, Hoja } from '../ui/piezas';
 import { useCopiar, useDia } from '../ui/usarDia';
 import { EditorComidas, useComidas } from '../ui/comidas';
@@ -141,21 +141,8 @@ export default function Diario() {
 
           <aside className="flex flex-col gap-6 lg:sticky lg:top-8 lg:gap-4">
             <div className="hidden flex-col gap-4 lg:flex">{restantes('restantes-pc')}{repetir('repetir-dia-pc')}</div>
-            <section className="tarjeta" data-testid="resumen-dia">
-              <div className="flex items-center justify-between">
-                <span className="etiqueta">Resumen del día</span>
-                {cumplido && <span className="inline-flex items-center gap-1 text-[12px] font-bold uppercase tracking-[.08em]" style={{ color: 'var(--verde)' }}><Icono n="check" size={14} />Cumplido</span>}
-              </div>
-              <div className="mt-3 flex items-center gap-4">
-                <Anillo valor={dia.totales.kcal} meta={metas.kcal} tam={112} />
-                <div className="min-w-0 flex-1 text-[13px] text-mu">
-                  <div><b className="num text-[20px] text-tx">{formatoNumero(dia.totales.kcal)}</b> kcal</div>
-                  <div>Meta: {formatoNumero(metas.kcal)} kcal</div>
-                </div>
-              </div>
-              <div className="mt-4"><Macros3 t={dia.totales} metas={metas} /></div>
-            </section>
-            <section className="tarjeta">
+            <Nutrientes dia={dia} metas={metas} cumplido={cumplido} comidas={comidasDelDia(lista, dia)} />
+            <section className="tarjeta" data-testid="agua">
               <div className="etiqueta mb-3">Agua</div>
               <Vasos ml={dia.agua} meta={metas.agua} alCambiar={(ml) => agua(ml)} />
             </section>
@@ -339,6 +326,68 @@ function TraerDe({ destino, fecha, alTraer }: { destino: TipoComida; fecha: stri
         {elegidos.length ? `Agregar a ${nombreComida(lista, destino).toLowerCase()} · ${formatoNumero(sumar(elegidos).kcal)} kcal` : 'Elegí al menos un alimento'}
       </button>
     </div>
+  );
+}
+
+/**
+ * Resumen del Diario, distinto del panel de Hoy: tabla de nutrientes (comido · meta · quedan)
+ * y en qué comidas se fueron las calorías del día.
+ */
+function Nutrientes({ dia, metas, cumplido, comidas }: { dia: Dia; metas: Metas; cumplido: boolean; comidas: { id: string; nombre: string }[] }) {
+  const filas = [['prot', 'Proteínas'], ['carb', 'Carbohidratos'], ['gras', 'Grasas']] as const;
+  const porComida = comidas.map((c) => ({ ...c, kcal: sumar(dia.comidas[c.id] ?? []).kcal })).filter((c) => c.kcal > 0);
+  const total = porComida.reduce((s, c) => s + c.kcal, 0);
+  const tonos = [1, 0.75, 0.55, 0.4, 0.28, 0.85, 0.65, 0.48, 0.34, 0.22];
+  return (
+    <section className="tarjeta" data-testid="resumen-dia">
+      <div className="flex items-center justify-between">
+        <span className="etiqueta">Nutrientes del día</span>
+        {cumplido && <span className="inline-flex items-center gap-1 text-[12px] font-bold uppercase tracking-[.08em]" style={{ color: 'var(--verde)' }}><Icono n="check" size={14} />Cumplido</span>}
+      </div>
+      <table className="mt-3 w-full text-[14px]">
+        <thead>
+          <tr className="text-[11px] uppercase tracking-[.08em] text-mu">
+            <th className="pb-1.5 text-left font-semibold" scope="col"><span className="sr-only">Nutriente</span></th>
+            <th className="pb-1.5 text-right font-semibold" scope="col">Comido</th>
+            <th className="pb-1.5 text-right font-semibold" scope="col">Meta</th>
+            <th className="pb-1.5 text-right font-semibold" scope="col">Quedan</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filas.map(([k, t]) => {
+            const q = Math.round(metas[k] - dia.totales[k]);
+            return (
+              <tr key={k} className="border-t border-ln2">
+                <th className="py-2 text-left font-semibold" scope="row"><span className="mr-2 inline-block h-2 w-2 rounded-full align-middle" style={{ background: `var(--${k})` }} />{t}</th>
+                <td className="num py-2 text-right text-[16px]">{formatoNumero(dia.totales[k])}</td>
+                <td className="py-2 text-right text-mu">{formatoNumero(metas[k])} g</td>
+                <td className={`py-2 text-right font-semibold ${q < 0 ? 'text-miss' : ''}`}>{q < 0 ? `+${formatoNumero(-q)}` : formatoNumero(q)} g</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <div className="mt-4 border-t border-ln2 pt-3">
+        <div className="etiqueta mb-2">Calorías por comida</div>
+        {total ? (
+          <>
+            <div className="flex h-3 overflow-hidden rounded-full bg-ln2" aria-hidden>
+              {porComida.map((c, i) => <div key={c.id} style={{ width: `${(c.kcal / total) * 100}%`, background: 'var(--gold)', opacity: tonos[i % tonos.length] }} className="border-r border-sf last:border-0" />)}
+            </div>
+            <ul className="mt-2.5 flex flex-col gap-1 text-[13px]" data-testid="por-comida">
+              {porComida.map((c, i) => (
+                <li key={c.id} className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: 'var(--gold)', opacity: tonos[i % tonos.length] }} />
+                  <span className="min-w-0 flex-1 truncate">{c.nombre}</span>
+                  <span className="num">{formatoNumero(c.kcal)}</span>
+                  <span className="w-10 text-right text-mu">{Math.round((c.kcal / total) * 100)} %</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : <p className="text-[13px] text-mu">Cuando registres algo, acá ves en qué comidas se reparten tus calorías.</p>}
+      </div>
+    </section>
   );
 }
 

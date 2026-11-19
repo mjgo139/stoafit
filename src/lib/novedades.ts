@@ -1,6 +1,14 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.5.1',
+    fecha: '2026-11-19',
+    cambios: [
+      'El agua quedó solo en el Diario; Hoy se enfoca en tus comidas y tu semana.',
+      'El Diario ya no repite el anillo de Hoy: ahora tiene "Nutrientes del día" (comido · meta · quedan) y "Calorías por comida".',
+    ],
+  },
+  {
     version: '1.5.0',
     fecha: '2026-11-19',
     cambios: [
