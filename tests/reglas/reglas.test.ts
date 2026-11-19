@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest';
 import {
   assertFails, assertSucceeds, initializeTestEnvironment, type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import { deleteDoc, doc, getDoc, getDocs, collection, query, setDoc, updateDoc, where } from 'firebase/firestore';
+import { deleteDoc, doc, getDoc, getDocs, collection, limit, query, setDoc, updateDoc, where } from 'firebase/firestore';
 
 let env: RulesTestEnvironment;
 
@@ -96,6 +96,76 @@ describe('reglas de Firestore', () => {
     const ana = env.authenticatedContext('ana').firestore();
     await assertSucceeds(getDoc(doc(ana, 'config/admins')));
     await assertFails(setDoc(doc(ana, 'config/admins'), { uids: ['ana'] }));
+  });
+
+  describe('base compartida de productos (un código = un producto)', () => {
+    // ana = admin · carla = cargadora · beto = usuario común
+    const prod = (codigo: string, uid: string, verificado = false) => ({
+      codigo, nombre: 'Galletitas', marca: 'X', por100: { kcal: 420, prot: 11, carb: 68, gras: 11 },
+      porciones: [{ nombre: '100 g', gramos: 100 }], verificado, creadoPor: uid, creado: 1, actualizado: 1, via: 'manual',
+    });
+    async function preparar() {
+      await env.withSecurityRulesDisabled(async (c) => {
+        const db = c.firestore();
+        await setDoc(doc(db, 'config/admins'), { uids: ['ana'] });
+        await setDoc(doc(db, 'config/cargadores'), { uids: ['carla'], info: { carla: { nombre: 'Carla', email: 'carla@ejemplo.com' } } });
+        await setDoc(doc(db, 'users/beto'), { ...perfil('beto'), email: 'beto@ejemplo.com' });
+      });
+    }
+
+    it('un usuario común crea un producto "sin verificar" con el código como id, y nada más', async () => {
+      await preparar();
+      const beto = env.authenticatedContext('beto').firestore();
+      await assertSucceeds(setDoc(doc(beto, 'productos/7840000000017'), prod('7840000000017', 'beto')));
+      await assertSucceeds(getDoc(doc(beto, 'productos/7840000000017')));
+      // no puede crearlo verificado, ni a nombre de otro, ni con un código distinto al id o inválido
+      await assertFails(setDoc(doc(beto, 'productos/7840000000024'), prod('7840000000024', 'beto', true)));
+      await assertFails(setDoc(doc(beto, 'productos/7840000000031'), prod('7840000000031', 'carla')));
+      await assertFails(setDoc(doc(beto, 'productos/7840000000048'), prod('7840000000055', 'beto')));
+      await assertFails(setDoc(doc(beto, 'productos/abc'), prod('abc', 'beto')));
+      // un código = un producto: si ya existe, no lo puede pisar ni corregir ni borrar
+      await assertFails(setDoc(doc(beto, 'productos/7840000000017'), { ...prod('7840000000017', 'beto'), nombre: 'Otro' }));
+      await assertFails(deleteDoc(doc(beto, 'productos/7840000000017')));
+      // sin sesión no se lee
+      await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), 'productos/7840000000017')));
+    });
+
+    it('cargadores y admin corrigen y verifican; el código no cambia', async () => {
+      await preparar();
+      const beto = env.authenticatedContext('beto').firestore();
+      const carla = env.authenticatedContext('carla').firestore();
+      const ana = env.authenticatedContext('ana').firestore();
+      await setDoc(doc(beto, 'productos/7840000000017'), prod('7840000000017', 'beto'));
+      await assertSucceeds(setDoc(doc(carla, 'productos/7840000000017'), { ...prod('7840000000017', 'beto', true), verificadoPor: 'carla' }));
+      await assertSucceeds(setDoc(doc(carla, 'productos/7840000000024'), prod('7840000000024', 'carla', true)));
+      await assertFails(setDoc(doc(carla, 'productos/7840000000017'), { ...prod('7840000000099', 'beto', true) }));
+      await assertSucceeds(getDocs(query(collection(carla, 'productos'), where('verificado', '==', false))));
+      await assertSucceeds(deleteDoc(doc(ana, 'productos/7840000000024')));
+    });
+
+    it('reportes: los crea cualquiera; los ven y borran cargadores', async () => {
+      await preparar();
+      const beto = env.authenticatedContext('beto').firestore();
+      const carla = env.authenticatedContext('carla').firestore();
+      const r = { codigo: '7840000000017', nombre: 'Galletitas', motivo: 'Calorías mal', uid: 'beto', fecha: 1 };
+      await assertSucceeds(setDoc(doc(beto, 'reportes/r1'), r));
+      await assertFails(setDoc(doc(beto, 'reportes/r2'), { ...r, uid: 'carla' }));
+      await assertFails(getDocs(collection(beto, 'reportes')));
+      await assertSucceeds(getDocs(collection(carla, 'reportes')));
+      await assertSucceeds(deleteDoc(doc(carla, 'reportes/r1')));
+    });
+
+    it('cargadores: los marca solo el admin; el admin busca cuentas por correo de a una', async () => {
+      await preparar();
+      const beto = env.authenticatedContext('beto').firestore();
+      const ana = env.authenticatedContext('ana').firestore();
+      await assertSucceeds(getDoc(doc(beto, 'config/cargadores')));
+      await assertFails(setDoc(doc(beto, 'config/cargadores'), { uids: ['beto'], info: {} }));
+      await assertSucceeds(setDoc(doc(ana, 'config/cargadores'), { uids: ['carla', 'beto'], info: {} }));
+      await assertSucceeds(getDocs(query(collection(ana, 'users'), where('email', '==', 'beto@ejemplo.com'), limit(1))));
+      await assertFails(getDocs(query(collection(ana, 'users'), where('email', '==', 'beto@ejemplo.com'))));
+      await assertFails(getDocs(query(collection(beto, 'users'), where('email', '==', 'ana@ejemplo.com'), limit(1))));
+    });
   });
 
   describe('profesionales y clientes', () => {

@@ -4,6 +4,7 @@ import { BIBLIOTECA, GRUPOS, buscar, buscarAlimento } from '../lib/alimentos';
 import { claveDia, fechaCorta, formatoNumero, nuevoId, sumarDias } from '../lib/logica';
 import { COMIDAS, NOMBRE_COMIDA, alimentoDeEtiqueta, copiarItems, etiquetaDe, macrosDe, sumar, type Etiqueta } from '../lib/nutricion';
 import { FUENTE_OFF, PRODUCTOS_PRUEBA, buscarEnOFF } from '../lib/openfoodfacts';
+import { alimentoDeProducto, codigoDeId, productosEnCache, recordarProducto } from '../lib/productos';
 import type { Alimento, ComidaGuardada, Dia, GrupoAlimento, ItemComida, TipoComida } from '../lib/tipos';
 import { ElegirPorcion, FormEtiqueta } from '../ui/alimento';
 import { useSesion } from '../ui/contexto';
@@ -11,6 +12,8 @@ import { Escaner } from '../ui/Escaner';
 import { Icono } from '../ui/Icono';
 import { Celebracion, Encabezado, Hoja, Vacio } from '../ui/piezas';
 import { useDia } from '../ui/usarDia';
+import { useProductos } from '../ui/usarProductos';
+import { mensajeError } from '../data/repo';
 
 type Pestana = 'recientes' | 'favoritos' | 'ayer' | 'guardadas' | 'mios' | 'todos';
 
@@ -29,7 +32,10 @@ export default function Agregar() {
   const [guardadas, setGuardadas] = useState<ComidaGuardada[]>([]);
   const [previos, setPrevios] = useState<Dia[]>([]);
   const [elegido, setElegido] = useState<Alimento | null>(null);
-  const [form, setForm] = useState<{ inicial: Partial<Etiqueta>; editar?: Alimento; aviso?: string } | null>(null);
+  const [form, setForm] = useState<{ inicial: Partial<Etiqueta>; editar?: Alimento; aviso?: string; codigo?: string } | null>(null);
+  const [reportar, setReportar] = useState<Alimento | null>(null);
+  const [cache, setCache] = useState<Alimento[]>(() => productosEnCache());
+  const productos = useProductos();
   const [escanear, setEscanear] = useState(params.get('escanear') === '1');
   const [buscando, setBuscando] = useState<string | null>(null);
   const [agregados, setAgregados] = useState(0);
@@ -41,20 +47,22 @@ export default function Agregar() {
     repo.leerDias(usuario.uid, sumarDias(fecha, -7), sumarDias(fecha, -1)).then(setPrevios).catch(() => undefined);
   }, [repo, usuario.uid, fecha]);
 
-  const todos = useMemo(() => [...propios, ...BIBLIOTECA], [propios]);
+  // Lo que se puede buscar: alimentos propios, productos compartidos que usaste en este teléfono y la biblioteca
+  const todos = useMemo(() => [...propios, ...cache.filter((c) => !propios.some((p) => p.id === c.id)), ...BIBLIOTECA], [propios, cache]);
+  const resolver = useCallback((id: string) => buscarAlimento(id, propios) ?? cache.find((c) => c.id === id), [propios, cache]);
   const favoritos = perfil.favoritos ?? [];
   const ayer = previos.find((d) => d.fecha === sumarDias(fecha, -1));
   const deAyer = ayer?.comidas[comida] ?? [];
   const recientes = useMemo(() => {
     const vistos = new Map<string, number>();
     for (const d of previos) for (const l of Object.values(d.comidas)) for (const i of l ?? []) vistos.set(i.alimentoId, (vistos.get(i.alimentoId) ?? 0) + 1);
-    return [...vistos.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => buscarAlimento(id, propios)).filter(Boolean).slice(0, 20) as Alimento[];
-  }, [previos, propios]);
+    return [...vistos.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => resolver(id)).filter(Boolean).slice(0, 20) as Alimento[];
+  }, [previos, resolver]);
 
   const lista: Alimento[] = texto.trim()
     ? buscar(texto, todos)
     : grupo ? todos.filter((a) => a.grupo === grupo)
-    : pestana === 'favoritos' ? favoritos.map((id) => buscarAlimento(id, propios)).filter(Boolean) as Alimento[]
+    : pestana === 'favoritos' ? favoritos.map((id) => resolver(id)).filter(Boolean) as Alimento[]
     : pestana === 'mios' ? propios
     : pestana === 'todos' ? todos
     : recientes;
@@ -77,31 +85,50 @@ export default function Agregar() {
     setPropios((l) => [a, ...l.filter((x) => x.id !== a.id)]);
   }
 
+  function usarCompartido(a: Alimento) {
+    recordarProducto(a);
+    setCache(productosEnCache());
+  }
+
   async function agregarElegido(a: Alimento, item: ItemComida) {
     setElegido(null);
-    // Lo escaneado de Open Food Facts queda guardado como propio: la próxima vez aparece sin internet
-    if (a.fuente === 'off' && !propios.some((p) => p.id === a.id)) await guardarPropio({ ...a, propio: true });
-    await sumarItems([item], `${item.nombre} agregado`);
+    let it = item;
+    // Lo encontrado en Open Food Facts pasa a la base compartida con su código: la próxima vez lo encuentra cualquiera
+    if (a.fuente === 'off' && a.codigo) {
+      try {
+        const r = await productos.crear({ nombre: a.nombre, marca: a.marca, codigo: a.codigo, modo: '100', porcion: a.porciones[0].nombre, gramos: a.porciones[0].gramos, ...a.por100, otras: a.porciones.slice(1) }, 'manual');
+        usarCompartido(r.alimento);
+        it = { ...item, alimentoId: r.alimento.id };
+      } catch { /* sin conexión: igual se registra la comida */ }
+    }
+    if (a.compartido) usarCompartido(a);
+    await sumarItems([it], `${it.nombre} agregado`);
   }
 
   const leerCodigo = useCallback(async (codigo: string) => {
     setEscanear(false);
     setBuscando(codigo);
     try {
+      // 1) La base compartida de StoaFit: un código = un producto
+      const compartido = await repo.leerProducto(codigo).catch(() => null);
+      if (compartido) { const a = alimentoDeProducto(compartido); usarCompartido(a); setElegido(a); return; }
+      // 2) Alimentos propios con código (de la v1.1.0)
       const mio = propios.find((p) => p.codigo === codigo);
       if (mio) { setElegido(mio); return; }
+      // 3) Open Food Facts
       const r = repo.modo === 'prueba'
         ? (PRODUCTOS_PRUEBA[codigo] ? { tipo: 'encontrado' as const, alimento: PRODUCTOS_PRUEBA[codigo] } : { tipo: 'no-esta' as const })
         : await buscarEnOFF(codigo);
       if (r.tipo === 'encontrado') { setElegido(r.alimento); return; }
       setForm({
+        codigo,
         inicial: { codigo, nombre: r.tipo === 'sin-datos' ? r.nombre : '' },
         aviso: r.tipo === 'error' ? 'No pudimos consultar la base de productos (¿sin internet?). Podés cargarlo vos con la etiqueta.'
           : r.tipo === 'sin-datos' ? 'Encontramos el producto pero sin la información nutricional. Copiala de la etiqueta y queda guardado.'
-          : 'Este código todavía no está en la base de productos. Copiá la etiqueta una vez y la próxima lo reconoce.',
+          : 'Este código todavía no está cargado. Copiá la etiqueta una vez y queda para todos los usuarios de StoaFit.',
       });
     } finally { setBuscando(null); }
-  }, [propios, repo.modo]);
+  }, [propios, repo]);
 
   const cambiarComida = (c: TipoComida) => setParams({ comida: c, fecha }, { replace: true });
   const yaHay = dia?.comidas[comida] ?? [];
@@ -215,7 +242,7 @@ export default function Agregar() {
                   <button className="tarjeta flex w-full items-center gap-3 py-3 text-left transition-colors hover:border-gold2" onClick={() => setElegido(a)} data-testid="alimento">
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-semibold">{a.nombre}
-                        {a.propio && <span className="ml-1.5 text-[11px] font-bold uppercase tracking-[.1em] acento">{a.receta ? 'receta' : a.codigo ? 'envasado' : 'propio'}</span>}
+                        {(a.propio || a.compartido) && <span className="ml-1.5 text-[11px] font-bold uppercase tracking-[.1em] acento">{a.receta ? 'receta' : a.codigo ? 'envasado' : 'propio'}</span>}
                       </span>
                       <span className="block truncate text-[13px] text-mu">{a.marca ? `${a.marca} · ` : ''}{p.nombre} · {formatoNumero(m.kcal)} kcal</span>
                     </span>
@@ -243,39 +270,72 @@ export default function Agregar() {
       <Hoja abierta={!!elegido} alCerrar={() => setElegido(null)} etiqueta={NOMBRE_COMIDA[comida]} titulo={elegido?.nombre ?? ''}>
         {elegido && (
           <ElegirPorcion key={elegido.id} alimento={elegido} favorito={favoritos.includes(elegido.id)} alFavorito={() => alternarFavorito(elegido)}
-            alEditar={elegido.propio ? () => {
+            alEditar={elegido.propio || (elegido.compartido && productos.cargador) ? () => {
               const a = elegido;
               setElegido(null);
               if (a.receta) nav(`/receta?id=${encodeURIComponent(a.id)}`);
-              else setForm({ inicial: etiquetaDe(a), editar: a });
+              else setForm({ inicial: etiquetaDe(a), editar: a, codigo: a.compartido ? a.codigo : undefined });
             } : undefined}
+            alReportar={elegido.compartido && !productos.cargador ? () => { const a = elegido; setElegido(null); setReportar(a); } : undefined}
             alAgregar={(item) => agregarElegido(elegido, item)} />
         )}
       </Hoja>
 
-      <Hoja abierta={!!form} alCerrar={() => setForm(null)} etiqueta={form?.editar ? 'Editar' : 'Alimento propio'} titulo={form?.editar ? form.editar.nombre : 'Crear alimento'}>
+      <Hoja abierta={!!form} alCerrar={() => setForm(null)} etiqueta={form?.codigo ? 'Producto envasado' : form?.editar ? 'Editar' : 'Alimento propio'}
+        titulo={form?.editar ? (form.codigo ? 'Corregir producto' : form.editar.nombre) : form?.codigo ? 'Cargar producto' : 'Crear alimento'}>
         {form && (
           <>
             {form.aviso && <p className="mb-3 rounded-[12px] bg-acentobg p-3 text-[13px]" role="status" data-testid="aviso-codigo">{form.aviso}</p>}
-            <FormEtiqueta key={form.editar?.id ?? 'nuevo'} inicial={form.inicial}
-              alBorrar={form.editar ? async () => {
+            <FormEtiqueta key={form.editar?.id ?? form.codigo ?? 'nuevo'} inicial={form.inicial} codigoFijo={form.codigo}
+              leerFoto={form.codigo ? productos.leerFoto : undefined}
+              textoGuardar={form.codigo ? (form.editar ? 'Guardar y verificar' : 'Guardar producto') : 'Guardar alimento'}
+              alBorrar={form.editar && !form.codigo ? async () => {
                 const id = form.editar!.id;
                 await repo.borrarPropio(usuario.uid, id);
                 setPropios((l) => l.filter((x) => x.id !== id));
                 setForm(null);
                 aviso('Alimento borrado');
               } : undefined}
-              alGuardar={async (e) => {
-                const a = alimentoDeEtiqueta(form.editar?.id ?? 'p-' + nuevoId(), e);
-                await guardarPropio(a);
-                const editado = !!form.editar;
-                setForm(null);
-                setTexto('');
-                setPestana('mios');
-                aviso(editado ? `${a.nombre} quedó actualizado` : `${a.nombre} quedó guardado`);
-                if (!editado) setElegido(a);
+              alGuardar={async (e, via) => {
+                try {
+                  if (form.codigo && form.editar) {
+                    // Cargador corrigiendo un producto compartido
+                    const a = await productos.corregir(form.codigo, e, via);
+                    setCache(productosEnCache());
+                    setForm(null);
+                    aviso(`${a.nombre} quedó corregido y verificado`);
+                    setElegido(a);
+                  } else if (form.codigo) {
+                    // Producto nuevo de la base compartida (el código es la llave)
+                    const r = await productos.crear(e, via);
+                    setCache(productosEnCache());
+                    setForm(null);
+                    aviso(r.creado ? `${r.alimento.nombre} quedó cargado para todos` : `Ese código ya estaba cargado: ${r.alimento.nombre}`);
+                    setElegido(r.alimento);
+                  } else {
+                    const a = alimentoDeEtiqueta(form.editar?.id ?? 'p-' + nuevoId(), e);
+                    await guardarPropio(a);
+                    const editado = !!form.editar;
+                    setForm(null);
+                    setTexto('');
+                    setPestana('mios');
+                    aviso(editado ? `${a.nombre} quedó actualizado` : `${a.nombre} quedó guardado`);
+                    if (!editado) setElegido(a);
+                  }
+                } catch (err) { aviso(mensajeError(err)); }
               }} />
           </>
+        )}
+      </Hoja>
+
+      <Hoja abierta={!!reportar} alCerrar={() => setReportar(null)} etiqueta="Reportar error" titulo={reportar?.nombre ?? ''}>
+        {reportar && (
+          <Reportar alEnviar={async (motivo) => {
+            const codigo = reportar.codigo ?? codigoDeId(reportar.id) ?? '';
+            await repo.reportar({ id: nuevoId(), codigo, nombre: reportar.nombre, motivo, uid: usuario.uid, fecha: Date.now() });
+            setReportar(null);
+            aviso('Gracias: un cargador lo va a revisar');
+          }} />
         )}
       </Hoja>
 
@@ -291,4 +351,19 @@ function sugerirComida(): TipoComida {
   if (h < 15) return 'almuerzo';
   if (h < 19) return 'merienda';
   return 'cena';
+}
+
+function Reportar({ alEnviar }: { alEnviar: (motivo: string) => void }) {
+  const [motivo, setMotivo] = useState('');
+  const rapidos = ['Las calorías no coinciden', 'La porción está mal', 'Es otro producto', 'El nombre está mal'];
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-[14px] text-mu">Contanos qué está mal. Un cargador lo revisa y lo corrige para todos.</p>
+      <div className="flex flex-wrap gap-1.5">
+        {rapidos.map((r) => <button key={r} className={`chip ${motivo === r ? 'chip-on' : ''}`} onClick={() => setMotivo(r)}>{r}</button>)}
+      </div>
+      <textarea className="campo h-[90px] py-2" maxLength={300} value={motivo} onChange={(e) => setMotivo(e.target.value)} aria-label="Qué está mal" placeholder="Ej.: la etiqueta dice 132 kcal por porción" />
+      <button className="btn w-full" disabled={!motivo.trim()} onClick={() => alEnviar(motivo.trim())}>Enviar reporte</button>
+    </div>
+  );
 }

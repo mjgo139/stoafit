@@ -1,4 +1,5 @@
-import type { Alimento, ComidaGuardada, Dia, Perfil, Plan, RegistroCuerpo } from '../lib/tipos';
+import type { Alimento, Cargador, ComidaGuardada, Dia, Perfil, Plan, Producto, RegistroCuerpo, Reporte } from '../lib/tipos';
+import { PRODUCTOS_COMPARTIDOS_PRUEBA, LECTURA_PRUEBA, REPORTES_PRUEBA } from './semilla';
 import { ErrorApp, type Repo, type Usuario } from './repo';
 import { CLAVE_PRUEBA, USUARIO_PRUEBA, datosDePrueba, perfilInicial } from './semilla';
 import type { Codigo, Comentario, Objetivo, Profesional, Solicitud, TipoProfesional, Vinculo } from '../pro/tipos';
@@ -17,6 +18,9 @@ interface Datos {
 
 /** Lo que no cuelga de un usuario: profesionales, solicitudes, códigos y vínculos */
 interface Comun {
+  productos: Map<string, Producto>;
+  reportes: Map<string, Reporte>;
+  cargadores: Map<string, Cargador>;
   profesionales: Map<string, Profesional>;
   solicitudes: Map<string, Solicitud>;
   codigos: Map<string, Codigo>;
@@ -30,7 +34,7 @@ type DatosPlanos = {
   perfil?: Perfil; dias: Dia[]; propios: Alimento[]; cuerpo: RegistroCuerpo[]; planes: Plan[]; guardadas?: ComidaGuardada[];
   comentarios?: Comentario[]; objetivos?: Objetivo[];
 };
-type ComunPlano = { profesionales: Profesional[]; solicitudes: Solicitud[]; codigos: Codigo[]; vinculos: Vinculo[] };
+type ComunPlano = { productos?: Producto[]; reportes?: Reporte[]; cargadores?: Cargador[]; profesionales: Profesional[]; solicitudes: Solicitud[]; codigos: Codigo[]; vinculos: Vinculo[] };
 const ERR = (code: string) => Object.assign(new ErrorApp(code), { code });
 const copia = <T,>(x: T): T => structuredClone(x);
 
@@ -42,11 +46,17 @@ export class RepoMemoria implements Repo {
   private oyentes = new Set<(u: Usuario | null) => void>();
   private cuentas = new Map<string, { u: Usuario; clave: string }>();
   private datos = new Map<string, Datos>();
-  protected comun: Comun = { profesionales: new Map(), solicitudes: new Map(), codigos: new Map(), vinculos: new Map() };
+  protected comun: Comun = {
+    productos: new Map(PRODUCTOS_COMPARTIDOS_PRUEBA.map((p) => [p.codigo, p])),
+    reportes: new Map(REPORTES_PRUEBA.map((r) => [r.id, r])),
+    cargadores: new Map(),
+    profesionales: new Map(), solicitudes: new Map(), codigos: new Map(), vinculos: new Map() };
 
   constructor(private ahora = Date.now(), private persistir = typeof sessionStorage !== 'undefined') {
     this.cuentas.set(USUARIO_PRUEBA.email, { u: USUARIO_PRUEBA, clave: CLAVE_PRUEBA });
     this.cargarEjemplo(USUARIO_PRUEBA, 'Sofía');
+    this.agregarCuentaComun();
+    this.cargarEjemplo({ uid: 'u-lucas', email: 'lucas@ejemplo.com', nombre: 'Lucas' }, 'Lucas', { semilla: 11 });
     this.restaurar();
   }
 
@@ -62,6 +72,7 @@ export class RepoMemoria implements Repo {
       }
       const c = this.comun;
       const comun: ComunPlano = {
+        productos: [...c.productos.values()], reportes: [...c.reportes.values()], cargadores: [...c.cargadores.values()],
         profesionales: [...c.profesionales.values()], solicitudes: [...c.solicitudes.values()],
         codigos: [...c.codigos.values()], vinculos: [...c.vinculos.values()],
       };
@@ -90,6 +101,9 @@ export class RepoMemoria implements Repo {
         });
       }
       if (g.comun) {
+        if (g.comun.productos) this.comun.productos = new Map(g.comun.productos.map((x) => [x.codigo, x]));
+        if (g.comun.reportes) this.comun.reportes = new Map(g.comun.reportes.map((x) => [x.id, x]));
+        for (const x of g.comun.cargadores ?? []) this.comun.cargadores.set(x.uid, x);
         for (const x of g.comun.profesionales ?? []) this.comun.profesionales.set(x.uid, x);
         for (const x of g.comun.solicitudes ?? []) this.comun.solicitudes.set(x.uid, x);
         for (const x of g.comun.codigos ?? []) this.comun.codigos.set(x.codigo, x);
@@ -181,6 +195,9 @@ export class RepoMemoria implements Repo {
     this.avisar();
   }
 
+  /** Para el modo prueba: una segunda cuenta común (sin permisos de cargador) */
+  protected agregarCuentaComun() { this.agregarCuenta({ uid: 'u-lucas', email: 'lucas@ejemplo.com', nombre: 'Lucas' }); }
+
   async borrarCuenta() {
     if (!this.usuario) return;
     const uid = this.usuario.uid;
@@ -243,6 +260,46 @@ export class RepoMemoria implements Repo {
   async leerGuardadas(uid: string) { this.ver(uid); return copia([...this.d(uid).guardadas.values()].sort((a, b) => a.nombre.localeCompare(b.nombre))); }
   async guardarGuardada(uid: string, c: ComidaGuardada) { this.propio(uid); this.d(uid).guardadas.set(c.id, copia(c)); this.guardar(); }
   async borrarGuardada(uid: string, id: string) { this.propio(uid); this.d(uid).guardadas.delete(id); this.guardar(); }
+
+  // ── Base compartida ──
+  private conSesion() { if (!this.usuario) throw ERR('permission-denied'); }
+  private async puedeCorregir() { if (!this.usuario || !(await this.esCargador(this.usuario.uid))) throw ERR('permission-denied'); }
+  async leerProducto(codigo: string) { this.conSesion(); await espera(80); return copia(this.comun.productos.get(codigo) ?? null); }
+  async crearProducto(p: Producto) {
+    this.conSesion();
+    await espera(80);
+    const ya = this.comun.productos.get(p.codigo);
+    if (ya) return { creado: false, producto: copia(ya) };
+    if (p.creadoPor !== this.usuario!.uid) throw ERR('permission-denied');
+    if (p.verificado && !(await this.esCargador(this.usuario!.uid))) throw ERR('permission-denied');
+    this.comun.productos.set(p.codigo, copia(p));
+    this.guardar();
+    return { creado: true, producto: copia(p) };
+  }
+  async guardarProducto(p: Producto) { await this.puedeCorregir(); this.comun.productos.set(p.codigo, copia(p)); this.guardar(); }
+  async borrarProducto(codigo: string) { await this.puedeCorregir(); this.comun.productos.delete(codigo); this.guardar(); }
+  async leerSinVerificar() { await this.puedeCorregir(); return copia([...this.comun.productos.values()].filter((p) => !p.verificado).sort((a, b) => b.creado - a.creado)); }
+  async reportar(r: Reporte) { this.conSesion(); this.comun.reportes.set(r.id, copia(r)); this.guardar(); }
+  async leerReportes() { await this.puedeCorregir(); return copia([...this.comun.reportes.values()].sort((a, b) => b.fecha - a.fecha)); }
+  async borrarReporte(id: string) { await this.puedeCorregir(); this.comun.reportes.delete(id); this.guardar(); }
+  async esCargador(uid: string) { return this.comun.cargadores.has(uid) || (await this.esAdmin(uid)); }
+  async leerCargadores() { this.soloAdmin(); return copia([...this.comun.cargadores.values()].sort((a, b) => a.nombre.localeCompare(b.nombre))); }
+  async agregarCargador(email: string) {
+    this.soloAdmin();
+    await espera();
+    const c = this.cuentas.get(email.trim().toLowerCase());
+    if (!c) throw ERR('cargador/no-existe');
+    const x: Cargador = { uid: c.u.uid, nombre: this.datos.get(c.u.uid)?.perfil?.nombre || c.u.nombre || c.u.email, email: c.u.email };
+    this.comun.cargadores.set(x.uid, x);
+    this.guardar();
+    return copia(x);
+  }
+  async quitarCargador(uid: string) { this.soloAdmin(); this.comun.cargadores.delete(uid); this.guardar(); }
+  async leerEtiqueta(_foto: Blob) {
+    await this.puedeCorregir();
+    await espera(900);
+    return copia(LECTURA_PRUEBA);
+  }
 
   async leerCuerpo(uid: string) { this.ver(uid); return copia([...this.d(uid).cuerpo.values()].sort((a, b) => a.fecha - b.fecha)); }
   async guardarCuerpo(uid: string, r: RegistroCuerpo) { this.propio(uid); this.d(uid).cuerpo.set(r.id, copia(r)); this.guardar(); }

@@ -8,6 +8,8 @@ interface Ctx {
   usuario: Usuario | null;
   perfil: Perfil | null;
   admin: boolean;
+  /** Puede leer etiquetas con foto y verificar productos de la base compartida (el admin también) */
+  cargador: boolean;
   /** Si es profesional activo (entrenador, nutricionista…) */
   profesional: Profesional | null;
   recargarProfesional: () => Promise<void>;
@@ -39,6 +41,7 @@ export function ProveedorApp({ repo, children }: { repo: Repo; children: ReactNo
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [admin, setAdmin] = useState(false);
+  const [cargador, setCargador] = useState(false);
   const [profesional, setProfesional] = useState<Profesional | null>(null);
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -51,6 +54,7 @@ export function ProveedorApp({ repo, children }: { repo: Repo; children: ReactNo
     if (!u) {
       setPerfil(null);
       setAdmin(false);
+      setCargador(false);
       setProfesional(null);
       setCargando(false);
       return;
@@ -60,9 +64,10 @@ export function ProveedorApp({ repo, children }: { repo: Repo; children: ReactNo
     const mismo = antes?.uid === u.uid;
     if (!mismo) setCargando(true);
     try {
-      const [p, a, pro] = await Promise.all([repo.leerPerfil(u), repo.esAdmin(u.uid), repo.leerProfesional(u.uid).catch(() => null)]);
+      const [p, a, pro, car] = await Promise.all([repo.leerPerfil(u), repo.esAdmin(u.uid), repo.leerProfesional(u.uid).catch(() => null), repo.esCargador(u.uid).catch(() => false)]);
       setPerfil(p);
       setAdmin(a);
+      setCargador(car || a);
       setProfesional(pro?.activo ? pro : null);
       aplicarTema(p.tema);
       aplicarAcento(p.acento);
@@ -103,8 +108,8 @@ export function ProveedorApp({ repo, children }: { repo: Repo; children: ReactNo
     window.setTimeout(() => setMensaje((m) => (m === t ? null : m)), 2600);
   }, []);
 
-  const v = useMemo(() => ({ repo, usuario, perfil, admin, profesional, recargarProfesional, cargando, cambiarPerfil, cambiarPerfilLocal, recargarPerfil, aviso, mensaje }),
-    [repo, usuario, perfil, admin, profesional, recargarProfesional, cargando, cambiarPerfil, cambiarPerfilLocal, recargarPerfil, aviso, mensaje]);
+  const v = useMemo(() => ({ repo, usuario, perfil, admin, cargador, profesional, recargarProfesional, cargando, cambiarPerfil, cambiarPerfilLocal, recargarPerfil, aviso, mensaje }),
+    [repo, usuario, perfil, admin, cargador, profesional, recargarProfesional, cargando, cambiarPerfil, cambiarPerfilLocal, recargarPerfil, aviso, mensaje]);
   return <C.Provider value={v}>{children}</C.Provider>;
 }
 

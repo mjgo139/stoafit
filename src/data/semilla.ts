@@ -2,7 +2,7 @@ import { buscarAlimento } from '../lib/alimentos';
 import { agregarDia, claveDia, sumarDias } from '../lib/logica';
 import { calcularMetas, diaCumplido, itemDe, totalesDia } from '../lib/nutricion';
 import { PLANTILLAS } from '../lib/plantillas';
-import type { ComidaGuardada, Dia, ItemComida, Perfil, Plan, RegistroCuerpo, TipoComida } from '../lib/tipos';
+import type { ComidaGuardada, Dia, ItemComida, Perfil, Plan, Producto, RegistroCuerpo, Reporte, TipoComida } from '../lib/tipos';
 import type { Usuario } from './repo';
 
 /** Cuenta de ejemplo del modo prueba (datos inventados) */
@@ -132,3 +132,24 @@ export function datosDePrueba(u: Usuario, nombre: string, ahora = Date.now(), op
 }
 
 export type { ItemComida };
+
+/** Base compartida del modo prueba (productos inventados) */
+export const PRODUCTOS_COMPARTIDOS_PRUEBA: Producto[] = [
+  {
+    codigo: '7840000000031', nombre: 'Pan lactal integral', marca: 'Panificadora Ejemplo', verificado: true, creadoPor: 'u-sofia', verificadoPor: 'u-sofia',
+    creado: 1795000000000, actualizado: 1795000000000, via: 'foto',
+    por100: { kcal: 250, prot: 10, carb: 43, gras: 4 }, porciones: [{ nombre: '2 rodajas', gramos: 50 }, { nombre: '100 g', gramos: 100 }],
+  },
+  {
+    codigo: '7840000000048', nombre: 'Galletitas de maíz', marca: 'Molino Ejemplo', verificado: false, creadoPor: 'u-lucas',
+    creado: 1795050000000, actualizado: 1795050000000, via: 'manual',
+    por100: { kcal: 440, prot: 7, carb: 70, gras: 15 }, porciones: [{ nombre: '4 galletitas', gramos: 30 }, { nombre: '100 g', gramos: 100 }],
+  },
+];
+
+export const REPORTES_PRUEBA: Reporte[] = [
+  { id: 'rep-1', codigo: '7840000000048', nombre: 'Galletitas de maíz', motivo: 'Las calorías no coinciden con la etiqueta (dice 132 por porción).', uid: 'u-lucas', fecha: 1795060000000 },
+];
+
+/** Lo que "lee" la IA en el modo prueba (etiqueta de ejemplo) */
+export const LECTURA_PRUEBA = { nombre: 'Pan de leche', marca: 'Panificadora Ejemplo', porcion: '1½ unidad', gramos: 50, kcal: 145, prot: 3.5, carb: 27, gras: 2.6 };

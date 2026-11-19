@@ -1,22 +1,32 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { formatoNumero, nuevoId } from '../lib/logica';
 import { itemDe, type Etiqueta } from '../lib/nutricion';
 import type { Alimento, ItemComida, Porcion } from '../lib/tipos';
+import type { LecturaEtiqueta } from '../lib/productos';
+import { mensajeError } from '../data/repo';
 import { Icono } from './Icono';
 import { Selector } from './piezas';
 
 const CANTIDADES = [0.5, 1, 1.5, 2, 3];
 
 /** Porción, cantidad y lo que aporta. Opcionalmente favorito, editar y borrar (alimentos propios). */
-export function ElegirPorcion({ alimento: a, favorito, alFavorito, alAgregar, alEditar, textoBoton = 'Agregar' }: {
+export function ElegirPorcion({ alimento: a, favorito, alFavorito, alAgregar, alEditar, alReportar, textoBoton = 'Agregar' }: {
   alimento: Alimento; favorito?: boolean; alFavorito?: () => void; alAgregar: (i: ItemComida) => void;
-  alEditar?: () => void; textoBoton?: string;
+  alEditar?: () => void; alReportar?: () => void; textoBoton?: string;
 }) {
   const [porcion, setPorcion] = useState(a.porciones[0]?.nombre ?? '100 g');
   const [cantidad, setCantidad] = useState(1);
   const item = itemDe(a, porcion, cantidad, nuevoId());
   return (
     <div>
+      {a.compartido && (
+        <p className="-mt-2 mb-2 flex flex-wrap items-center gap-2 text-[12px]" data-testid="estado-producto">
+          {a.verificado
+            ? <span className="inline-flex items-center gap-1 font-bold uppercase tracking-[.08em]" style={{ color: 'var(--verde)' }}><Icono n="check" size={13} />Verificado</span>
+            : <span className="rounded-full border border-ln3 px-2 py-0.5 font-bold uppercase tracking-[.08em] text-mu">Sin verificar</span>}
+          <span className="text-mu2">Base compartida de StoaFit</span>
+        </p>
+      )}
       {(a.marca || a.codigo || a.receta) && (
         <p className="-mt-2 mb-3 text-[13px] text-mu">
           {a.receta ? `Receta · ${a.receta.ingredientes.length} ingredientes · rinde ${a.receta.porciones} porciones` : [a.marca, a.codigo && `Código ${a.codigo}`].filter(Boolean).join(' · ')}
@@ -46,6 +56,7 @@ export function ElegirPorcion({ alimento: a, favorito, alFavorito, alAgregar, al
         <div><div className="num text-[18px]" style={{ color: 'var(--gras)' }}>{formatoNumero(item.gras, 1)}</div><div className="text-[11px] text-mu">grasas g</div></div>
       </div>
       <p className="mt-2 text-center text-[12px] text-mu2">{formatoNumero(item.gramos)} g en total{a.fuente === 'off' ? ' · datos de Open Food Facts' : ''}</p>
+      {alReportar && <button className="mx-auto mt-1 block text-[12px] font-semibold text-mu underline" onClick={alReportar}>¿Algún dato está mal? Reportar error</button>}
       <div className="mt-4 flex gap-2">
         {alFavorito && (
           <button className="btn-sec h-[52px] w-[52px] shrink-0 px-0" aria-label={favorito ? 'Quitar de favoritos' : 'Agregar a favoritos'} aria-pressed={!!favorito} onClick={alFavorito}>
@@ -53,7 +64,7 @@ export function ElegirPorcion({ alimento: a, favorito, alFavorito, alAgregar, al
           </button>
         )}
         {alEditar && (
-          <button className="btn-sec h-[52px] w-[52px] shrink-0 px-0" aria-label={a.receta ? 'Editar receta' : 'Editar alimento'} onClick={alEditar}>
+          <button className="btn-sec h-[52px] w-[52px] shrink-0 px-0" aria-label={a.receta ? 'Editar receta' : a.compartido ? 'Corregir producto' : 'Editar alimento'} onClick={alEditar}>
             <Icono n="editar" size={19} />
           </button>
         )}
@@ -67,19 +78,29 @@ export function ElegirPorcion({ alimento: a, favorito, alFavorito, alAgregar, al
  * Formulario de etiqueta nutricional: como viene en el envase ("por porción" o "cada 100 g"),
  * con marca, código de barras y otras medidas caseras.
  */
-export function FormEtiqueta({ inicial, alGuardar, alBorrar }: {
-  inicial: Partial<Etiqueta>; alGuardar: (e: Etiqueta) => void; alBorrar?: () => void;
+export function FormEtiqueta({ inicial, alGuardar, alBorrar, codigoFijo, leerFoto, textoGuardar = 'Guardar alimento' }: {
+  inicial: Partial<Etiqueta>; alGuardar: (e: Etiqueta, via: 'manual' | 'foto') => void; alBorrar?: () => void;
+  /** Producto de la base compartida: el código queda fijo (un código = un producto) */
+  codigoFijo?: string;
+  /** Solo cargadores: leer la etiqueta con una foto */
+  leerFoto?: (foto: Blob) => Promise<LecturaEtiqueta>;
+  textoGuardar?: string;
 }) {
   const t = (n?: number) => (n === undefined ? '' : String(n).replace('.', ','));
   const [nombre, setNombre] = useState(inicial.nombre ?? '');
   const [marca, setMarca] = useState(inicial.marca ?? '');
-  const [codigo, setCodigo] = useState(inicial.codigo ?? '');
+  const codigo = inicial.codigo ?? '';
   const [modo, setModo] = useState<Etiqueta['modo']>(inicial.modo ?? 'porcion');
   const [porcion, setPorcion] = useState(inicial.porcion ?? '1 porción');
   const [gramos, setGramos] = useState(t(inicial.gramos ?? 100));
   const [v, setV] = useState({ kcal: t(inicial.kcal), prot: t(inicial.prot), carb: t(inicial.carb), gras: t(inicial.gras) });
   const [otras, setOtras] = useState<{ nombre: string; gramos: string }[]>((inicial.otras ?? []).map((o) => ({ nombre: o.nombre, gramos: String(o.gramos) })));
   const [borrar, setBorrar] = useState(false);
+  const [via, setVia] = useState<'manual' | 'foto'>('manual');
+  const [leyendo, setLeyendo] = useState(false);
+  const [errorFoto, setErrorFoto] = useState('');
+  const [leida, setLeida] = useState(false);
+  const archivo = useRef<HTMLInputElement>(null);
   const num = (s: string) => Number(s.replace(',', '.')) || 0;
   const g = num(gramos);
   const valido = nombre.trim() && v.kcal !== '' && g > 0;
@@ -87,9 +108,32 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar }: {
   function guardar() {
     const o: Porcion[] = otras.filter((x) => x.nombre.trim() && num(x.gramos) > 0).map((x) => ({ nombre: x.nombre.trim().slice(0, 40), gramos: num(x.gramos) }));
     alGuardar({
-      nombre, marca, codigo: codigo.replace(/\D/g, ''), modo, porcion: porcion.trim().slice(0, 40) || '1 porción', gramos: g,
+      nombre, marca, codigo: codigoFijo ?? codigo.replace(/\D/g, ''), modo, porcion: porcion.trim().slice(0, 40) || '1 porción', gramos: g,
       kcal: num(v.kcal), prot: num(v.prot), carb: num(v.carb), gras: num(v.gras), otras: o,
-    });
+    }, via);
+  }
+
+  async function foto(f: File | undefined) {
+    if (!f || !leerFoto) return;
+    setErrorFoto('');
+    setLeyendo(true);
+    try {
+      const l = await leerFoto(await comprimir(f));
+      const t = (n?: number) => (n === undefined ? undefined : String(n).replace('.', ','));
+      if (l.nombre && !nombre.trim()) setNombre(l.nombre);
+      if (l.marca && !marca.trim()) setMarca(l.marca);
+      setModo('porcion');
+      if (l.porcion) setPorcion(l.porcion);
+      if (l.gramos) setGramos(t(l.gramos)!);
+      setV((x) => ({ kcal: t(l.kcal) ?? x.kcal, prot: t(l.prot) ?? x.prot, carb: t(l.carb) ?? x.carb, gras: t(l.gras) ?? x.gras }));
+      setVia('foto');
+      setLeida(true);
+    } catch (e) {
+      setErrorFoto(mensajeError(e));
+    } finally {
+      setLeyendo(false);
+      if (archivo.current) archivo.current.value = '';
+    }
   }
   const campo = (k: keyof typeof v, etiqueta: string) => (
     <label className="block"><span className="etiqueta">{etiqueta}</span>
@@ -98,16 +142,31 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar }: {
   );
   return (
     <div className="flex flex-col gap-3">
+      {leerFoto && (
+        <div className="rounded-[14px] border border-gold2 p-3" data-testid="leer-foto">
+          <input ref={archivo} type="file" accept="image/*" capture="environment" className="hidden" aria-label="Foto de la etiqueta"
+            onChange={(e) => foto(e.target.files?.[0])} />
+          <button className="btn w-full" disabled={leyendo} onClick={() => archivo.current?.click()}>
+            <Icono n="camara" size={18} />{leyendo ? 'Leyendo la etiqueta…' : leida ? 'Leer otra foto' : 'Leer etiqueta con foto'}
+          </button>
+          <p className="mt-2 text-center text-[12px] text-mu">
+            {leida ? <b className="oro">Listo: revisá los valores antes de guardar.</b> : 'Sacale una foto de cerca a la tabla "Información Nutricional", sin brillo.'}
+          </p>
+          {errorFoto && <p className="mt-1 text-center text-[13px] text-miss" role="alert">{errorFoto}</p>}
+        </div>
+      )}
       <label className="block"><span className="etiqueta">Nombre</span>
-        <input className="campo mt-1.5" value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={80} aria-label="Nombre del alimento" placeholder="Ej.: Guiso de la abuela" />
+        <input className="campo mt-1.5" value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={80} aria-label="Nombre del alimento" placeholder={codigoFijo ? 'Ej.: Pan de leche' : 'Ej.: Guiso de la abuela'} />
       </label>
-      <div className="grid grid-cols-2 gap-2">
+      <div className={codigoFijo ? 'grid grid-cols-2 gap-2' : ''}>
         <label className="block"><span className="etiqueta">Marca (opcional)</span>
           <input className="campo mt-1.5" value={marca} onChange={(e) => setMarca(e.target.value)} maxLength={60} aria-label="Marca" />
         </label>
-        <label className="block"><span className="etiqueta">Código de barras</span>
-          <input className="campo mt-1.5" inputMode="numeric" value={codigo} onChange={(e) => setCodigo(e.target.value.replace(/\D/g, '').slice(0, 14))} aria-label="Código de barras" placeholder="Opcional" />
-        </label>
+        {codigoFijo && (
+          <div><span className="etiqueta">Código de barras</span>
+            <div className="campo mt-1.5 flex items-center gap-2 bg-sf2 text-mu" aria-label="Código de barras" data-testid="codigo-fijo"><Icono n="barras" size={16} />{codigoFijo}</div>
+          </div>
+        )}
       </div>
       <div>
         <div className="etiqueta mb-1.5">La etiqueta dice los valores…</div>
@@ -139,7 +198,7 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar }: {
         ))}
         {otras.length < 4 && <button className="mt-2 text-[13px] font-semibold oro" onClick={() => setOtras([...otras, { nombre: '', gramos: '' }])}>+ Agregar medida</button>}
       </div>
-      <button className="btn mt-1 w-full" disabled={!valido} onClick={guardar}>Guardar alimento</button>
+      <button className="btn mt-1 w-full" disabled={!valido || leyendo} onClick={guardar}>{textoGuardar}</button>
       {alBorrar && (borrar ? (
         <div className="rounded-[12px] border border-miss p-3 text-[14px]">
           <p>¿Borrar <b>{nombre}</b>? Lo que ya registraste en el diario queda igual.</p>
@@ -148,4 +207,19 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar }: {
       ) : <button className="btn-sec text-miss" onClick={() => setBorrar(true)}><Icono n="basura" size={16} />Borrar alimento</button>)}
     </div>
   );
+}
+
+/** Achica la foto (máximo 1280 px, JPEG) para que la lectura sea rápida y barata */
+export async function comprimir(f: Blob, max = 1280): Promise<Blob> {
+  try {
+    const img = await createImageBitmap(f);
+    const k = Math.min(1, max / Math.max(img.width, img.height));
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.width * k);
+    c.height = Math.round(img.height * k);
+    c.getContext('2d')!.drawImage(img, 0, 0, c.width, c.height);
+    return await new Promise<Blob>((ok) => c.toBlob((b) => ok(b ?? f), 'image/jpeg', 0.8));
+  } catch {
+    return f;
+  }
 }

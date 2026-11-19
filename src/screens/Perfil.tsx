@@ -20,7 +20,7 @@ const ACENTOS: { v: Acento; t: string; c: string }[] = [
 
 /** Perfil: datos, apariencia, unidades, recordatorios, exportar, borrar cuenta y ajustes (admin) */
 export default function Perfil() {
-  const { repo, usuario, perfil, admin, cambiarPerfil, aviso } = useSesion();
+  const { repo, usuario, perfil, admin, cargador, cambiarPerfil, aviso } = useSesion();
   const [nombre, setNombre] = useState(perfil.nombre);
   const [borrar, setBorrar] = useState(false);
   const [cuenta, setCuenta] = useState(false);
@@ -139,9 +139,20 @@ export default function Perfil() {
             </div>
           </section>
 
+          {cargador && (
+            <section>
+              <Grupo n={5} className="mb-3">Base compartida</Grupo>
+              <Link to="/productos" className="tarjeta flex items-center gap-3" data-testid="ir-productos">
+                <Icono n="barras" className="oro" />
+                <span className="flex-1"><b>Productos</b><span className="block text-[12px] text-mu">Reportes, productos sin verificar{admin ? ' y cargadores' : ''}</span></span>
+                <Icono n="der" size={18} className="text-mu" />
+              </Link>
+            </section>
+          )}
+
           {admin && (
             <section>
-              <Grupo n={5} className="mb-3">Ajustes</Grupo>
+              <Grupo n={6} className="mb-3">Ajustes</Grupo>
               <div className="tarjeta" data-testid="version">
                 <div className="flex items-baseline justify-between"><span className="etiqueta">Versión</span><span className="num text-[20px] oro">{VERSION}</span></div>
                 <div className="mt-1 text-[13px] text-mu">Armada el {fechaCorta(Date.parse(FECHA_ARMADO))} · commit <code>{COMMIT}</code> · {repo.modo === 'prueba' ? 'modo prueba' : 'Firebase'}</div>

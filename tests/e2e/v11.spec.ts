@@ -35,16 +35,17 @@ test('código de barras: producto encontrado y producto nuevo', async ({ page })
   await captura(page, '81-producto-escaneado');
   await page.getByRole('button', { name: 'Agregar', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Galletitas de agua integrales agregado' })).toBeVisible();
-  // Quedó guardado como propio: aparece en Míos
-  await page.getByRole('tab', { name: 'Míos' }).click();
+  // Pasó a la base compartida con su código y se puede buscar por nombre
+  await page.getByLabel('Buscar alimento').fill('galletitas de agua');
   await expect(page.getByTestId('alimento').filter({ hasText: 'Galletitas de agua integrales' })).toContainText('envasado');
+  await page.getByLabel('Buscar alimento').fill('');
 
   // Un código que no está: se carga la etiqueta "por porción"
   await page.getByTestId('boton-escanear').click();
   await page.getByLabel('Código de barras a mano').fill('7840000000994');
   await page.getByRole('button', { name: 'Buscar' }).click();
   await expect(page.getByTestId('aviso-codigo')).toContainText('todavía no está');
-  await expect(page.getByLabel('Código de barras', { exact: true })).toHaveValue('7840000000994');
+  await expect(page.getByTestId('codigo-fijo')).toContainText('7840000000994');
   await page.getByLabel('Nombre del alimento').fill('Mbejú congelado');
   await page.getByLabel('Marca').fill('Granja Ejemplo');
   await page.getByLabel('Nombre de la porción').fill('1 unidad');
@@ -57,7 +58,7 @@ test('código de barras: producto encontrado y producto nuevo', async ({ page })
   await page.getByLabel('Otra medida 1', { exact: true }).fill('1 paquete');
   await page.getByLabel('Gramos de otra medida 1').fill('480');
   await captura(page, '82-crear-alimento');
-  await page.getByRole('button', { name: 'Guardar alimento' }).click();
+  await page.getByRole('button', { name: 'Guardar producto' }).click();
   await expect(page.getByRole('dialog', { name: 'Mbejú congelado' })).toContainText('Granja Ejemplo');
   await page.getByRole('radio', { name: /1 paquete/ }).click();
   await expect(page.getByTestId('aporte')).toContainText('1.440');
@@ -68,11 +69,12 @@ test('código de barras: producto encontrado y producto nuevo', async ({ page })
   await page.getByLabel('Código de barras a mano').fill('7840000000994');
   await page.getByRole('button', { name: 'Buscar' }).click();
   await expect(page.getByRole('dialog', { name: 'Mbejú congelado' })).toBeVisible();
-  // Editar el alimento propio
-  await page.getByRole('button', { name: 'Editar alimento' }).click();
+  // Sofía es admin (y cargadora): puede corregirlo y queda verificado
+  await page.getByRole('button', { name: 'Corregir producto' }).click();
   await page.getByLabel('Calorías').fill('250');
-  await page.getByRole('button', { name: 'Guardar alimento' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'quedó actualizado' })).toBeVisible();
+  await page.getByRole('button', { name: 'Guardar y verificar' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'corregido y verificado' })).toBeVisible();
+  await expect(page.getByTestId('estado-producto')).toContainText('Verificado');
 });
 
 test('repetir: día anterior, copiar a otro día y comidas guardadas', async ({ page }) => {

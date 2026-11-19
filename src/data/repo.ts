@@ -1,4 +1,4 @@
-import type { Alimento, ComidaGuardada, Dia, Perfil, Plan, RegistroCuerpo } from '../lib/tipos';
+import type { Alimento, Cargador, ComidaGuardada, Dia, Perfil, Plan, Producto, RegistroCuerpo, Reporte } from '../lib/tipos';
 import type { Comentario, Objetivo, Profesional, Solicitud, TipoProfesional, Vinculo } from '../pro/tipos';
 
 export interface Usuario {
@@ -46,6 +46,25 @@ export interface Repo {
   leerGuardadas(uid: string): Promise<ComidaGuardada[]>;
   guardarGuardada(uid: string, c: ComidaGuardada): Promise<void>;
   borrarGuardada(uid: string, id: string): Promise<void>;
+
+  // ── Base compartida de productos envasados (un código = un producto) ──
+  leerProducto(codigo: string): Promise<Producto | null>;
+  /** Crea el producto solo si el código no existe; si ya existe devuelve el que está */
+  crearProducto(p: Producto): Promise<{ creado: boolean; producto: Producto }>;
+  /** Corregir / verificar: solo cargadores y admin */
+  guardarProducto(p: Producto): Promise<void>;
+  borrarProducto(codigo: string): Promise<void>;
+  leerSinVerificar(): Promise<Producto[]>;
+  reportar(r: Reporte): Promise<void>;
+  leerReportes(): Promise<Reporte[]>;
+  borrarReporte(id: string): Promise<void>;
+  esCargador(uid: string): Promise<boolean>;
+  leerCargadores(): Promise<Cargador[]>;
+  /** El admin busca a la persona por su correo y la marca como cargador */
+  agregarCargador(email: string): Promise<Cargador>;
+  quitarCargador(uid: string): Promise<void>;
+  /** Lee una etiqueta nutricional de una foto (solo cargadores) */
+  leerEtiqueta(foto: Blob): Promise<unknown>;
 
   leerCuerpo(uid: string): Promise<RegistroCuerpo[]>;
   guardarCuerpo(uid: string, r: RegistroCuerpo): Promise<void>;
@@ -99,6 +118,10 @@ export function mensajeError(e: unknown): string {
     'permission-denied': 'No tenés permiso para eso.',
     'pro/codigo': 'Ese código no existe o el profesional ya no está activo.',
     'pro/propio': 'No podés ser cliente de vos mismo.',
+    'cargador/no-existe': 'No hay ninguna cuenta de StoaFit con ese correo.',
+    'ia/no-disponible': 'La lectura de etiquetas todavía no está activada.',
+    'ia/limite': 'Se alcanzó el límite de lecturas por hoy. Cargá la etiqueta a mano.',
+    'ia/no-leyo': 'No pudimos leer la etiqueta. Probá con otra foto, más cerca y sin brillo.',
   };
   if (mapa[code]) return mapa[code];
   if (e instanceof Error && e.message) return e.message;

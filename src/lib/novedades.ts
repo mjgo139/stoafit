@@ -1,6 +1,16 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.2.0',
+    fecha: '2026-11-19',
+    cambios: [
+      'Base compartida de productos: un código de barras = un solo producto, igual para todos los usuarios.',
+      'Si un código no está, cualquiera lo carga a mano y queda "sin verificar" para todos; lo de Open Food Facts también pasa a la base.',
+      'Cargadores (los marca el admin): leen la etiqueta con una foto (IA) y corrigen o verifican productos.',
+      'Reportar error en un producto; panel Productos con reportes, sin verificar y cargadores.',
+    ],
+  },
+  {
     version: '1.1.0',
     fecha: '2026-11-19',
     cambios: [

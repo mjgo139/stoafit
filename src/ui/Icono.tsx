@@ -57,6 +57,7 @@ const P: Record<string, string> = {
   barras: 'M4 6v12M7 6v12M10 6v12M13 6v12M17 6v12M20 6v12M2 3v3M2 18v3M22 3v3M22 18v3',
   receta: 'M6 3h10l3 3v15H6zM9 8h7M9 12h7M9 16h4',
   copiar2: 'M8 8h11v12H8zM5 16V4h11',
+  camara: 'M4 8h3l2-3h6l2 3h3v11H4zM12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z',
   google: '',
 };
 

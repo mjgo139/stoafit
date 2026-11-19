@@ -210,7 +210,7 @@ test('perfil: apariencia, unidades, versión y exportar', async ({ page }) => {
   await page.getByRole('radio', { name: 'Terracota' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-acento', 'terracota');
   await page.getByRole('radio', { name: 'Libras (lb)' }).click();
-  await expect(page.getByTestId('version')).toContainText('1.1.0');
+  await expect(page.getByTestId('version')).toContainText('1.2.0');
   await captura(page, '60-perfil-oscuro');
   const descarga = page.waitForEvent('download');
   await page.getByRole('button', { name: /Exportar mis datos/ }).click();

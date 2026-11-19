@@ -32,7 +32,42 @@ export interface Alimento {
   fuente?: 'manual' | 'off' | 'receta';
   /** Si es una receta: sus ingredientes y cuánto rinde */
   receta?: Receta;
+  /** Producto de la base compartida: lo revisó un cargador o el admin */
+  verificado?: boolean;
+  compartido?: boolean;
 }
+
+/**
+ * Producto envasado de la base compartida de StoaFit: productos/{codigo}.
+ * El código de barras es la llave: un código = un solo producto.
+ */
+export interface Producto {
+  codigo: string;
+  nombre: string;
+  marca?: string;
+  por100: Macros;
+  porciones: Porcion[];
+  verificado: boolean;
+  creadoPor: string;
+  creado: number;
+  actualizado: number;
+  verificadoPor?: string;
+  /** Cómo se cargó: a mano o leyendo la etiqueta con IA */
+  via?: 'manual' | 'foto';
+}
+
+/** Aviso de un usuario: "este producto tiene un error" — reportes/{id} */
+export interface Reporte {
+  id: string;
+  codigo: string;
+  nombre: string;
+  motivo: string;
+  uid: string;
+  fecha: number;
+}
+
+/** Usuarios que pueden leer etiquetas con foto y verificar productos — config/cargadores */
+export interface Cargador { uid: string; nombre: string; email: string }
 
 /** Receta casera: ingredientes de la biblioteca, en cuántas porciones se divide y (opcional) el peso de la fuente terminada */
 export interface Receta {

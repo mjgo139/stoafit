@@ -15,6 +15,24 @@ service cloud.firestore {
       return conSesion() && request.auth.uid == uid;
     }
 
+    // Cargadores: pueden leer etiquetas con foto y verificar o corregir productos de la base compartida
+    function esCargador() {
+      return conSesion() && (esAdmin() || (exists(/databases/$(database)/documents/config/cargadores)
+        && request.auth.uid in get(/databases/$(database)/documents/config/cargadores).data.uids));
+    }
+
+    // Producto de la base compartida: el id del documento ES el código de barras
+    function productoValido(codigo) {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['codigo', 'nombre', 'marca', 'por100', 'porciones', 'verificado', 'creadoPor', 'creado', 'actualizado', 'verificadoPor', 'via'])
+        && d.codigo == codigo && codigo.matches('^([0-9]{8}|[0-9]{12,14})$')
+        && d.nombre is string && d.nombre.size() > 0 && d.nombre.size() <= 80
+        && (!('marca' in d) || (d.marca is string && d.marca.size() <= 60))
+        && d.por100.kcal is number && d.por100.kcal >= 0 && d.por100.kcal <= 1000
+        && d.porciones is list && d.porciones.size() > 0 && d.porciones.size() <= 8
+        && d.verificado is bool && d.creadoPor is string;
+    }
+
     function esAdmin() {
       return conSesion() && exists(/databases/$(database)/documents/config/admins)
         && request.auth.uid in get(/databases/$(database)/documents/config/admins).data.uids;
@@ -79,7 +97,9 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      allow read: if puedeVer(uid);
+      allow get: if puedeVer(uid);
+      // El admin solo puede buscar una cuenta por su correo, de a una (para marcar cargadores)
+      allow list: if puedeVer(uid) || (esAdmin() && request.query.limit <= 1);
       allow delete: if esDueno(uid);
       allow create, update: if esDueno(uid) && perfilValido(uid);
 
@@ -202,6 +222,33 @@ service cloud.firestore {
     match /config/admins {
       allow read: if conSesion();
       allow write: if false;
+    }
+
+    // Lista de cargadores: la leen todos (para saber si son cargadores); la cambia solo el admin
+    match /config/cargadores {
+      allow read: if conSesion();
+      allow write: if esAdmin() && request.resource.data.keys().hasOnly(['uids', 'info'])
+        && request.resource.data.uids is list && request.resource.data.uids.size() <= 200;
+    }
+
+    // Base compartida de productos envasados: un código = un producto
+    match /productos/{codigo} {
+      allow read: if conSesion();
+      // Cualquiera con sesión lo crea si el código no existe; si no es cargador, queda "sin verificar"
+      allow create: if conSesion() && productoValido(codigo)
+        && request.resource.data.creadoPor == request.auth.uid
+        && (request.resource.data.verificado == false || esCargador());
+      // Corregir, verificar o borrar: solo cargadores y admin (el código no cambia nunca)
+      allow update: if esCargador() && productoValido(codigo) && request.resource.data.codigo == resource.data.codigo;
+      allow delete: if esCargador();
+    }
+
+    // Reportes de errores en productos: los crea cualquiera con sesión; los ven y borran cargadores y admin
+    match /reportes/{id} {
+      allow create: if conSesion() && request.resource.data.uid == request.auth.uid
+        && request.resource.data.codigo is string && request.resource.data.motivo is string
+        && request.resource.data.motivo.size() > 0 && request.resource.data.motivo.size() <= 300;
+      allow read, delete: if esCargador();
     }
   }
 }

@@ -6,10 +6,10 @@ import {
 } from 'firebase/auth';
 import {
   collection, deleteDoc, doc, getDoc, getDocs, initializeFirestore, limit, orderBy, documentId,
-  persistentLocalCache, persistentMultipleTabManager, query, setDoc, where,
+  persistentLocalCache, persistentMultipleTabManager, query, runTransaction, setDoc, where,
   writeBatch, type Firestore,
 } from 'firebase/firestore';
-import type { Alimento, ComidaGuardada, Dia, Perfil, Plan, RegistroCuerpo } from '../lib/tipos';
+import type { Alimento, Cargador, ComidaGuardada, Dia, Perfil, Plan, Producto, RegistroCuerpo, Reporte } from '../lib/tipos';
 import { firebaseConfig } from '../firebaseConfig';
 import { ErrorApp, type Repo, type Usuario } from './repo';
 import type { Comentario, Objetivo, Profesional, Solicitud, TipoProfesional, Vinculo, Codigo } from '../pro/tipos';
@@ -181,6 +181,85 @@ export class RepoFirebase implements Repo {
   }
   async borrarGuardada(uid: string, id: string) {
     await sinBloquear(deleteDoc(doc(this.col(uid, 'savedMeals'), id)));
+  }
+
+  // ── Base compartida de productos: productos/{codigo} (el código es la llave) ──
+  async leerProducto(codigo: string) {
+    const s = await getDoc(doc(this.db, 'productos', codigo));
+    return s.exists() ? ({ ...(s.data() as Producto), codigo: s.id }) : null;
+  }
+  async crearProducto(p: Producto) {
+    // En una transacción: si otro lo creó un segundo antes, se devuelve ese y no se pisa
+    return runTransaction(this.db, async (t) => {
+      const ref = doc(this.db, 'productos', p.codigo);
+      const s = await t.get(ref);
+      if (s.exists()) return { creado: false, producto: { ...(s.data() as Producto), codigo: s.id } };
+      t.set(ref, limpio(p));
+      return { creado: true, producto: p };
+    });
+  }
+  async guardarProducto(p: Producto) {
+    await setDoc(doc(this.db, 'productos', p.codigo), limpio(p));
+  }
+  async borrarProducto(codigo: string) {
+    await deleteDoc(doc(this.db, 'productos', codigo));
+  }
+  async leerSinVerificar() {
+    const s = await getDocs(query(collection(this.db, 'productos'), where('verificado', '==', false), limit(100)));
+    return s.docs.map((d) => ({ ...(d.data() as Producto), codigo: d.id })).sort((a, b) => b.creado - a.creado);
+  }
+  async reportar(r: Reporte) {
+    await setDoc(doc(this.db, 'reportes', r.id), limpio(r));
+  }
+  async leerReportes() {
+    const s = await getDocs(query(collection(this.db, 'reportes'), limit(100)));
+    return s.docs.map((d) => ({ ...(d.data() as Reporte), id: d.id })).sort((a, b) => b.fecha - a.fecha);
+  }
+  async borrarReporte(id: string) {
+    await deleteDoc(doc(this.db, 'reportes', id));
+  }
+  async esCargador(uid: string) {
+    try {
+      const s = await getDoc(doc(this.db, 'config', 'cargadores'));
+      return ((s.data()?.uids as string[] | undefined) ?? []).includes(uid) || (await this.esAdmin(uid));
+    } catch {
+      return false;
+    }
+  }
+  async leerCargadores() {
+    const s = await getDoc(doc(this.db, 'config', 'cargadores'));
+    const info = (s.data()?.info ?? {}) as Record<string, Omit<Cargador, 'uid'>>;
+    return ((s.data()?.uids as string[] | undefined) ?? []).map((uid) => ({ uid, nombre: info[uid]?.nombre ?? '', email: info[uid]?.email ?? '' }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }
+  async agregarCargador(email: string) {
+    // Solo el admin puede buscar una cuenta por su correo (las reglas lo limitan a 1 resultado)
+    const s = await getDocs(query(collection(this.db, 'users'), where('email', '==', email.trim().toLowerCase()), limit(1)));
+    if (s.empty) throw Object.assign(new ErrorApp('cargador/no-existe'), { code: 'cargador/no-existe' });
+    const d = s.docs[0];
+    const c: Cargador = { uid: d.id, nombre: (d.data().nombre as string) || email, email: email.trim().toLowerCase() };
+    const ref = doc(this.db, 'config', 'cargadores');
+    await runTransaction(this.db, async (t) => {
+      const x = await t.get(ref);
+      const uids = [...new Set([...((x.data()?.uids as string[]) ?? []), c.uid])];
+      const info = { ...((x.data()?.info as object) ?? {}), [c.uid]: { nombre: c.nombre, email: c.email } };
+      t.set(ref, { uids, info });
+    });
+    return c;
+  }
+  async quitarCargador(uid: string) {
+    const ref = doc(this.db, 'config', 'cargadores');
+    await runTransaction(this.db, async (t) => {
+      const x = await t.get(ref);
+      const uids = ((x.data()?.uids as string[]) ?? []).filter((u) => u !== uid);
+      const info = { ...((x.data()?.info as Record<string, unknown>) ?? {}) };
+      delete info[uid];
+      t.set(ref, { uids, info });
+    });
+  }
+  async leerEtiqueta(foto: Blob) {
+    const { leerEtiquetaConGemini } = await import('./ia');
+    return leerEtiquetaConGemini(this.app, foto);
   }
 
   async leerCuerpo(uid: string) {

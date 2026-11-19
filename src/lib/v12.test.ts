@@ -1,0 +1,48 @@
+import { describe, expect, it } from 'vitest';
+import { macrosDe } from './nutricion';
+import { CODIGO_VALIDO, alimentoDeProducto, codigoDeId, idProducto, limpiarLectura, productoDeEtiqueta } from './productos';
+
+describe('base compartida: un código = un producto', () => {
+  const e = { nombre: 'Pan de leche', marca: 'Bimbo', codigo: '7840042000414', modo: 'porcion' as const, porcion: '1½ unidad', gramos: 50, kcal: 145, prot: 3.5, carb: 27, gras: 2.6 };
+  it('el id siempre sale del código', () => {
+    expect(idProducto('7840042000414')).toBe('cod-7840042000414');
+    expect(codigoDeId('cod-7840042000414')).toBe('7840042000414');
+    expect(codigoDeId('chipa')).toBeNull();
+    expect(CODIGO_VALIDO.test('7840042000414')).toBe(true);
+    expect(CODIGO_VALIDO.test('12345678')).toBe(true);
+    expect(CODIGO_VALIDO.test('123456789')).toBe(false);
+  });
+  it('arma el producto desde la etiqueta "por porción"', () => {
+    const p = productoDeEtiqueta(e, 'u1', false, 'foto', 1000);
+    expect(p).toMatchObject({ codigo: '7840042000414', nombre: 'Pan de leche', marca: 'Bimbo', verificado: false, creadoPor: 'u1', creado: 1000, via: 'foto' });
+    expect(p.por100).toEqual({ kcal: 290, prot: 7, carb: 54, gras: 5.2 });
+    expect(p.verificadoPor).toBeUndefined();
+    const a = alimentoDeProducto(p);
+    expect(a.id).toBe('cod-7840042000414');
+    expect(a.compartido).toBe(true);
+    expect(macrosDe(a, 50).kcal).toBe(145);
+  });
+  it('al corregir no cambia el código ni quién lo creó', () => {
+    const previo = productoDeEtiqueta(e, 'u1', false, 'manual', 1000);
+    const p = productoDeEtiqueta({ ...e, codigo: '9999999999999', kcal: 150 }, 'carga', true, 'manual', 2000, previo);
+    expect(p.codigo).toBe('7840042000414');
+    expect(p.creadoPor).toBe('u1');
+    expect(p.creado).toBe(1000);
+    expect(p.verificado).toBe(true);
+    expect(p.verificadoPor).toBe('carga');
+    expect(p.actualizado).toBe(2000);
+  });
+  it('sin código válido no se puede crear', () => {
+    expect(() => productoDeEtiqueta({ ...e, codigo: '' }, 'u1', false, 'manual')).toThrow();
+    expect(() => productoDeEtiqueta({ ...e, codigo: '12' }, 'u1', false, 'manual')).toThrow();
+  });
+});
+
+describe('lectura de la etiqueta con IA', () => {
+  it('limpia y valida lo que devuelve la IA', () => {
+    expect(limpiarLectura({ nombre: ' Pan ', kcal: '145', prot: 3.5, carb: '27,0', gras: 2.6, gramos: 50, porcion: '1½ unidad' }))
+      .toEqual({ nombre: 'Pan', kcal: 145, prot: 3.5, carb: 27, gras: 2.6, gramos: 50, porcion: '1½ unidad' });
+    expect(limpiarLectura({ kcal: -3, prot: 9999, carb: 'mucho', gramos: 0 })).toEqual({});
+    expect(limpiarLectura(null)).toEqual({});
+  });
+});
