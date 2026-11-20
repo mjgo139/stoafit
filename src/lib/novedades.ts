@@ -1,6 +1,13 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.7.1',
+    fecha: '2026-11-20',
+    cambios: [
+      'PC: la barra lateral muestra el emblema (laurel con la manzana), StoaFit en dorado y una línea dorada, como StoaGym.',
+    ],
+  },
+  {
     version: '1.7.0',
     fecha: '2026-11-20',
     cambios: [
