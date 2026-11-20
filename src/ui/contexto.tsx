@@ -103,6 +103,22 @@ export function ProveedorApp({ repo, children }: { repo: Repo; children: ReactNo
     setProfesional(pro?.activo ? pro : null);
   }, [repo, usuario]);
 
+  // Si el admin te marca como admin o cargador mientras la app está abierta, se nota al volver a ella
+  // (2 lecturas como mucho cada 5 minutos)
+  useEffect(() => {
+    if (!usuario || usuario.invitado) return;
+    let ultima = Date.now();
+    const revisar = async () => {
+      if (document.visibilityState !== 'visible' || Date.now() - ultima < 5 * 60_000) return;
+      ultima = Date.now();
+      const [a, car] = await Promise.all([repo.esAdmin(usuario.uid), repo.esCargador(usuario.uid).catch(() => false)]);
+      setAdmin(a);
+      setCargador(car || a);
+    };
+    document.addEventListener('visibilitychange', revisar);
+    return () => document.removeEventListener('visibilitychange', revisar);
+  }, [repo, usuario]);
+
   const aviso = useCallback((t: string) => {
     setMensaje(t);
     window.setTimeout(() => setMensaje((m) => (m === t ? null : m)), 2600);

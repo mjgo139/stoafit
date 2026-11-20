@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { useEffect, useRef, useState } from 'react';
 import { codigoValido } from '../lib/openfoodfacts';
 import { Icono } from './Icono';
@@ -94,7 +95,9 @@ export function Escaner({ alLeer }: { alLeer: (codigo: string) => void }) {
         <div className="rounded-[12px] border border-dashed border-ln3 p-4 text-center text-[14px] text-mu" role="alert">
           <Icono n="alerta" className="mx-auto oro" />
           <p className="mt-2">{estado === 'denegado'
-            ? 'No diste permiso para usar la cámara. Podés activarlo en los ajustes del navegador, o escribir el código abajo.'
+            ? (Capacitor.isNativePlatform()
+              ? 'StoaFit no tiene permiso para usar la cámara. Activalo en Ajustes del teléfono → Aplicaciones → StoaFit → Permisos → Cámara, o escribí el código abajo.'
+              : 'No diste permiso para usar la cámara. Podés activarlo en los ajustes del navegador, o escribir el código abajo.')
             : 'No encontramos una cámara en este dispositivo. Escribí el código que está debajo de las barras.'}</p>
         </div>
       )}

@@ -106,3 +106,10 @@ test('admin: lee la etiqueta con foto, revisa reportes, verifica y marca cargado
   await expect(page.getByTestId('cargador')).toContainText('Lucas');
   await captura(page, '94-cargadores');
 });
+
+test('cargador: "Leer etiqueta con foto" también al crear un alimento propio', async ({ page }) => {
+  await entrar(page, 'sofia@ejemplo.com', 'Sofía');
+  await page.getByRole('link', { name: 'Agregar a Almuerzo' }).click();
+  await page.getByRole('button', { name: /Crear alimento/ }).filter({ visible: true }).first().click();
+  await expect(page.getByTestId('leer-foto')).toBeVisible();
+});

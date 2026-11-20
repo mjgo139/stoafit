@@ -1,6 +1,15 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.6.4',
+    fecha: '2026-11-19',
+    cambios: [
+      'Android: la app ahora pide permiso para la cámara (escanear códigos y sacar la foto de la etiqueta).',
+      'Cargadores y admin: "Leer etiqueta con foto" también aparece en "Crear alimento".',
+      'Si te dan permisos de admin o cargador, se activan al volver a la app, sin cerrar sesión.',
+    ],
+  },
+  {
     version: '1.6.3',
     fecha: '2026-11-19',
     cambios: [

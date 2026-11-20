@@ -389,7 +389,7 @@ export default function Agregar() {
           <>
             {form.aviso && <p className="mb-3 rounded-[12px] bg-acentobg p-3 text-[13px]" role="status" data-testid="aviso-codigo">{form.aviso}</p>}
             <FormEtiqueta key={form.editar?.id ?? form.codigo ?? 'nuevo'} inicial={form.inicial} codigoFijo={form.codigo}
-              leerFoto={form.codigo ? productos.leerFoto : undefined}
+              leerFoto={productos.leerFoto}
               textoGuardar={form.codigo ? (form.editar ? 'Guardar y verificar' : 'Guardar producto') : 'Guardar alimento'}
               alBorrar={form.editar && !form.codigo ? async () => {
                 const id = form.editar!.id;
