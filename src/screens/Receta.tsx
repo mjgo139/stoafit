@@ -72,22 +72,22 @@ export default function Receta() {
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-start">
         <section>
-          <Grupo n={1} className="mb-3" extra={<span className="text-[13px] text-mu">{ingredientes.length}</span>}>Ingredientes</Grupo>
+          <Grupo n={1} className="mb-3" extra={<span className="text-[13.5px] text-mu">{ingredientes.length}</span>}>Ingredientes</Grupo>
           <div className="tarjeta py-1" data-testid="ingredientes">
             {ingredientes.map((i) => (
               <div key={i.id} className="fila last:border-0" data-testid="ingrediente">
                 <span className="min-w-0 flex-1 py-2">
                   <span className="block truncate font-semibold">{i.nombre}</span>
-                  <span className="block text-[13px] text-mu">{textoCantidad(i)}</span>
+                  <span className="block text-[13.5px] text-mu">{textoCantidad(i)}</span>
                 </span>
                 <span className="shrink-0 text-right"><span className="num block text-[16px]">{formatoNumero(i.kcal)}</span><LineaMacros m={i} /></span>
                 <button className="flex h-9 w-9 shrink-0 items-center justify-center text-mu2 hover:text-miss" aria-label={`Quitar ${i.nombre}`}
-                  onClick={() => setIngredientes((l) => l.filter((x) => x.id !== i.id))}><Icono n="basura" size={17} /></button>
+                  onClick={() => setIngredientes((l) => l.filter((x) => x.id !== i.id))}><Icono n="basura" size={16} /></button>
               </div>
             ))}
             <div className={`py-3 ${ingredientes.length ? 'border-t border-ln2' : ''}`}>
               <div className="relative">
-                <Icono n="buscar" size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-mu" />
+                <Icono n="buscar" size={20} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-mu" />
                 <input className="campo pl-10" placeholder="Agregar ingrediente: harina de maíz, queso…" value={texto}
                   onChange={(e) => setTexto(e.target.value)} aria-label="Buscar ingrediente" />
               </div>
@@ -96,13 +96,13 @@ export default function Receta() {
                   {resultados.map((a) => (
                     <li key={a.id}>
                       <button className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-[10px] px-2 text-left hover:bg-sf2" onClick={() => setElegido(a)} data-testid="resultado-ingrediente">
-                        <span className="truncate">{a.nombre}</span><Icono n="mas" size={18} className="shrink-0 oro" />
+                        <span className="truncate">{a.nombre}</span><Icono n="mas" size={20} className="shrink-0 oro" />
                       </button>
                     </li>
                   ))}
                 </ul>
               )}
-              {texto.trim() && !resultados.length && <p className="mt-2 text-[13px] text-mu">No encontramos “{texto}”. Podés crearlo como alimento propio desde Agregar.</p>}
+              {texto.trim() && !resultados.length && <p className="mt-2 text-[13.5px] text-mu">No encontramos “{texto}”. Podés crearlo como alimento propio desde Agregar.</p>}
             </div>
           </div>
         </section>
@@ -114,27 +114,27 @@ export default function Receta() {
               <button className="chip h-11 w-11" aria-label="Menos porciones" onClick={() => setPorciones((p) => Math.max(1, p - 1))}><Icono n="menos" size={16} /></button>
               <span className="num w-12 text-center text-[28px] oro" aria-label="Porciones">{n}</span>
               <button className="chip h-11 w-11" aria-label="Más porciones" onClick={() => setPorciones((p) => Math.min(60, p + 1))}><Icono n="mas" size={16} /></button>
-              <span className="text-[14px] text-mu">porciones</span>
+              <span className="text-[15px] text-mu">porciones</span>
             </div>
             <label className="mt-4 block"><span className="etiqueta">Peso de la fuente terminada (opcional)</span>
               <span className="relative mt-1.5 block">
                 <input className="campo pr-10" inputMode="decimal" value={peso} onChange={(e) => setPeso(e.target.value)} aria-label="Peso total cocido" placeholder={crudo ? `${formatoNumero(crudo)} (suma de ingredientes)` : 'en gramos'} />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-mu">g</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13.5px] text-mu">g</span>
               </span>
             </label>
-            <p className="mt-1.5 text-[12px] text-mu2">Al cocinar cambia el peso (se evapora agua). Si pesás la fuente sin el recipiente, la porción en gramos sale exacta.</p>
+            <p className="mt-1.5 text-[12.5px] text-mu2">Al cocinar cambia el peso (se evapora agua). Si pesás la fuente sin el recipiente, la porción en gramos sale exacta.</p>
           </section>
 
           <section className="panel-dia" data-testid="por-porcion">
             <div className="etiqueta">Cada porción ({formatoNumero(pesoFinal / n)} g)</div>
-            <div className="num mt-1 text-[40px] leading-none oro">{formatoNumero(total.kcal / n)} <span className="font-body text-[14px] text-mu">kcal</span></div>
+            <div className="num mt-1 text-[40px] leading-none oro">{formatoNumero(total.kcal / n)} <span className="font-body text-[15px] text-mu">kcal</span></div>
             <div className="mt-3"><LineaMacros m={{ kcal: 0, prot: total.prot / n, carb: total.carb / n, gras: total.gras / n }} /></div>
-            <p className="mt-3 text-[13px] text-mu">Receta entera: {formatoNumero(total.kcal)} kcal · {formatoNumero(pesoFinal)} g</p>
+            <p className="mt-3 text-[13.5px] text-mu">Receta entera: {formatoNumero(total.kcal)} kcal · {formatoNumero(pesoFinal)} g</p>
           </section>
 
           <button className="btn w-full" disabled={!valido || guardando} onClick={guardar}>{guardando ? 'Guardando…' : 'Guardar receta'}</button>
           {editarId && (borrar ? (
-            <div className="rounded-[12px] border border-miss p-3 text-[14px]">
+            <div className="rounded-[12px] border border-miss p-3 text-[15px]">
               <p>¿Borrar la receta? Lo que ya registraste en el diario queda igual.</p>
               <div className="mt-2 flex gap-2">
                 <button className="btn-sec flex-1 text-miss" onClick={async () => { await repo.borrarPropio(usuario.uid, editarId); aviso('Receta borrada'); nav(-1); }}>Sí, borrar</button>

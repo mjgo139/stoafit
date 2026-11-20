@@ -58,7 +58,7 @@ export default function App() {
 
 function Aviso({ texto }: { texto: string }) {
   return (
-    <div role="status" className="entrar fixed inset-x-0 bottom-[96px] z-[70] mx-auto w-fit max-w-[90vw] rounded-full border border-gold2 bg-sf px-5 py-2.5 text-[14px] font-semibold lg:bottom-8"
+    <div role="status" className="entrar fixed inset-x-0 bottom-[96px] z-[70] mx-auto w-fit max-w-[90vw] rounded-full border border-gold2 bg-sf px-5 py-2.5 text-[15px] font-semibold lg:bottom-8"
       style={{ boxShadow: 'var(--sombra)' }}>
       {texto}
     </div>

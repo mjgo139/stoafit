@@ -59,7 +59,7 @@ export default function Plan() {
 
       <div className="mt-7 grid grid-cols-1 gap-7 lg:grid-cols-2 lg:gap-6">
         <section>
-          <Grupo n={1} className="mb-3" extra={<button className="text-[13px] font-semibold oro" onClick={() => setEditarMeta(true)}>Editar</button>}>Meta diaria</Grupo>
+          <Grupo n={1} className="mb-3" extra={<button className="text-[13.5px] font-semibold oro" onClick={() => setEditarMeta(true)}>Editar</button>}>Meta diaria</Grupo>
           <div className="panel-dia" data-testid="meta-diaria">
             <div className="flex items-end justify-between gap-4">
               <div>
@@ -72,19 +72,19 @@ export default function Plan() {
               {([['Proteínas', metas.prot, pct.prot, 'var(--prot)'], ['Carbohidratos', metas.carb, pct.carb, 'var(--carb)'], ['Grasas', metas.gras, pct.gras, 'var(--gras)']] as const).map(([t, g, p, c]) => (
                 <div key={t} className="rounded-[12px] border border-ln2 p-3 text-center">
                   <div className="num text-[22px]" style={{ color: c }}>{g} g</div>
-                  <div className="text-[12px] text-mu">{t}<span className="block">{p} %</span></div>
+                  <div className="text-[12.5px] text-mu">{t}<span className="block">{p} %</span></div>
                 </div>
               ))}
             </div>
-            <div className="mt-4 flex items-center gap-2 text-[14px] text-mu"><Icono n="agua" size={18} className="acento" />Agua: <b className="text-tx">{formatoNumero(metas.agua / 1000, 2)} L</b> ({metas.agua / 250} vasos)</div>
+            <div className="mt-4 flex items-center gap-2 text-[15px] text-mu"><Icono n="agua" size={20} className="acento" />Agua: <b className="text-tx">{formatoNumero(metas.agua / 1000, 2)} L</b> ({metas.agua / 250} vasos)</div>
             {datos ? (
-              <p className="mt-4 border-t border-ln2 pt-3 text-[13px] text-mu">
+              <p className="mt-4 border-t border-ln2 pt-3 text-[13.5px] text-mu">
                 Basal (Mifflin-St Jeor): <b className="text-tx">{formatoNumero(basal(datos))} kcal</b> · con actividad {ACTIVIDADES.find((a) => a.v === datos.actividad)?.t.toLowerCase()}: <b className="text-tx">{formatoNumero(gastoTotal(datos))} kcal</b> · objetivo: {OBJETIVOS.find((o) => o.v === datos.objetivo)?.t.toLowerCase()}.
               </p>
-            ) : <p className="mt-4 border-t border-ln2 pt-3 text-[13px] text-mu">Completá tus datos para una meta a tu medida.</p>}
+            ) : <p className="mt-4 border-t border-ln2 pt-3 text-[13.5px] text-mu">Completá tus datos para una meta a tu medida.</p>}
             <div className="mt-4 flex flex-wrap gap-2">
-              <Link to="/conocerte?editar=1" className="btn-sec h-10 text-[13px]">Cambiar mis datos</Link>
-              {datos && perfil.metasManual && <button className="btn-sec h-10 text-[13px]" onClick={recalcular}>Volver a la calculada</button>}
+              <Link to="/conocerte?editar=1" className="btn-sec h-10 text-[13.5px]">Cambiar mis datos</Link>
+              {datos && perfil.metasManual && <button className="btn-sec h-10 text-[13.5px]" onClick={recalcular}>Volver a la calculada</button>}
             </div>
           </div>
         </section>
@@ -95,12 +95,12 @@ export default function Plan() {
             <ul className="flex flex-col">
               {lista.map((c) => (
                 <li key={c.id} className="fila last:border-0">
-                  <span className="flex-1"><b>{c.nombre}</b><span className="block text-[12px] text-mu">{COMIDAS.find((x) => x.id === c.id)?.hora ?? 'A tu hora'}</span></span>
-                  <span className="text-right"><span className="num text-[18px]">{formatoNumero(Math.round(metas.kcal * repartoDe(lista)[c.id] / 10) * 10)}</span> <span className="text-[12px] text-mu">kcal</span></span>
+                  <span className="flex-1"><b>{c.nombre}</b><span className="block text-[12.5px] text-mu">{COMIDAS.find((x) => x.id === c.id)?.hora ?? 'A tu hora'}</span></span>
+                  <span className="text-right"><span className="num text-[18px]">{formatoNumero(Math.round(metas.kcal * repartoDe(lista)[c.id] / 10) * 10)}</span> <span className="text-[12.5px] text-mu">kcal</span></span>
                 </li>
               ))}
             </ul>
-            <p className="mt-2 text-[12px] text-mu2">Es una guía: lo que importa es el total del día.</p>
+            <p className="mt-2 text-[12.5px] text-mu2">Es una guía: lo que importa es el total del día.</p>
           </div>
         </section>
       </div>
@@ -112,10 +112,10 @@ export default function Plan() {
             const t = totalesPlantilla(p);
             return (
               <button key={p.id} className="tarjeta flex h-full flex-col text-left transition-colors hover:border-gold2" onClick={() => setVerPlantilla(p)} data-testid="plantilla">
-                <span className="font-display text-[19px] font-semibold">{p.nombre}</span>
-                <span className="mt-0.5 text-[13px] text-mu">{p.linea}</span>
+                <span className="font-display text-[20px] font-semibold">{p.nombre}</span>
+                <span className="mt-0.5 text-[13.5px] text-mu">{p.linea}</span>
                 <span className="mt-auto flex items-end justify-between pt-3">
-                  <span><span className="num text-[24px] oro">{formatoNumero(t.kcal)}</span> <span className="text-[12px] text-mu">kcal</span></span>
+                  <span><span className="num text-[26px] oro">{formatoNumero(t.kcal)}</span> <span className="text-[12.5px] text-mu">kcal</span></span>
                   <LineaMacros m={t} />
                 </span>
               </button>
@@ -125,9 +125,9 @@ export default function Plan() {
       </section>
 
       <section className="mt-8">
-        <Grupo n={4} className="mb-3" extra={<button className="text-[13px] font-semibold oro" onClick={() => setEditarPlan({ id: nuevoId(), nombre: '', comidas: {}, creado: Date.now() })}>+ Nuevo</button>}>Mis planes</Grupo>
+        <Grupo n={4} className="mb-3" extra={<button className="text-[13.5px] font-semibold oro" onClick={() => setEditarPlan({ id: nuevoId(), nombre: '', comidas: {}, creado: Date.now() })}>+ Nuevo</button>}>Mis planes</Grupo>
         {!planes ? <Cargando /> : planes.length === 0 ? (
-          <p className="tarjeta py-6 text-center text-[14px] text-mu">Anotá tu propio plan: qué comer en cada comida. Si tenés nutricionista, sus planes aparecen acá.</p>
+          <p className="tarjeta py-6 text-center text-[15px] text-mu">Anotá tu propio plan: qué comer en cada comida. Si tenés nutricionista, sus planes aparecen acá.</p>
         ) : (
           <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {planes.map((p) => (
@@ -135,12 +135,12 @@ export default function Plan() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     {p.asignadaPor && <div className="etiqueta acento">De tu nutricionista · {p.nombreAsignador}</div>}
-                    <div className="font-display text-[19px] font-semibold">{p.nombre}</div>
-                    {p.descripcion && <p className="text-[13px] text-mu">{p.descripcion}</p>}
+                    <div className="font-display text-[20px] font-semibold">{p.nombre}</div>
+                    {p.descripcion && <p className="text-[13.5px] text-mu">{p.descripcion}</p>}
                   </div>
-                  {!p.asignadaPor && <button className="chip h-8 shrink-0 px-2.5 text-[12px]" onClick={() => setEditarPlan(p)}><Icono n="editar" size={14} />Editar</button>}
+                  {!p.asignadaPor && <button className="chip h-8 shrink-0 px-2.5 text-[12.5px]" onClick={() => setEditarPlan(p)}><Icono n="editar" size={16} />Editar</button>}
                 </div>
-                <dl className="mt-3 flex flex-col gap-2 text-[14px]">
+                <dl className="mt-3 flex flex-col gap-2 text-[15px]">
                   {Object.entries(p.comidas).filter(([, v]) => v).sort(([a], [b]) => orden(a) - orden(b)).map(([id, v]) => (
                     <div key={id}><dt className="etiqueta">{nombreComida(lista, id)}</dt><dd className="mt-0.5">{v}</dd></div>
                   ))}
@@ -161,7 +161,7 @@ export default function Plan() {
             {(Object.entries(itemsDePlantilla(verPlantilla, nuevoId)) as [TipoComida, ItemComida[]][]).map(([c, l]) => (
               <div key={c} className="mb-3">
                 <div className="etiqueta">{nombreComida(lista, c)}</div>
-                <ul className="mt-1 text-[14px]">
+                <ul className="mt-1 text-[15px]">
                   {l.map((i) => <li key={i.id} className="flex justify-between gap-2 py-0.5"><span>{i.nombre} <span className="text-mu">· {textoCantidad(i)}</span></span><span className="shrink-0 text-mu">{formatoNumero(i.kcal)}</span></li>)}
                 </ul>
               </div>
@@ -189,7 +189,7 @@ function EditarMeta({ inicial, alGuardar }: { inicial: Metas; alGuardar: (m: Met
       <span className="relative mt-1.5 block">
         <input className="campo pr-12" inputMode="numeric" value={m[k] || ''} aria-label={t}
           onChange={(e) => setM({ ...m, [k]: Math.max(0, Math.min(k === 'agua' ? 8000 : 9000, Number(e.target.value.replace(/\D/g, '')) || 0)) })} />
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-mu">{u}</span>
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13.5px] text-mu">{u}</span>
       </span>
     </label>
   );
@@ -199,7 +199,7 @@ function EditarMeta({ inicial, alGuardar }: { inicial: Metas; alGuardar: (m: Met
       {campo('kcal', 'Calorías', 'kcal')}
       <div className="grid grid-cols-3 gap-2">{campo('prot', 'Proteínas', 'g')}{campo('carb', 'Carbohidratos', 'g')}{campo('gras', 'Grasas', 'g')}</div>
       {campo('agua', 'Agua', 'ml')}
-      <p className="text-[13px] text-mu">Los macros suman <b className="text-tx">{formatoNumero(desde)} kcal</b>{Math.abs(desde - m.kcal) > m.kcal * 0.08 ? ' · conviene que se parezcan a las calorías.' : '.'}</p>
+      <p className="text-[13.5px] text-mu">Los macros suman <b className="text-tx">{formatoNumero(desde)} kcal</b>{Math.abs(desde - m.kcal) > m.kcal * 0.08 ? ' · conviene que se parezcan a las calorías.' : '.'}</p>
       <button className="btn w-full" disabled={m.kcal < 800} onClick={() => alGuardar(m)}>Guardar meta</button>
     </div>
   );

@@ -51,15 +51,15 @@ export function ElegirPorcion({ alimento: a, favorito, alFavorito, alAgregar, al
   return (
     <div>
       {a.compartido && (
-        <p className="-mt-2 mb-2 flex flex-wrap items-center gap-2 text-[12px]" data-testid="estado-producto">
+        <p className="-mt-2 mb-2 flex flex-wrap items-center gap-2 text-[12.5px]" data-testid="estado-producto">
           {a.verificado
-            ? <span className="inline-flex items-center gap-1 font-bold uppercase tracking-[.08em]" style={{ color: 'var(--verde)' }}><Icono n="check" size={13} />Verificado</span>
+            ? <span className="inline-flex items-center gap-1 font-bold uppercase tracking-[.08em]" style={{ color: 'var(--verde)' }}><Icono n="check" size={16} />Verificado</span>
             : <span className="rounded-full border border-ln3 px-2 py-0.5 font-bold uppercase tracking-[.08em] text-mu">Sin verificar</span>}
           <span className="text-mu2">Base compartida de StoaFit</span>
         </p>
       )}
       {(a.marca || a.codigo || a.receta) && (
-        <p className="-mt-2 mb-3 text-[13px] text-mu">
+        <p className="-mt-2 mb-3 text-[13.5px] text-mu">
           {a.receta ? `Receta · ${a.receta.ingredientes.length} ingredientes · rinde ${a.receta.porciones} porciones` : [a.marca, a.codigo && `Código ${a.codigo}`].filter(Boolean).join(' · ')}
         </p>
       )}
@@ -70,7 +70,7 @@ export function ElegirPorcion({ alimento: a, favorito, alFavorito, alAgregar, al
         <input className="campo num h-11 w-[84px] shrink-0 text-center text-[22px]" inputMode="decimal" value={cant} aria-label="Cantidad"
           onChange={(e) => setCant(e.target.value.replace(/[^0-9.,]/g, '').slice(0, 7))} onFocus={(e) => e.target.select()} />
         <button className="chip h-11 w-11 shrink-0" aria-label="Más cantidad" onClick={() => setCant((c) => texto(num(c) + (enGramos ? 10 : 0.5)))}><Icono n="mas" size={16} /></button>
-        <select className="campo h-11 min-w-0 flex-1 px-3 text-[14px]" value={porcion} onChange={(e) => cambiarUnidad(e.target.value)} aria-label="Unidad">
+        <select className="campo h-11 min-w-0 flex-1 px-3 text-[15px]" value={porcion} onChange={(e) => cambiarUnidad(e.target.value)} aria-label="Unidad">
           {a.porciones.map((p) => (
             <option key={p.nombre} value={p.nombre}>{p.nombre}{p.nombre !== '100 g' && p.nombre !== '100 ml' && !p.nombre.includes('(') ? ` (${formatoNumero(p.gramos)} g)` : ''}</option>
           ))}
@@ -79,7 +79,7 @@ export function ElegirPorcion({ alimento: a, favorito, alFavorito, alAgregar, al
       </div>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {(enGramos ? GRAMOS : CANTIDADES).map((c) => (
-          <button key={c} className={`chip h-8 px-2.5 text-[12px] ${cantidad === c ? 'chip-on' : ''}`} onClick={() => setCant(texto(c))}>
+          <button key={c} className={`chip h-8 px-2.5 text-[12.5px] ${cantidad === c ? 'chip-on' : ''}`} onClick={() => setCant(texto(c))}>
             {enGramos ? `${c} ${porcion}` : c === 0.5 ? '½' : c === 1.5 ? '1½' : c}
           </button>
         ))}
@@ -91,13 +91,13 @@ export function ElegirPorcion({ alimento: a, favorito, alFavorito, alAgregar, al
           {([['prot', 'Proteínas'], ['carb', 'Carbohidr.'], ['gras', 'Grasas']] as const).map(([k, t]) => (
             <div key={k}>
               <div className="text-[11px] font-bold" style={{ color: `var(--${k})` }}>{r[k]} %</div>
-              <div className="num text-[18px]">{formatoNumero(item[k], 1)} <span className="text-[12px] text-mu">g</span></div>
+              <div className="num text-[18px]">{formatoNumero(item[k], 1)} <span className="text-[12.5px] text-mu">g</span></div>
               <div className="text-[11px] text-mu">{t}</div>
             </div>
           ))}
         </div>
       </div>
-      <p className="mt-1.5 text-center text-[12px] text-mu2">{formatoNumero(item.gramos)} {suelta === 'ml' && enGramos ? 'ml' : 'g'} en total{a.fuente === 'off' ? ' · datos de Open Food Facts' : ''}</p>
+      <p className="mt-1.5 text-center text-[12.5px] text-mu2">{formatoNumero(item.gramos)} {suelta === 'ml' && enGramos ? 'ml' : 'g'} en total{a.fuente === 'off' ? ' · datos de Open Food Facts' : ''}</p>
 
       <div className="mt-3" data-testid="de-tu-meta">
         <div className="etiqueta mb-2">De tu meta del día</div>
@@ -131,7 +131,7 @@ export function ElegirPorcion({ alimento: a, favorito, alFavorito, alAgregar, al
         </div>
       )}
 
-      {alReportar && <button className="mx-auto mt-3 block text-[12px] font-semibold text-mu underline" onClick={alReportar}>¿Algún dato está mal? Reportar error</button>}
+      {alReportar && <button className="mx-auto mt-3 block text-[12.5px] font-semibold text-mu underline" onClick={alReportar}>¿Algún dato está mal? Reportar error</button>}
       <div className="mt-4 flex gap-2">
         {alFavorito && (
           <button className="btn-sec h-[52px] w-[52px] shrink-0 px-0" aria-label={favorito ? 'Quitar de favoritos' : 'Agregar a favoritos'} aria-pressed={!!favorito} onClick={alFavorito}>
@@ -140,7 +140,7 @@ export function ElegirPorcion({ alimento: a, favorito, alFavorito, alAgregar, al
         )}
         {alEditar && (
           <button className="btn-sec h-[52px] w-[52px] shrink-0 px-0" aria-label={a.receta ? 'Editar receta' : a.compartido ? 'Corregir producto' : 'Editar alimento'} onClick={alEditar}>
-            <Icono n="editar" size={19} />
+            <Icono n="editar" size={20} />
           </button>
         )}
         <button className="btn flex-1" disabled={cantidad <= 0} onClick={() => alAgregar(item, [...dias].sort())}>
@@ -168,7 +168,7 @@ function AnilloMacros({ kcal, r }: { kcal: number; r: { prot: number; carb: numb
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="num text-[22px] leading-none oro">{formatoNumero(kcal)}</span>
-        <span className="mt-0.5 text-[10px] uppercase tracking-[.08em] text-mu">kcal</span>
+        <span className="mt-0.5 text-[11px] uppercase tracking-[.08em] text-mu">kcal</span>
       </div>
     </div>
   );
@@ -247,12 +247,12 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar, codigoFijo, leerFot
           <input ref={archivo} type="file" accept="image/*" capture="environment" className="hidden" aria-label="Foto de la etiqueta"
             onChange={(e) => foto(e.target.files?.[0])} />
           <button className="btn w-full" disabled={leyendo} onClick={() => archivo.current?.click()}>
-            <Icono n="camara" size={18} />{leyendo ? 'Leyendo la etiqueta…' : leida ? 'Leer otra foto' : 'Leer etiqueta con foto'}
+            <Icono n="camara" size={20} />{leyendo ? 'Leyendo la etiqueta…' : leida ? 'Leer otra foto' : 'Leer etiqueta con foto'}
           </button>
-          <p className="mt-2 text-center text-[12px] text-mu">
+          <p className="mt-2 text-center text-[12.5px] text-mu">
             {leida ? <b className="oro">Listo: revisá los valores antes de guardar.</b> : 'Sacale una foto de cerca a la tabla "Información Nutricional", sin brillo.'}
           </p>
-          {errorFoto && <p className="mt-1 text-center text-[13px] text-miss" role="alert">{errorFoto}</p>}
+          {errorFoto && <p className="mt-1 text-center text-[13.5px] text-miss" role="alert">{errorFoto}</p>}
         </div>
       )}
       <label className="block"><span className="etiqueta">Nombre</span>
@@ -281,7 +281,7 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar, codigoFijo, leerFot
           <input className="campo mt-1.5" inputMode="decimal" value={gramos} onChange={(e) => setGramos(e.target.value)} aria-label="Gramos de la porción" />
         </label>
       </div>
-      <p className="text-[13px] text-mu">Lo que aporta <b>{modo === 'porcion' ? `esa porción (${formatoNumero(g)} g)` : 'cada 100 g o 100 ml'}</b>:</p>
+      <p className="text-[13.5px] text-mu">Lo que aporta <b>{modo === 'porcion' ? `esa porción (${formatoNumero(g)} g)` : 'cada 100 g o 100 ml'}</b>:</p>
       <div className="grid grid-cols-2 gap-2">
         {campo('kcal', 'Calorías')}{campo('prot', 'Proteínas (g)')}{campo('carb', 'Carbohidratos (g)')}{campo('gras', 'Grasas (g)')}
       </div>
@@ -293,14 +293,14 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar, codigoFijo, leerFot
               onChange={(e) => setOtras(otras.map((x, k) => (k === i ? { ...x, nombre: e.target.value } : x)))} />
             <input className="campo" inputMode="decimal" value={o.gramos} placeholder="g" aria-label={`Gramos de otra medida ${i + 1}`}
               onChange={(e) => setOtras(otras.map((x, k) => (k === i ? { ...x, gramos: e.target.value } : x)))} />
-            <button className="flex items-center justify-center text-mu2" aria-label={`Quitar medida ${i + 1}`} onClick={() => setOtras(otras.filter((_, k) => k !== i))}><Icono n="basura" size={17} /></button>
+            <button className="flex items-center justify-center text-mu2" aria-label={`Quitar medida ${i + 1}`} onClick={() => setOtras(otras.filter((_, k) => k !== i))}><Icono n="basura" size={16} /></button>
           </div>
         ))}
-        {otras.length < 4 && <button className="mt-2 text-[13px] font-semibold oro" onClick={() => setOtras([...otras, { nombre: '', gramos: '' }])}>+ Agregar medida</button>}
+        {otras.length < 4 && <button className="mt-2 text-[13.5px] font-semibold oro" onClick={() => setOtras([...otras, { nombre: '', gramos: '' }])}>+ Agregar medida</button>}
       </div>
       <button className="btn mt-1 w-full" disabled={!valido || leyendo} onClick={guardar}>{textoGuardar}</button>
       {alBorrar && (borrar ? (
-        <div className="rounded-[12px] border border-miss p-3 text-[14px]">
+        <div className="rounded-[12px] border border-miss p-3 text-[15px]">
           <p>¿Borrar <b>{nombre}</b>? Lo que ya registraste en el diario queda igual.</p>
           <div className="mt-2 flex gap-2"><button className="btn-sec flex-1 text-miss" onClick={alBorrar}>Sí, borrar</button><button className="btn-sec flex-1" onClick={() => setBorrar(false)}>Cancelar</button></div>
         </div>

@@ -44,7 +44,7 @@ export default function Acceso() {
 
       {vista === 'portada' ? (
         <div className="entrar mt-10 flex flex-col gap-3">
-          <p className="mb-4 text-center font-display text-[18px] italic leading-snug text-tx2">“{frase.texto}”<span className="mt-1 block text-[13px] not-italic text-mu">— {frase.autor}</span></p>
+          <p className="mb-4 text-center font-display text-[18px] italic leading-snug text-tx2">“{frase.texto}”<span className="mt-1 block text-[13.5px] not-italic text-mu">— {frase.autor}</span></p>
           <button className="btn w-full" onClick={() => ir('registrar')}>Crear cuenta</button>
           <button className="btn-sec h-[52px] w-full" onClick={() => ir('ingresar')}>Iniciar sesión</button>
           {repo.permiteGoogle && (
@@ -52,12 +52,12 @@ export default function Acceso() {
               <Icono n="google" size={20} />Continuar con Google
             </button>
           )}
-          <button className="mt-2 p-2 text-[14px] font-semibold oro" disabled={enviando} onClick={() => hacer(() => repo.ingresarComoInvitado())}>
+          <button className="mt-2 p-2 text-[15px] font-semibold oro" disabled={enviando} onClick={() => hacer(() => repo.ingresarComoInvitado())}>
             Continuar como invitado
           </button>
-          {error && <p role="alert" className="text-center text-[14px] text-miss">{error}</p>}
+          {error && <p role="alert" className="text-center text-[15px] text-miss">{error}</p>}
           {repo.modo === 'prueba' && (
-            <p className="mt-4 rounded-[12px] border border-dashed border-ln3 p-3 text-center text-[13px] text-mu" data-testid="aviso-prueba">
+            <p className="mt-4 rounded-[12px] border border-dashed border-ln3 p-3 text-center text-[13.5px] text-mu" data-testid="aviso-prueba">
               <b>Modo prueba</b>: los datos son inventados y no se guardan.<br />Cuenta de ejemplo: <b>sofia@ejemplo.com</b> / <b>stoafit</b>
             </p>
           )}
@@ -85,14 +85,14 @@ export default function Acceso() {
               </span>
             </label>
           )}
-          {error && <p role="alert" className="text-[14px] text-miss">{error}</p>}
+          {error && <p role="alert" className="text-[15px] text-miss">{error}</p>}
           <button className="btn mt-1 w-full" disabled={enviando}>
             {enviando ? 'Un momento…' : vista === 'ingresar' ? 'Entrar' : vista === 'registrar' ? 'Crear cuenta' : 'Enviar correo'}
           </button>
-          {vista === 'ingresar' && <button type="button" className="p-1 text-[14px] font-semibold oro" onClick={() => ir('recuperar')}>Olvidé mi contraseña</button>}
-          {vista === 'ingresar' && <button type="button" className="p-1 text-[14px] text-mu" onClick={() => ir('registrar')}>¿No tenés cuenta? <b className="oro">Creá una</b></button>}
-          {vista === 'registrar' && <button type="button" className="p-1 text-[14px] text-mu" onClick={() => ir('ingresar')}>¿Ya tenés cuenta? <b className="oro">Iniciá sesión</b></button>}
-          <button type="button" className="mt-2 flex items-center justify-center gap-1 p-1 text-[14px] text-mu" onClick={() => ir('portada')}>
+          {vista === 'ingresar' && <button type="button" className="p-1 text-[15px] font-semibold oro" onClick={() => ir('recuperar')}>Olvidé mi contraseña</button>}
+          {vista === 'ingresar' && <button type="button" className="p-1 text-[15px] text-mu" onClick={() => ir('registrar')}>¿No tenés cuenta? <b className="oro">Creá una</b></button>}
+          {vista === 'registrar' && <button type="button" className="p-1 text-[15px] text-mu" onClick={() => ir('ingresar')}>¿Ya tenés cuenta? <b className="oro">Iniciá sesión</b></button>}
+          <button type="button" className="mt-2 flex items-center justify-center gap-1 p-1 text-[15px] text-mu" onClick={() => ir('portada')}>
             <Icono n="atras" size={16} />Volver
           </button>
         </form>

@@ -1,6 +1,15 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.7.2',
+    fecha: '2026-11-20',
+    cambios: [
+      'Letras y tamaños unificados con una sola escala, como StoaGym (11 · 12,5 · 13,5 · 15 · 16 · 18 · 20 · 26).',
+      'Íconos parejos: mismo trazo y tres tamaños (16, 20 y 23); se redibujaron el plato, el código de barras y la llama de la racha.',
+      'Saludo de Hoy y pestañas de abajo con el mismo tamaño y peso que StoaGym; los atajos de Agregar quedan alineados.',
+    ],
+  },
+  {
     version: '1.7.1',
     fecha: '2026-11-20',
     cambios: [

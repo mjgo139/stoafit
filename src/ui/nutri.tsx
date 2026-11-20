@@ -34,7 +34,7 @@ export function BarraMacro({ m, valor, meta }: { m: 'prot' | 'carb' | 'gras'; va
   const f = meta ? Math.min(1, valor / meta) : 0;
   return (
     <div data-testid={`macro-${m}`}>
-      <div className="flex items-baseline justify-between text-[13px]">
+      <div className="flex items-baseline justify-between text-[13.5px]">
         <span className="font-semibold">{NOMBRE[m]}</span>
         <span className="text-mu"><b className="num text-[15px] text-tx">{formatoNumero(valor)}</b> / {formatoNumero(meta)} g</span>
       </div>
@@ -58,7 +58,7 @@ export function Macros3({ t, metas }: { t: Macros; metas: Metas }) {
 /** Línea corta de macros: "P 20 · C 35 · G 8" */
 export function LineaMacros({ m }: { m: Macros }) {
   return (
-    <span className="text-[12px] text-mu">
+    <span className="text-[12.5px] text-mu">
       <b style={{ color: 'var(--prot)' }}>P</b> {formatoNumero(m.prot)} · <b style={{ color: 'var(--carb)' }}>C</b> {formatoNumero(m.carb)} · <b style={{ color: 'var(--gras)' }}>G</b> {formatoNumero(m.gras)}
     </span>
   );
@@ -85,9 +85,9 @@ export function TarjetaComida({ tipo, nombre, parte, items, metas, fecha }: { ti
       <Link to={`/diario?fecha=${fecha}#${tipo}`} className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
           <span className="font-display text-[18px] font-semibold">{nombre}</span>
-          <span className="text-[13px] text-mu">{vacia ? `~${formatoNumero(sugerido)} kcal sugeridas` : `${formatoNumero(kcal)} kcal`}</span>
+          <span className="text-[13.5px] text-mu">{vacia ? `~${formatoNumero(sugerido)} kcal sugeridas` : `${formatoNumero(kcal)} kcal`}</span>
         </div>
-        <div className="truncate text-[13px] text-mu">{vacia ? 'Todavía nada' : items.map((i) => i.nombre).join(', ')}</div>
+        <div className="truncate text-[13.5px] text-mu">{vacia ? 'Todavía nada' : items.map((i) => i.nombre).join(', ')}</div>
       </Link>
       <Link to={`/agregar?comida=${tipo}&fecha=${fecha}`} className="btn-redondo h-10 w-10" aria-label={`Agregar a ${nombre}`}>
         <Icono n="mas" size={20} />
@@ -109,7 +109,7 @@ export function Vasos({ ml, meta, alCambiar }: { ml: number; meta: number; alCam
         ))}
       </div>
       <div className="mt-3 flex items-center justify-between">
-        <span className="text-[14px] text-mu"><b className="num text-[20px] acento">{formatoNumero(ml / 1000, 2)}</b> de {formatoNumero(meta / 1000, 2)} L</span>
+        <span className="text-[15px] text-mu"><b className="num text-[20px] acento">{formatoNumero(ml / 1000, 2)}</b> de {formatoNumero(meta / 1000, 2)} L</span>
         <span className="flex gap-2">
           <button className="chip h-9 w-11" aria-label="Quitar un vaso" onClick={() => alCambiar(ml - 250)} disabled={ml <= 0}><Icono n="menos" size={16} /></button>
           <button className="chip h-9 px-3" aria-label="Agregar un vaso" onClick={() => alCambiar(ml + 250)}><Icono n="mas" size={16} />Vaso</button>

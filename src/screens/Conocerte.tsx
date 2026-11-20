@@ -83,13 +83,13 @@ export default function Conocerte() {
                 <input className="campo mt-2" value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={80} aria-label="Tu nombre" placeholder="Tu nombre" />
               </label>
             ) : !editar && (
-              <button className="mt-3 text-[13px] font-semibold text-mu underline" onClick={() => setCambiarNombre(true)}>¿No es tu nombre? Cambialo</button>
+              <button className="mt-3 text-[13.5px] font-semibold text-mu underline" onClick={() => setCambiarNombre(true)}>¿No es tu nombre? Cambialo</button>
             )}
             <div className="etiqueta mt-6">Sexo (para la fórmula)</div>
             <div className="mt-2 grid grid-cols-2 gap-3" role="radiogroup" aria-label="Sexo">
               {([['mujer', 'Mujer'], ['hombre', 'Hombre']] as const).map(([v, t]) => (
                 <button key={v} role="radio" aria-checked={genero === v} onClick={() => setGenero(v)}
-                  className={`tarjeta h-[72px] text-[17px] font-semibold transition-colors ${genero === v ? 'border-gold oro' : ''}`}>{t}</button>
+                  className={`tarjeta h-[72px] text-[16px] font-semibold transition-colors ${genero === v ? 'border-gold oro' : ''}`}>{t}</button>
               ))}
             </div>
           </>
@@ -117,7 +117,7 @@ export default function Conocerte() {
             <h1 className="titulo mt-2">¿Cuánto pesás hoy?</h1>
             <p className="mt-2 text-mu">Queda como tu primer registro en Progreso.</p>
             <div className="mt-8"><Regla valor={peso} min={30} max={220} paso={0.1} decimales={1} unidad="kg" etiqueta="Peso" alCambiar={setPeso} /></div>
-            <p className="mt-4 text-center text-[14px] text-mu">Índice de masa corporal: <b className="text-tx">{formatoNumero(imc(peso, altura), 1)}</b></p>
+            <p className="mt-4 text-center text-[15px] text-mu">Índice de masa corporal: <b className="text-tx">{formatoNumero(imc(peso, altura), 1)}</b></p>
           </>
         )}
         {paso === 4 && (
@@ -132,7 +132,7 @@ export default function Conocerte() {
                   <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${actividad === a.v ? 'border-gold' : 'border-ln3'}`}>
                     {actividad === a.v && <span className="h-2.5 w-2.5 rounded-full bg-gold" />}
                   </span>
-                  <span><b className="block">{a.t}</b><span className="text-[13px] text-mu">{a.linea}</span></span>
+                  <span><b className="block">{a.t}</b><span className="text-[13.5px] text-mu">{a.linea}</span></span>
                 </button>
               ))}
             </div>
@@ -150,7 +150,7 @@ export default function Conocerte() {
                   <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${objetivo === o.v ? 'border-gold' : 'border-ln3'}`}>
                     {objetivo === o.v && <span className="h-2.5 w-2.5 rounded-full bg-gold" />}
                   </span>
-                  <span><b className="block">{o.t}</b><span className="text-[13px] text-mu">{o.linea}</span></span>
+                  <span><b className="block">{o.t}</b><span className="text-[13.5px] text-mu">{o.linea}</span></span>
                 </button>
               ))}
             </div>
@@ -165,14 +165,14 @@ export default function Conocerte() {
               <Laurel size={150} fondo />
               <div className="etiqueta">Calorías por día</div>
               <div className="num mt-1 text-[56px] leading-none oro">{formatoNumero(metas.kcal)}</div>
-              <div className="mt-5 grid grid-cols-3 gap-2 text-[13px]">
+              <div className="mt-5 grid grid-cols-3 gap-2 text-[13.5px]">
                 {([['Proteínas', metas.prot, 'var(--prot)'], ['Carbohidratos', metas.carb, 'var(--carb)'], ['Grasas', metas.gras, 'var(--gras)']] as const).map(([t, v, c]) => (
                   <div key={t}><span className="num block text-[22px]" style={{ color: c }}>{v} g</span><span className="text-mu">{t}</span></div>
                 ))}
               </div>
-              <div className="mt-4 flex items-center justify-center gap-2 text-[14px] text-mu"><Icono n="agua" size={18} className="acento" />Agua: <b className="text-tx">{formatoNumero(metas.agua / 1000, 2)} litros</b> ({metas.agua / 250} vasos)</div>
+              <div className="mt-4 flex items-center justify-center gap-2 text-[15px] text-mu"><Icono n="agua" size={20} className="acento" />Agua: <b className="text-tx">{formatoNumero(metas.agua / 1000, 2)} litros</b> ({metas.agua / 250} vasos)</div>
             </div>
-            <p className="mt-4 text-[13px] text-mu2">Es una guía general, no reemplaza la indicación de un profesional. En Plan podés ajustarla a mano.</p>
+            <p className="mt-4 text-[13.5px] text-mu2">Es una guía general, no reemplaza la indicación de un profesional. En Plan podés ajustarla a mano.</p>
           </>
         )}
       </div>

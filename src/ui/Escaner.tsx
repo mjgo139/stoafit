@@ -86,13 +86,13 @@ export function Escaner({ alLeer }: { alLeer: (codigo: string) => void }) {
               <span className="absolute inset-x-3 top-1/2 h-0.5 -translate-y-1/2 animate-pulse bg-[#C9A66B]" />
             </div>
           </div>
-          <p className="absolute inset-x-0 bottom-3 text-center text-[13px] font-semibold text-white">
+          <p className="absolute inset-x-0 bottom-3 text-center text-[13.5px] font-semibold text-white">
             {estado === 'iniciando' ? 'Abriendo la cámara…' : 'Apuntá al código de barras del envase'}
           </p>
         </div>
       )}
       {(estado === 'sin-camara' || estado === 'denegado') && (
-        <div className="rounded-[12px] border border-dashed border-ln3 p-4 text-center text-[14px] text-mu" role="alert">
+        <div className="rounded-[12px] border border-dashed border-ln3 p-4 text-center text-[15px] text-mu" role="alert">
           <Icono n="alerta" className="mx-auto oro" />
           <p className="mt-2">{estado === 'denegado'
             ? (Capacitor.isNativePlatform()
@@ -104,7 +104,7 @@ export function Escaner({ alLeer }: { alLeer: (codigo: string) => void }) {
       <form className="mt-4 flex gap-2" onSubmit={(e) => { e.preventDefault(); if (valido) alLeer(valido); }}>
         <input className="campo flex-1" inputMode="numeric" placeholder="O escribí el código: 7840…" value={manual}
           onChange={(e) => setManual(e.target.value.replace(/\D/g, '').slice(0, 14))} aria-label="Código de barras a mano" />
-        <button className="btn h-12 shrink-0 px-4 text-[12px]" disabled={!valido}>Buscar</button>
+        <button className="btn h-12 shrink-0 px-4 text-[12.5px]" disabled={!valido}>Buscar</button>
       </form>
     </div>
   );

@@ -28,7 +28,7 @@ export function EditorComidas({ alGuardar }: { alGuardar: (l: ComidaDelDia[]) =>
   const listos = limpiarComidas(l);
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-[14px] text-mu">Poné los nombres que uses (por ejemplo "Pre entreno" o "Comida 1"), ordenalas o quitá las que no hacés. Lo que ya registraste no se borra.</p>
+      <p className="text-[15px] text-mu">Poné los nombres que uses (por ejemplo "Pre entreno" o "Comida 1"), ordenalas o quitá las que no hacés. Lo que ya registraste no se borra.</p>
       <ul className="flex flex-col gap-2" aria-label="Tus comidas">
         {l.map((c, i) => (
           <li key={c.id} className="flex items-center gap-1.5" data-testid="editar-comida">
@@ -41,9 +41,9 @@ export function EditorComidas({ alGuardar }: { alGuardar: (l: ComidaDelDia[]) =>
         ))}
       </ul>
       <button className="btn-sec" disabled={l.length >= MAX_COMIDAS} onClick={() => setL((x) => [...x, { id: 'c-' + nuevoId().slice(0, 8).toLowerCase().replace(/[^a-z0-9]/g, '0'), nombre: `Comida ${x.length + 1}` }])}>
-        <Icono n="mas" size={18} />Agregar otra comida
+        <Icono n="mas" size={20} />Agregar otra comida
       </button>
-      <button className="text-[13px] font-semibold text-mu underline" onClick={() => setL(COMIDAS.map(({ id, nombre }) => ({ id, nombre })))}>Volver a las de siempre</button>
+      <button className="text-[13.5px] font-semibold text-mu underline" onClick={() => setL(COMIDAS.map(({ id, nombre }) => ({ id, nombre })))}>Volver a las de siempre</button>
       <button className="btn w-full" disabled={!listos.length} onClick={() => alGuardar(listos)}>Guardar comidas</button>
     </div>
   );

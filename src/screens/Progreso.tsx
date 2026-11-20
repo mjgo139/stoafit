@@ -54,7 +54,7 @@ export default function Progreso() {
   return (
     <div className="pt-6 lg:pt-10">
       <CabeceraPagina etiqueta="Progreso" titulo="Tu camino" linea="Lo que se mide, se puede mejorar."
-        accion={<button className="btn h-11 px-4 text-[12px]" onClick={() => setRegistrar(true)}><Icono n="balanza" size={17} />Registrar</button>} />
+        accion={<button className="btn h-11 px-4 text-[12.5px]" onClick={() => setRegistrar(true)}><Icono n="balanza" size={16} />Registrar</button>} />
 
       <div className="mt-6 grid grid-cols-2 gap-2.5 lg:grid-cols-4" data-testid="resumen-progreso">
         <Dato t="Peso actual" v={actual ? `${formatoNumero(aUnidad(actual, u), 1)} ${u}` : '—'} />
@@ -89,13 +89,13 @@ export default function Progreso() {
         <Grupo n={3} className="mb-3" extra={<div className="w-[180px]"><Selector nombre="Período" valor={rango} alCambiar={setRango} opciones={[{ v: '7', t: '7 días' }, { v: '30', t: '30 días' }]} /></div>}>Promedios</Grupo>
         {!dias ? <Cargando /> : prom.n === 0 ? <p className="tarjeta py-6 text-center text-mu">Sin registros en este período.</p> : (
           <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4" data-testid="promedios">
-            <div className="tarjeta text-center"><div className="etiqueta">Calorías</div><div className="num mt-1 text-[26px] oro">{formatoNumero(prom.kcal)}</div><div className="text-[12px] text-mu">meta {formatoNumero(metas.kcal)}</div></div>
-            <div className="tarjeta text-center"><div className="etiqueta">Proteínas</div><div className="num mt-1 text-[26px]" style={{ color: 'var(--prot)' }}>{formatoNumero(prom.prot)} g</div><div className="text-[12px] text-mu">{pct.prot} % · meta {metas.prot} g</div></div>
-            <div className="tarjeta text-center"><div className="etiqueta">Carbohidratos</div><div className="num mt-1 text-[26px]" style={{ color: 'var(--carb)' }}>{formatoNumero(prom.carb)} g</div><div className="text-[12px] text-mu">{pct.carb} % · meta {metas.carb} g</div></div>
-            <div className="tarjeta text-center"><div className="etiqueta">Grasas</div><div className="num mt-1 text-[26px]" style={{ color: 'var(--gras)' }}>{formatoNumero(prom.gras)} g</div><div className="text-[12px] text-mu">{pct.gras} % · meta {metas.gras} g</div></div>
+            <div className="tarjeta text-center"><div className="etiqueta">Calorías</div><div className="num mt-1 text-[26px] oro">{formatoNumero(prom.kcal)}</div><div className="text-[12.5px] text-mu">meta {formatoNumero(metas.kcal)}</div></div>
+            <div className="tarjeta text-center"><div className="etiqueta">Proteínas</div><div className="num mt-1 text-[26px]" style={{ color: 'var(--prot)' }}>{formatoNumero(prom.prot)} g</div><div className="text-[12.5px] text-mu">{pct.prot} % · meta {metas.prot} g</div></div>
+            <div className="tarjeta text-center"><div className="etiqueta">Carbohidratos</div><div className="num mt-1 text-[26px]" style={{ color: 'var(--carb)' }}>{formatoNumero(prom.carb)} g</div><div className="text-[12.5px] text-mu">{pct.carb} % · meta {metas.carb} g</div></div>
+            <div className="tarjeta text-center"><div className="etiqueta">Grasas</div><div className="num mt-1 text-[26px]" style={{ color: 'var(--gras)' }}>{formatoNumero(prom.gras)} g</div><div className="text-[12.5px] text-mu">{pct.gras} % · meta {metas.gras} g</div></div>
           </div>
         )}
-        {prom.n > 0 && <p className="mt-2 text-[12px] text-mu2">Promedio de {prom.n} día{prom.n > 1 ? 's' : ''} con registros.</p>}
+        {prom.n > 0 && <p className="mt-2 text-[12.5px] text-mu2">Promedio de {prom.n} día{prom.n > 1 ? 's' : ''} con registros.</p>}
       </section>
 
       <section className="mt-8">
@@ -109,11 +109,11 @@ export default function Progreso() {
                   <li key={d.fecha} className="fila last:border-0">
                     <Link to={`/diario?fecha=${d.fecha}`} className="flex flex-1 items-center gap-3 py-2">
                       <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${ok ? 'text-white' : 'border border-ln3 text-mu2'}`} style={ok ? { background: 'var(--verde)' } : undefined}>
-                        <Icono n={ok ? 'check' : 'plato'} size={15} />
+                        <Icono n={ok ? 'check' : 'plato'} size={16} />
                       </span>
                       <span className="flex-1"><b className="first-letter:uppercase">{new Intl.DateTimeFormat('es-PY', { weekday: 'long', day: 'numeric', month: 'short' }).format(fechaDeClave(d.fecha)).replace('.', '')}</b>
-                        <span className="block text-[12px] text-mu">{ok ? 'Cumplido' : d.totales.kcal > (d.metas ?? metas).kcal * 1.1 ? 'Pasado de la meta' : 'Por debajo de la meta'} · agua {formatoNumero(d.agua / 1000, 2)} L</span></span>
-                      <span className="num text-[17px]">{formatoNumero(d.totales.kcal)}<span className="ml-1 font-body text-[12px] text-mu">kcal</span></span>
+                        <span className="block text-[12.5px] text-mu">{ok ? 'Cumplido' : d.totales.kcal > (d.metas ?? metas).kcal * 1.1 ? 'Pasado de la meta' : 'Por debajo de la meta'} · agua {formatoNumero(d.agua / 1000, 2)} L</span></span>
+                      <span className="num text-[16px]">{formatoNumero(d.totales.kcal)}<span className="ml-1 font-body text-[12.5px] text-mu">kcal</span></span>
                     </Link>
                   </li>
                 );
@@ -167,7 +167,7 @@ function RegistrarCuerpo({ unidad, previo, alGuardar }: { unidad: 'kg' | 'lb'; p
           </label>
         ))}
       </div>
-      <p className="text-[13px] text-mu">Pesate siempre a la misma hora, mejor a la mañana en ayunas.</p>
+      <p className="text-[13.5px] text-mu">Pesate siempre a la misma hora, mejor a la mañana en ayunas.</p>
       <button className="btn w-full" disabled={!valido} onClick={guardar}>Guardar</button>
     </div>
   );

@@ -40,7 +40,7 @@ export function Marco() {
         {/* Marca como en StoaGym: emblema (laurel + manzana), nombre en Cinzel dorado y una línea dorada que se desvanece */}
         <div className="flex items-center gap-2.5 px-2" data-testid="marca-lateral">
           <Emblema size={42} />
-          <span className="marca text-[24px] leading-none text-[#f2c55c]" style={{ textShadow: '0 0 18px rgba(242,197,92,.25)' }}>StoaFit</span>
+          <span className="marca text-[26px] leading-none text-[#f2c55c]" style={{ textShadow: '0 0 18px rgba(242,197,92,.25)' }}>StoaFit</span>
         </div>
         <div className="divisor mx-1 mt-6" style={{ background: 'linear-gradient(90deg, transparent, rgba(242,197,92,.85), transparent)' }} aria-hidden />
         <nav className="mt-6 flex flex-col gap-1" aria-label="Secciones">
@@ -56,8 +56,8 @@ export function Marco() {
             {iniciales(perfil.nombre || 'Invitado')}
           </span>
           <span className="min-w-0">
-            <span className="block truncate text-[14px] font-semibold text-[#f7f1e7]">{perfil.nombre || 'Invitado'}</span>
-            <span className="block truncate text-[12px] text-[#9d927d]">{usuario.invitado ? 'Modo invitado' : usuario.email}</span>
+            <span className="block truncate text-[15px] font-semibold text-[#f7f1e7]">{perfil.nombre || 'Invitado'}</span>
+            <span className="block truncate text-[12.5px] text-[#9d927d]">{usuario.invitado ? 'Modo invitado' : usuario.email}</span>
           </span>
         </div>
       </aside>
@@ -71,7 +71,7 @@ export function Marco() {
         <div className="mx-auto flex max-w-[480px] justify-around">
           {PESTANAS.map((p) => (
             <NavLink key={p.a} to={p.a} onClick={(e) => { e.preventDefault(); ir(p.a); }}
-              className={`flex h-[64px] flex-1 flex-col items-center justify-center gap-1 text-[11px] font-semibold ${activa(p.a) ? 'oro' : 'text-mu2'}`}>
+              className={`flex h-[64px] flex-1 flex-col items-center justify-center gap-1 text-[11px] ${activa(p.a) ? 'oro font-semibold' : 'text-mu2'}`}>
               <Icono n={p.i} size={23} />{p.t}
             </NavLink>
           ))}

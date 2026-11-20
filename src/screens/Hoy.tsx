@@ -32,18 +32,18 @@ export default function Hoy() {
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:gap-10">
           <div className="min-w-0 flex-1">
             <div className="etiqueta first-letter:uppercase">{fechaLarga(hoy)}</div>
-            <h1 className="mt-1.5 font-display text-[30px] font-semibold leading-tight lg:text-[40px]">{saludo()}, {nombre}</h1>
+            <h1 className="mt-1.5 font-display text-[26px] font-bold leading-tight lg:text-[40px]">{saludo()}, {nombre}</h1>
             <p className="mt-2 max-w-[520px] font-display text-[15px] italic text-mu lg:text-[16px]">“{frase.texto}” <span className="not-italic">— {frase.autor}</span></p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <Ficha><Icono n="fuego" size={15} className="oro" />{r ? `${r} día${r > 1 ? 's' : ''} de racha` : 'Empezá tu racha'}</Ficha>
-              <Ficha><Icono n="plato" size={15} className="acento" />{dia ? comidasRegistradas(dia) : 0}/{lista.length} comidas</Ficha>
+              <Ficha><Icono n="fuego" size={16} className="oro" />{r ? `${r} día${r > 1 ? 's' : ''} de racha` : 'Empezá tu racha'}</Ficha>
+              <Ficha><Icono n="plato" size={16} className="acento" />{dia ? comidasRegistradas(dia) : 0}/{lista.length} comidas</Ficha>
             </div>
           </div>
           {dia ? (
             <div className="flex items-center gap-5 lg:w-[420px]">
               <Anillo valor={dia.totales.kcal} meta={metas.kcal} tam={132} />
               <div className="min-w-0 flex-1">
-                <div className="mb-3 text-[13px] text-mu"><b className="num text-[18px] text-tx">{formatoNumero(dia.totales.kcal)}</b> de {formatoNumero(metas.kcal)} kcal</div>
+                <div className="mb-3 text-[13.5px] text-mu"><b className="num text-[18px] text-tx">{formatoNumero(dia.totales.kcal)}</b> de {formatoNumero(metas.kcal)} kcal</div>
                 <Macros3 t={dia.totales} metas={metas} />
               </div>
             </div>
@@ -55,8 +55,8 @@ export default function Hoy() {
         <section>
           <Grupo n={1} className="mb-3" extra={
             <span className="flex items-center gap-3">
-              <Link to="/agregar?escanear=1" className="flex items-center gap-1 text-[13px] font-semibold oro" aria-label="Escanear un producto"><Icono n="barras" size={16} />Escanear</Link>
-              <Link to="/diario" className="text-[13px] font-semibold oro">Ver diario →</Link>
+              <Link to="/agregar?escanear=1" className="flex items-center gap-1 text-[13.5px] font-semibold oro" aria-label="Escanear un producto"><Icono n="barras" size={16} />Escanear</Link>
+              <Link to="/diario" className="text-[13.5px] font-semibold oro">Ver diario →</Link>
             </span>}>Comidas de hoy</Grupo>
           {!dia ? <Cargando /> : (
             <div className="flex flex-col gap-2.5">
@@ -85,12 +85,12 @@ export default function Hoy() {
                   );
                 })}
               </div>
-              <div className="mt-3 flex items-center justify-between text-[13px] text-mu">
+              <div className="mt-3 flex items-center justify-between text-[13.5px] text-mu">
                 <span><b className="num text-[18px] text-tx">{enSemana}</b>/7 días cumplidos</span>
                 <span>Racha <b className="num text-[18px] oro">{r ? romano(r) : '0'}</b></span>
               </div>
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ln2"><div className="h-full rounded-full bg-gold transition-all" style={{ width: `${(enSemana / 7) * 100}%` }} /></div>
-              <p className="mt-3 text-[12px] text-mu2">Un día se cumple con 2 comidas o más y las calorías entre el 85 % y el 110 % de tu meta.</p>
+              <p className="mt-3 text-[12.5px] text-mu2">Un día se cumple con 2 comidas o más y las calorías entre el 85 % y el 110 % de tu meta.</p>
             </div>
           </section>
         </div>

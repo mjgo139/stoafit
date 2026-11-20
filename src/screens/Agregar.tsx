@@ -171,9 +171,9 @@ export default function Agregar() {
     return (
       <div className={`tarjeta p-0 ${vertical ? 'flex flex-col divide-y divide-ln2' : 'grid grid-cols-3 divide-x divide-ln2'}`} data-testid={id}>
         {botones.map(([ic, t, l, f]) => (
-          <button key={t} onClick={f} className={`flex items-center gap-3 hover:bg-sf2 ${vertical ? 'px-4 py-3 text-left first:rounded-t-[16px] last:rounded-b-[16px]' : 'flex-col justify-center gap-2 px-1 py-4 text-center first:rounded-l-[16px] last:rounded-r-[16px]'}`}>
+          <button key={t} onClick={f} className={`flex items-center gap-3 hover:bg-sf2 ${vertical ? 'px-4 py-3 text-left first:rounded-t-[16px] last:rounded-b-[16px]' : 'flex-col justify-start gap-2 px-1 pb-3 pt-4 text-center first:rounded-l-[16px] last:rounded-r-[16px]'}`}>
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gold2 oro">
-              {ic === 'kcal' ? <span className="num text-[12px] font-semibold">kcal</span> : <Icono n={ic} size={19} />}
+              {ic === 'kcal' ? <span className="text-[11px] font-bold tracking-[.04em]">kcal</span> : <Icono n={ic} size={20} />}
             </span>
             <span className="min-w-0">
               <span className="block text-[11.5px] font-bold uppercase leading-tight tracking-[.1em] oro">{t}</span>
@@ -205,11 +205,11 @@ export default function Agregar() {
             </div>
           </div>
           <div className="flex justify-end">
-            {agregados > 0 && <button className="btn h-10 px-4 text-[12px]" onClick={() => nav(-1)}>Listo</button>}
+            {agregados > 0 && <button className="btn h-10 px-4 text-[12.5px]" onClick={() => nav(-1)}>Listo</button>}
           </div>
         </div>
         <div className="relative mt-3">
-          <Icono n="buscar" size={19} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-mu" />
+          <Icono n="buscar" size={20} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-mu" />
           <input className="campo h-12 rounded-full pl-11 pr-14" placeholder="Buscá un alimento" value={texto} onChange={(e) => { setTexto(e.target.value); setGrupo(null); }}
             aria-label="Buscar alimento" />
           <button className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full oro hover:bg-goldbg" aria-label="Escanear código de barras" onClick={() => setEscanear(true)} data-testid="boton-escanear">
@@ -220,12 +220,12 @@ export default function Agregar() {
           <div className="-mx-[17px] mt-2 flex overflow-x-auto border-b border-ln2 px-[17px] lg:mx-0 lg:px-0" role="tablist">
             {PESTANAS.map(([v, t]) => (
               <button key={v} role="tab" aria-selected={pestana === v} onClick={() => { setPestana(v); setGrupo(null); }}
-                className={`h-11 shrink-0 border-b-2 px-3 text-[14px] font-semibold ${pestana === v ? 'border-gold oro' : 'border-transparent text-mu'}`}>{t}</button>
+                className={`h-11 shrink-0 border-b-2 px-3 text-[15px] font-semibold ${pestana === v ? 'border-gold oro' : 'border-transparent text-mu'}`}>{t}</button>
             ))}
           </div>
         )}
       </header>
-      {buscando && <p className="mb-2 text-[13px] text-mu" role="status">Buscando el código {buscando}…</p>}
+      {buscando && <p className="mb-2 text-[13.5px] text-mu" role="status">Buscando el código {buscando}…</p>}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
       <div className="min-w-0">
@@ -247,16 +247,16 @@ export default function Agregar() {
               {deAyer.length ? (
                 <div className="tarjeta" data-testid="lo-de-ayer">
                   <div className="flex items-center justify-between gap-3">
-                    <div className="text-[14px] text-mu">{formatoNumero(sumar(deAyer).kcal)} kcal · {deAyer.length} alimentos</div>
-                    <button className="btn h-10 px-4 text-[12px]" onClick={() => sumarItems(copiarItems(deAyer, nuevoId), `Repetiste ${nombre.toLowerCase()} de ayer`)}>
+                    <div className="text-[15px] text-mu">{formatoNumero(sumar(deAyer).kcal)} kcal · {deAyer.length} alimentos</div>
+                    <button className="btn h-10 px-4 text-[12.5px]" onClick={() => sumarItems(copiarItems(deAyer, nuevoId), `Repetiste ${nombre.toLowerCase()} de ayer`)}>
                       <Icono n="repetir" size={16} />Repetir
                     </button>
                   </div>
-                  <ul className="mt-3 border-t border-ln2 pt-2 text-[14px]">
+                  <ul className="mt-3 border-t border-ln2 pt-2 text-[15px]">
                     {deAyer.map((i) => <li key={i.id} className="flex justify-between gap-3 py-1"><span className="min-w-0 truncate">{i.nombre}</span><span className="shrink-0 text-mu">{formatoNumero(i.kcal)} kcal</span></li>)}
                   </ul>
                 </div>
-              ) : <p className="tarjeta py-5 text-center text-[14px] text-mu">Ayer no registraste {nombre.toLowerCase()}. En el Diario, "Repetir…" trae cualquier comida de otro día.</p>}
+              ) : <p className="tarjeta py-5 text-center text-[15px] text-mu">Ayer no registraste {nombre.toLowerCase()}. En el Diario, "Repetir…" trae cualquier comida de otro día.</p>}
             </section>
             <section>
               <h2 className="titulo-tarjeta mb-2.5">Guardadas</h2>
@@ -269,11 +269,11 @@ export default function Agregar() {
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <div className="font-display text-[18px] font-semibold">{g.nombre}</div>
-                            <div className="text-[13px] text-mu">{formatoNumero(t.kcal)} kcal · {g.items.map((i) => i.nombre).join(', ')}</div>
+                            <div className="text-[13.5px] text-mu">{formatoNumero(t.kcal)} kcal · {g.items.map((i) => i.nombre).join(', ')}</div>
                           </div>
-                          <button className="btn h-10 shrink-0 px-4 text-[12px]" onClick={() => sumarItems(copiarItems(g.items, nuevoId), `"${g.nombre}" agregada`)}>Agregar</button>
+                          <button className="btn h-10 shrink-0 px-4 text-[12.5px]" onClick={() => sumarItems(copiarItems(g.items, nuevoId), `"${g.nombre}" agregada`)}>Agregar</button>
                         </div>
-                        <button className="mt-2 text-[12px] text-mu2 hover:text-miss" onClick={async () => {
+                        <button className="mt-2 text-[12.5px] text-mu2 hover:text-miss" onClick={async () => {
                           await repo.borrarGuardada(usuario.uid, g.id);
                           setGuardadas((l) => l.filter((x) => x.id !== g.id));
                           aviso(`"${g.nombre}" borrada`);
@@ -289,8 +289,8 @@ export default function Agregar() {
           <>
             {!buscandoTexto && pestana === 'mios' && (
               <div className="mb-4 grid grid-cols-2 gap-3">
-                <button className="btn-sec" onClick={() => setForm({ inicial: {} })}><Icono n="mas" size={18} />Crear alimento</button>
-                <Link className="btn-sec" to="/receta"><Icono n="receta" size={18} />Crear receta</Link>
+                <button className="btn-sec" onClick={() => setForm({ inicial: {} })}><Icono n="mas" size={20} />Crear alimento</button>
+                <Link className="btn-sec" to="/receta"><Icono n="receta" size={20} />Crear receta</Link>
               </div>
             )}
             {!buscandoTexto && lista.length > 0 && (
@@ -300,7 +300,7 @@ export default function Agregar() {
               pestana === 'mios' && !buscandoTexto ? (
                 <Vacio titulo="Tus alimentos y recetas" linea="Cargá productos con su etiqueta (o escaneándolos) y las recetas de tu casa: quedan para la próxima." />
               ) : (
-                <div className="tarjeta py-6 text-center text-[14px] text-mu">
+                <div className="tarjeta py-6 text-center text-[15px] text-mu">
                   {buscandoTexto ? <>No encontramos “{texto}”.</> : pestana === 'favoritos' ? 'Tocá la estrella de un alimento para tenerlo acá.' : 'Todavía no hay historial. Buscá un alimento arriba.'}
                   {buscandoTexto && <button className="mt-3 block w-full font-semibold oro" onClick={() => setForm({ inicial: { nombre: texto } })}>Crear “{texto}” como alimento propio →</button>}
                 </div>
@@ -314,12 +314,12 @@ export default function Agregar() {
                       <button className="min-w-0 flex-1 py-3.5 text-left" onClick={() => setElegido(a)} data-testid="alimento">
                         <span className="flex items-center gap-1.5 font-semibold">
                           <span className="truncate">{a.nombre}</span>
-                          {a.verificado && <span className="shrink-0" style={{ color: 'var(--verde)' }} aria-label="Verificado"><Icono n="check" size={14} /></span>}
-                          {favoritos.includes(a.id) && <Icono n="estrella" size={14} className="shrink-0 oro" />}
+                          {a.verificado && <span className="shrink-0" style={{ color: 'var(--verde)' }} aria-label="Verificado"><Icono n="check" size={16} /></span>}
+                          {favoritos.includes(a.id) && <Icono n="estrella" size={16} className="shrink-0 oro" />}
                         </span>
-                        <span className="mt-0.5 block truncate text-[13px] text-mu">
+                        <span className="mt-0.5 block truncate text-[13.5px] text-mu">
                           <b className="font-semibold text-tx">{formatoNumero(it.kcal)} kcal</b>{a.marca ? ` · ${a.marca}` : ''} · {textoCantidad(it)}
-                          {(a.propio || a.compartido) && <span className="ml-1.5 text-[10.5px] font-bold uppercase tracking-[.1em] acento">{a.receta ? 'receta' : a.codigo ? 'envasado' : 'propio'}</span>}
+                          {(a.propio || a.compartido) && <span className="ml-1.5 text-[11px] font-bold uppercase tracking-[.1em] acento">{a.receta ? 'receta' : a.codigo ? 'envasado' : 'propio'}</span>}
                         </span>
                       </button>
                       <button className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-goldbg oro transition-transform active:scale-95" aria-label={`Agregar ${a.nombre} ya`}
@@ -335,7 +335,7 @@ export default function Agregar() {
         )}
       </div>
 
-      <p className="mt-6 text-center text-[12px] text-mu2 lg:hidden">Valores aproximados de tablas generales. {FUENTE_OFF}.</p>
+      <p className="mt-6 text-center text-[12.5px] text-mu2 lg:hidden">Valores aproximados de tablas generales. {FUENTE_OFF}.</p>
       </div>
 
       {/* PC: a la derecha, lo que ya tiene esta comida y los atajos */}
@@ -343,21 +343,21 @@ export default function Agregar() {
         <section className="tarjeta" data-testid="en-esta-comida">
           <div className="flex items-baseline justify-between gap-2">
             <span className="etiqueta">En {nombre.toLowerCase()}</span>
-            <span className="num text-[18px]">{formatoNumero(sumar(yaHay).kcal)}<span className="ml-1 font-sans text-[12px] text-mu">kcal</span></span>
+            <span className="num text-[18px]">{formatoNumero(sumar(yaHay).kcal)}<span className="ml-1 font-sans text-[12.5px] text-mu">kcal</span></span>
           </div>
           {yaHay.length ? (
             <ul className="mt-2">
               {yaHay.map((i) => (
                 <li key={i.id} className="fila last:border-0">
-                  <span className="min-w-0 flex-1 py-1.5"><span className="block truncate text-[14px] font-semibold">{i.nombre}</span><span className="block text-[12px] text-mu">{textoCantidad(i)}</span></span>
+                  <span className="min-w-0 flex-1 py-1.5"><span className="block truncate text-[15px] font-semibold">{i.nombre}</span><span className="block text-[12.5px] text-mu">{textoCantidad(i)}</span></span>
                   <span className="shrink-0 text-right"><span className="num block text-[15px]">{formatoNumero(i.kcal)}</span><LineaMacros m={i} /></span>
                 </li>
               ))}
             </ul>
-          ) : <p className="mt-2 text-[14px] text-mu">Todavía nada. Tocá el "+" de un alimento y aparece acá.</p>}
+          ) : <p className="mt-2 text-[15px] text-mu">Todavía nada. Tocá el "+" de un alimento y aparece acá.</p>}
         </section>
         {atajos('accesos-pc', true)}
-        <p className="text-[12px] text-mu2">Valores aproximados de tablas generales. {FUENTE_OFF}.</p>
+        <p className="text-[12.5px] text-mu2">Valores aproximados de tablas generales. {FUENTE_OFF}.</p>
       </aside>
       </div>
 
@@ -387,7 +387,7 @@ export default function Agregar() {
         titulo={form?.editar ? (form.codigo ? 'Corregir producto' : form.editar.nombre) : form?.codigo ? 'Cargar producto' : 'Crear alimento'}>
         {form && (
           <>
-            {form.aviso && <p className="mb-3 rounded-[12px] bg-acentobg p-3 text-[13px]" role="status" data-testid="aviso-codigo">{form.aviso}</p>}
+            {form.aviso && <p className="mb-3 rounded-[12px] bg-acentobg p-3 text-[13.5px]" role="status" data-testid="aviso-codigo">{form.aviso}</p>}
             <FormEtiqueta key={form.editar?.id ?? form.codigo ?? 'nuevo'} inicial={form.inicial} codigoFijo={form.codigo}
               leerFoto={productos.leerFoto}
               textoGuardar={form.codigo ? (form.editar ? 'Guardar y verificar' : 'Guardar producto') : 'Guardar alimento'}
@@ -466,7 +466,7 @@ function AdicionRapida({ alAgregar }: { alAgregar: (i: ItemComida) => void }) {
   );
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-[14px] text-mu">Para cuando sabés las calorías pero no querés buscar el alimento (una comida afuera, un antojo).</p>
+      <p className="text-[15px] text-mu">Para cuando sabés las calorías pero no querés buscar el alimento (una comida afuera, un antojo).</p>
       <label className="block"><span className="etiqueta">Qué fue (opcional)</span>
         <input className="campo mt-1.5" maxLength={60} value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej.: empanada en la feria" aria-label="Qué fue" />
       </label>
@@ -485,7 +485,7 @@ function Reportar({ alEnviar }: { alEnviar: (motivo: string) => void }) {
   const rapidos = ['Las calorías no coinciden', 'La porción está mal', 'Es otro producto', 'El nombre está mal'];
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-[14px] text-mu">Contanos qué está mal. Un cargador lo revisa y lo corrige para todos.</p>
+      <p className="text-[15px] text-mu">Contanos qué está mal. Un cargador lo revisa y lo corrige para todos.</p>
       <div className="flex flex-wrap gap-1.5">
         {rapidos.map((r) => <button key={r} className={`chip ${motivo === r ? 'chip-on' : ''}`} onClick={() => setMotivo(r)}>{r}</button>)}
       </div>
