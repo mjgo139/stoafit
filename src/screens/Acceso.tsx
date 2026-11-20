@@ -38,7 +38,7 @@ export default function Acceso() {
     <div className="relative mx-auto flex min-h-screen max-w-[440px] flex-col px-6 pb-10 pt-[9vh]">
       <div className="entrar text-center">
         <Laurel size={84} className="mx-auto" />
-        <h1 className="mt-4 font-display text-[44px] font-semibold leading-none tracking-[-.01em]">StoaFit</h1>
+        <h1 className="marca mt-4 text-[44px] leading-none oro">StoaFit</h1>
         <p className="etiqueta mt-3 oro">Templanza · Medida · Constancia</p>
       </div>
 

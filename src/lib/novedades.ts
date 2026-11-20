@@ -1,6 +1,14 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.7.0',
+    fecha: '2026-11-20',
+    cambios: [
+      'Nuevo estilo, igual al de StoaGym: oscuro "Noche romana" con oro brillante, fondo de mármol con vetas doradas y bordes marrón dorado.',
+      'Títulos de página con la letra Cinzel, botones dorados con degradé y campos y fichas con las medidas de la familia.',
+    ],
+  },
+  {
     version: '1.6.4',
     fecha: '2026-11-19',
     cambios: [

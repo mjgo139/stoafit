@@ -36,25 +36,25 @@ export function Marco() {
 
   return (
     <div className="min-h-screen lg:flex">
-      <aside className="lateral-fija sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col border-r border-black/20 px-4 py-7 text-[#e9e2d3] lg:flex" style={{ background: 'var(--lateral)', ['--gold' as string]: '#c9a66b' }}>
+      <aside className="lateral-fija sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col border-r border-black/20 px-4 py-7 text-[#e9e2d3] lg:flex" style={{ background: 'var(--lateral)', ['--gold' as string]: '#f2c55c' }}>
         <div className="flex items-center gap-2.5 px-2">
           <Laurel size={34} />
-          <span className="font-display text-[23px] font-semibold tracking-[.01em] text-[#f3eddf]">StoaFit</span>
+          <span className="marca text-[22px] text-[#f2c55c]">StoaFit</span>
         </div>
         <nav className="mt-9 flex flex-col gap-1" aria-label="Secciones">
           {PESTANAS.map((p) => (
             <NavLink key={p.a} to={p.a} onClick={(e) => { e.preventDefault(); ir(p.a); }}
-              className={`flex h-[46px] items-center gap-3 rounded-[10px] px-3 text-[14.5px] font-semibold transition-colors ${activa(p.a) ? 'bg-white/[.07] text-[#dbbb84]' : 'text-[#bdb3a0] hover:bg-white/[.04] hover:text-[#f3eddf]'}`}>
+              className={`flex h-[46px] items-center gap-3 rounded-[10px] px-3 text-[14.5px] font-semibold transition-colors ${activa(p.a) ? 'bg-[#2a2113] text-[#f2c55c]' : 'text-[#c9bda7] hover:bg-white/[.04] hover:text-[#f7f1e7]'}`}>
               <Icono n={p.i} size={22} />{p.t}
             </NavLink>
           ))}
         </nav>
         <div className="mt-auto flex items-center gap-3 border-t border-white/10 px-2 pt-5" data-testid="persona-lateral">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#8a6d3c] font-display text-[15px] font-semibold text-[#dbbb84]">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#a66c16] font-display text-[15px] font-semibold text-[#f2c55c]">
             {iniciales(perfil.nombre || 'Invitado')}
           </span>
           <span className="min-w-0">
-            <span className="block truncate text-[14px] font-semibold text-[#f3eddf]">{perfil.nombre || 'Invitado'}</span>
+            <span className="block truncate text-[14px] font-semibold text-[#f7f1e7]">{perfil.nombre || 'Invitado'}</span>
             <span className="block truncate text-[12px] text-[#9d927d]">{usuario.invitado ? 'Modo invitado' : usuario.email}</span>
           </span>
         </div>

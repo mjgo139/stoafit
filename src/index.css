@@ -3,51 +3,56 @@
 @tailwind utilities;
 
 /*
-  StoaFit · familia estoica (Stoica y TITANUS).
-  "Mármol" (claro): piedra #ECE6DB y bronce #7E5D22. Oscuro: #14120E y bronce #C9A66B.
-  Detalle propio: un color de acento para las comidas y macros (oliva, terracota o bronce).
+  StoaFit · familia estoica (Stoica, StoaGym/TITANUS).
+  v1.7.0: colores, letras, medidas y movimiento igualados a la guía de estilos de StoaGym
+  (oscuro "Noche romana" con oro brillante; claro "Mármol" con piedra y bronce).
+  Propio de StoaFit: color de acento (oliva, terracota o bronce) y los colores de datos (macros y series).
 */
-:root, :root[data-theme='light'] {
-  --bg:#ece6db; --bg2:#e4dccd; --bg3:#f3eee5;
-  --sf:#faf7f1; --sf2:#f4efe6; --nav:#f6f2ea;
-  --ln:#e0d7c5; --ln2:#e8e0d0; --ln3:#c9b994;
-  --tx:#1b1712; --tx2:#2f2a22; --mu:#5a5244; --mu2:#7a705e;
-  --gold:#7e5d22; --goldh:#6a4d1b; --gold2:#a9884f; --goldbg:#efe3c8; --on:#fbf8f1;
-  --oro-grad: linear-gradient(#8a6829, #7e5d22);
-  --panel-grad: var(--sf);
-  --ok:#3f6e38; --okbg:#e3ecd9; --verde:#3f6e38; --miss:#9c3f2e; --missbg:#f4ded6;
-  --sombra: 0 1px 2px rgba(60,45,20,.05), 0 6px 18px rgba(60,45,20,.07);
-  --lateral:#1b1813;
-  --f-marca:'Playfair Display', Georgia, serif;
+:root, :root[data-theme='dark'] {
+  /* Fondos */
+  --bg:#090909; --bg2:#1c1712; --bg3:#25211e;
+  --sf:#141311; --sf2:#1a1918; --nav:#0b0b0a; --lateral:#050505;
+  /* Líneas: marrón dorado, nunca gris */
+  --ln:#685338; --ln2:#3b3226; --ln3:#74572e;
+  /* Texto marfil cálido */
+  --tx:#f7f1e7; --tx2:#e6dccb; --mu:#c9bda7; --mu2:#9d917c;
+  /* Oro: el único color de acción */
+  --gold:#f2c55c; --goldh:#ffd67a; --gold2:#a66c16; --goldbg:#2a2113; --on:#0b0b0b;
+  --oro-grad: linear-gradient(#ffe7a0, #e6b84e 55%, #b77c22);
+  --panel-grad: linear-gradient(125deg, rgba(26,25,24,.92), rgba(9,9,9,.92));
+  /* Estados */
+  --verde:#7dba70; --miss:#d9826f; --missbg:#331b16; --ok:#7dba70; --okbg:#1c2a18; --marfil:#F3EDDF;
+  --vena: rgba(154,113,55,.16);
+  --sombra: 0 8px 25px rgba(0,0,0,.45);
+  --f-marca:'Cinzel', Georgia, serif;
   --f-display:'Playfair Display', Georgia, serif;
   --f-body:Inter, system-ui, sans-serif;
-  --acento:#5e6b33; --acentobg:#e6e8d3;
-  /* Macros: tres colores bien distintos (validados para daltonismo); no cambian con el acento */
-  --prot:#c4553b; --carb:#2f6fb8; --gras:#a87a0a;
-  /* Gráficos con varias series (ej. calorías por comida): orden fijo, validado para daltonismo y contraste */
-  --serie-1:#2f6fb8; --serie-2:#d0632f; --serie-3:#16967a; --serie-4:#c98f00;
-  --serie-5:#c9618d; --serie-6:#3d7a2c; --serie-7:#6a58c4; --serie-8:#c43d3b; --serie-otras:#9a907f;
-  color-scheme: light;
-}
-:root[data-theme='dark'] {
-  --bg:#14120e; --bg2:#1a1813; --bg3:#1d1a14;
-  --sf:#1d1a15; --sf2:#24201a; --nav:#18150f;
-  --ln:#353026; --ln2:#2b261f; --ln3:#5a4c33;
-  --tx:#f3eddf; --tx2:#e2d9c6; --mu:#b9ad97; --mu2:#8f846f;
-  --gold:#c9a66b; --goldh:#dbbb84; --gold2:#8a6d3c; --goldbg:#2c2417; --on:#14120e;
-  --oro-grad: linear-gradient(#d2b179, #c9a66b);
-  --panel-grad: var(--sf);
-  --ok:#8bb37f; --okbg:#1f2a1c; --verde:#8bb37f; --miss:#d48a74; --missbg:#33201a;
-  --sombra: 0 8px 22px rgba(0,0,0,.35);
-  --lateral:#0f0d0a;
   --acento:#a3b06c; --acentobg:#262a1b;
+  /* Macros y series: validados (daltonismo y contraste) contra la tarjeta #141311 */
   --prot:#d96a52; --carb:#4f8fdc; --gras:#b5840c;
   --serie-1:#4f8fdc; --serie-2:#de7040; --serie-3:#24ab8a; --serie-4:#b5840c;
   --serie-5:#cf6b96; --serie-6:#5ea64a; --serie-7:#8476dc; --serie-8:#e06a68; --serie-otras:#6f6656;
   color-scheme: dark;
 }
-:root[data-acento='terracota'] { --acento:#a4512f; --acentobg:#f1dccf; }
-:root[data-theme='dark'][data-acento='terracota'] { --acento:#d9875f; --acentobg:#33211a; }
+:root[data-theme='light'] {
+  --bg:#ece6db; --bg2:#e4dccd; --bg3:#f3eee5;
+  --sf:#faf7f1; --sf2:#f6f1e8; --nav:#f6f2ea; --lateral:#16130e; /* la lateral sigue oscura */
+  --ln:#d8ccb4; --ln2:#e5ddcd; --ln3:#c5b48f;
+  --tx:#16120d; --tx2:#2b261e; --mu:#4a4337; --mu2:#6a604f;
+  --gold:#7e5d22; --goldh:#674b1a; --gold2:#a07a35; --goldbg:#eadbb8; --on:#fbf8f1;
+  --oro-grad: linear-gradient(#9a7333, #7e5d22 60%, #664a19);
+  --panel-grad: linear-gradient(125deg, #fbf8f2, #f4eee3);
+  --verde:#3f6e38; --miss:#9c3f2e; --missbg:#f4ded6; --ok:#3f6e38; --okbg:#e3ecd9; --marfil:#2b261e;
+  --vena: rgba(126,93,34,.10);
+  --sombra: 0 1px 2px rgba(60,45,20,.05), 0 6px 18px rgba(60,45,20,.08);
+  --acento:#5e6b33; --acentobg:#e6e8d3;
+  --prot:#c4553b; --carb:#2f6fb8; --gras:#a87a0a;
+  --serie-1:#2f6fb8; --serie-2:#d0632f; --serie-3:#16967a; --serie-4:#c98f00;
+  --serie-5:#c9618d; --serie-6:#3d7a2c; --serie-7:#6a58c4; --serie-8:#c43d3b; --serie-otras:#9a907f;
+  color-scheme: light;
+}
+:root[data-acento='terracota'] { --acento:#d9875f; --acentobg:#33211a; }
+:root[data-theme='light'][data-acento='terracota'] { --acento:#a4512f; --acentobg:#f1dccf; }
 :root[data-acento='bronce'] { --acento:var(--gold); --acentobg:var(--goldbg); }
 
 html, body, #root { min-height: 100%; }
@@ -58,7 +63,19 @@ body {
   font-size: 15px;
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
-  background: var(--bg);
+  /* El fondo no es plano: dos brillos cálidos y vetas doradas finas, como mármol */
+  background:
+    radial-gradient(ellipse at 100% 20%, var(--bg3) 0%, transparent 40%),
+    radial-gradient(ellipse at 0% 75%, var(--bg2) 0%, transparent 40%),
+    var(--bg);
+  background-attachment: fixed;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(115deg, transparent 22%, var(--vena) 22.2%, transparent 22.5%, transparent 62%, var(--vena) 62.1%, transparent 62.4%),
+    linear-gradient(30deg, transparent 38%, var(--vena) 38.1%, transparent 38.3%);
+  background-size: 370px 520px, 290px 430px;
 }
 #root { position: relative; z-index: 1; }
 input, select, textarea, button { font: inherit; color: inherit; }
@@ -77,13 +94,14 @@ input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin
   a.ficha:hover, button.ficha:hover { border-color: var(--gold); }
   .panel-dia {
     @apply relative overflow-hidden rounded-[20px] border border-gold2;
-    background: linear-gradient(120deg, color-mix(in srgb, var(--gold) 12%, var(--sf)) 0%, var(--sf) 62%);
-    box-shadow: var(--sombra);
+    background: linear-gradient(120deg, color-mix(in srgb, var(--gold) 14%, var(--sf)) 0%, var(--sf) 62%);
+    box-shadow: 0 1px 0 rgba(255,255,255,.03) inset, 0 12px 30px -14px rgba(0,0,0,.6);
     padding: 20px 20px 18px;
   }
   @media (min-width: 1024px) { .panel-dia { padding: 30px 34px; } }
   .laurel-fondo { position: absolute; right: -30px; top: -20px; opacity: .13; pointer-events: none; }
-  .titulo { font-family: var(--f-display); @apply font-semibold text-tx; font-size: 30px; line-height: 1.12; letter-spacing: -.005em; }
+  /* Títulos de página: Cinzel, como StoaGym */
+  .titulo { font-family: var(--f-marca); @apply font-bold text-tx; font-size: 28px; line-height: 1.15; letter-spacing: .02em; }
   @media (min-width: 1024px) { .titulo { font-size: 36px; } }
   .titulo-tarjeta { font-family: var(--f-display); @apply font-semibold text-tx text-[20px] leading-tight; }
   .num { font-family: var(--f-display); @apply font-semibold; font-variant-numeric: tabular-nums; }
@@ -100,26 +118,27 @@ input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin
   .acento { color: var(--acento); }
   .divisor { height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full font-bold text-[14px] uppercase px-6 transition-transform select-none border;
-    letter-spacing: .1em; height: 52px; background: var(--gold); color: var(--on); border-color: var(--gold);
+    @apply inline-flex items-center justify-center gap-2 rounded-[12px] font-bold text-[16px] px-5 transition-transform select-none border;
+    height: 52px; background: var(--oro-grad); color: var(--on); border-color: var(--goldh); box-shadow: 0 3px 14px rgba(0,0,0,.35);
   }
-  .btn:hover { background: var(--goldh); }
+  .btn:hover { filter: brightness(1.05); }
   .btn:active { transform: scale(.98); }
   .btn:disabled { opacity: .5; }
   .btn-sec {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-ln3 text-tx font-semibold text-[14px] px-5 transition-colors select-none;
-    height: 44px; background: transparent;
+    @apply inline-flex items-center justify-center gap-2 rounded-[12px] border border-ln text-tx font-semibold text-[14px] px-4 transition-colors select-none;
+    height: 44px; background: var(--sf);
   }
   .btn-sec:hover { border-color: var(--gold); }
   .btn-redondo {
     @apply inline-flex items-center justify-center rounded-full border shrink-0;
-    width: 48px; height: 48px; background: var(--gold); color: var(--on); border-color: var(--gold);
+    width: 48px; height: 48px; background: var(--oro-grad); color: var(--on); border-color: var(--goldh);
   }
-  .campo { @apply w-full rounded-[12px] border border-ln bg-sf px-3 outline-none text-tx; height: 48px; }
+  .campo { @apply w-full rounded-[9px] border border-ln bg-sf px-3 outline-none text-tx; height: 46px; }
   .campo:focus { border-color: var(--gold); }
   .fila { @apply flex items-center gap-3 border-b border-ln2; min-height: 56px; }
   .chip { @apply inline-flex items-center justify-center rounded-full border border-ln px-3 h-8 text-[13px] font-medium text-tx2; background: var(--sf); }
-  .chip-on { border-color: var(--gold); color: var(--on); font-weight: 700; background: var(--gold); }
+  .chip-on { border-color: var(--goldh); color: var(--on); font-weight: 700; background: var(--oro-grad); }
+  .hecho { background: color-mix(in srgb, var(--verde) 20%, transparent); }
   .toque { min-width: 44px; min-height: 44px; }
 }
 
