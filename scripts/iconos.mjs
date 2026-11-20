@@ -21,9 +21,14 @@ const manzana = `<g transform="translate(198.5 184) scale(1.15)">
 export function svg(forma = 'cuadrado') {
   const fondo = forma === 'circulo' ? '<circle cx="256" cy="256" r="256" fill="#14120E"/>'
     : forma === 'lleno' ? '<rect width="512" height="512" fill="#14120E"/>'
+    : forma === 'frente' ? ''
     : '<rect width="512" height="512" rx="112" fill="#14120E"/>';
   // v1.6.1: laurel y manzana agrandados ×1,42 desde el centro (como el resto de la familia de íconos: mancuerna, check, libro, busto)
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">${fondo}<g transform="translate(256 256) scale(1.42) translate(-256 -256)">${laurel}${manzana}</g></svg>`;
+  const dibujo = `<g transform="translate(256 256) scale(1.42) translate(-256 -256)">${laurel}${manzana}</g>`;
+  // 'frente' = capa de adelante del ícono adaptable de Android (fondo transparente; el fondo #14120E lo pone Android).
+  // El lienzo es de 108 dp y se ven 72 dp: el dibujo va al 72/108 para que la máscara del teléfono no lo corte.
+  const contenido = forma === 'frente' ? `<g transform="translate(256 256) scale(${72 / 108}) translate(-256 -256)">${dibujo}</g>` : dibujo;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">${fondo}${contenido}</svg>`;
 }
 
 const navegador = await chromium.launch({ executablePath: process.env.PW_CHROME || undefined });
@@ -39,7 +44,20 @@ for (const [d] of [['mdpi'], ['hdpi'], ['xhdpi'], ['xxhdpi'], ['xxxhdpi']]) mkdi
 for (const [d, t] of [['mdpi', 48], ['hdpi', 72], ['xhdpi', 96], ['xxhdpi', 144], ['xxxhdpi', 192]]) {
   await png('lleno', t, `android/app/src/main/res/mipmap-${d}/ic_launcher.png`);
   await png('circulo', t, `android/app/src/main/res/mipmap-${d}/ic_launcher_round.png`);
+  // Ícono adaptable (Android 8+) y pantalla de inicio de Android 12+: capa de adelante de 108 dp
+  await png('frente', Math.round(t * 108 / 48), `android/app/src/main/res/mipmap-${d}/ic_launcher_foreground.png`);
 }
+// Ícono adaptable: fondo #14120E (values/ic_launcher_background.xml) + la capa de adelante. Sin esto Android 12+
+// muestra el ícono cuadrado achicado adentro de un círculo blanco al abrir la app.
+mkdirSync('android/app/src/main/res/mipmap-anydpi-v26', { recursive: true });
+const adaptable = `<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>
+`;
+writeFileSync('android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml', adaptable);
+writeFileSync('android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml', adaptable);
 writeFileSync('public/icono.svg', svg('cuadrado'));
 
 await navegador.close();

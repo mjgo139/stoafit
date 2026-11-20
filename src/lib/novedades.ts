@@ -1,6 +1,13 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.6.3',
+    fecha: '2026-11-19',
+    cambios: [
+      'Android: al abrir la app ya no aparece el borde blanco alrededor del logo, y el ícono se adapta a la forma de tu teléfono.',
+    ],
+  },
+  {
     version: '1.6.2',
     fecha: '2026-11-19',
     cambios: [
