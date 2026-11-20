@@ -69,12 +69,12 @@ export default function Perfil() {
           <section>
             <Grupo n={1} className="mb-3">Vos</Grupo>
             <div className="tarjeta">
-              <div className="flex items-center gap-3">
-                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-gold2 font-display text-[20px] font-semibold oro">{iniciales(perfil.nombre || 'Invitado')}</span>
-                <label className="min-w-0 flex-1"><span className="etiqueta">Nombre</span>
-                  <input className="campo mt-1.5" value={nombre} maxLength={80} aria-label="Nombre" onChange={(e) => setNombre(e.target.value)}
-                    onBlur={() => nombre.trim() && nombre.trim() !== perfil.nombre && cambiarPerfil({ nombre: nombre.trim() }).then(() => aviso('Nombre guardado'))} />
-                </label>
+              {/* La etiqueta arriba de todo: así la inicial y el campo quedan a la misma altura */}
+              <label htmlFor="perfil-nombre" className="etiqueta">Nombre</label>
+              <div className="mt-1.5 flex items-center gap-3">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-gold2 font-display text-[19px] font-semibold oro" aria-hidden>{iniciales(perfil.nombre || 'Invitado')}</span>
+                <input id="perfil-nombre" className="campo min-w-0 flex-1" value={nombre} maxLength={80} aria-label="Nombre" onChange={(e) => setNombre(e.target.value)}
+                  onBlur={() => nombre.trim() && nombre.trim() !== perfil.nombre && cambiarPerfil({ nombre: nombre.trim() }).then(() => aviso('Nombre guardado'))} />
               </div>
               <Link to="/conocerte?editar=1" className={`${fila} mt-3 border-t border-ln2 border-b-0`}>
                 <Icono n="cuerpo" className="oro" />

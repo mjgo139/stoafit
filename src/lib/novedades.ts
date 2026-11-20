@@ -1,6 +1,14 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.6.2',
+    fecha: '2026-11-19',
+    cambios: [
+      'Al crear tu cuenta ya no te vuelve a pedir el nombre: te saluda y seguís.',
+      'Perfil: la inicial y tu nombre quedan alineados.',
+    ],
+  },
+  {
     version: '1.6.1',
     fecha: '2026-11-19',
     cambios: [

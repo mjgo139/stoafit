@@ -66,11 +66,15 @@ export class RepoFirebase implements Repo {
       if (nombre) await updateProfile(c.user, { displayName: nombre });
       await setDoc(this.u(c.user.uid), { email: c.user.email ?? '', ...(nombre ? { nombre } : {}) }, { merge: true });
       await c.user.reload();
+      await c.user.getIdToken(true);
       return;
     }
     const c = await createUserWithEmailAndPassword(this.auth, email.trim(), clave);
     if (nombre) await updateProfile(c.user, { displayName: nombre });
-    await setDoc(this.u(c.user.uid), limpio(perfilInicial({ uid: c.user.uid, email: c.user.email ?? '', nombre })));
+    // merge: si la app ya creó el perfil vacío al detectar la cuenta nueva, solo se completa el nombre
+    await setDoc(this.u(c.user.uid), limpio(perfilInicial({ uid: c.user.uid, email: c.user.email ?? '', nombre })), { merge: true });
+    // Avisa a la app que la cuenta ya tiene nombre (así "Conocerte" no lo vuelve a pedir)
+    await c.user.getIdToken(true);
   }
 
   async recuperarClave(email: string) {
@@ -83,6 +87,7 @@ export class RepoFirebase implements Repo {
       const c = await linkWithPopup(actual, new GoogleAuthProvider());
       await setDoc(this.u(c.user.uid), { email: c.user.email ?? '', nombre: c.user.displayName ?? '' }, { merge: true });
       await c.user.reload();
+      await c.user.getIdToken(true);
       return;
     }
     await signInWithPopup(this.auth, new GoogleAuthProvider());

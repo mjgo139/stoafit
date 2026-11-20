@@ -44,6 +44,20 @@ test('portada y acceso', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Recuperar contraseña' })).toBeVisible();
 });
 
+test('cuenta nueva: Conocerte no vuelve a pedir el nombre', async ({ page }) => {
+  await limpio(page);
+  await page.getByRole('button', { name: 'Crear cuenta' }).click();
+  await page.getByLabel('Nombre').fill('Ana Benítez');
+  await page.getByLabel('Correo').fill('ana@ejemplo.com');
+  await page.getByLabel('Contraseña', { exact: true }).fill('clave123');
+  await page.getByRole('button', { name: 'Crear cuenta' }).click();
+  await expect(page.getByRole('heading', { name: 'Hola, Ana' })).toBeVisible();
+  await expect(page.getByLabel('Tu nombre')).toHaveCount(0);
+  await page.getByRole('radio', { name: 'Mujer' }).click();
+  await expect(page.getByRole('button', { name: 'Siguiente' })).toBeEnabled();
+  await captura(page, '04-conocerte-con-nombre');
+});
+
 test('invitado: conocerte calcula la meta y llega a Hoy', async ({ page }) => {
   await limpio(page);
   await page.getByRole('button', { name: 'Continuar como invitado' }).click();

@@ -17,7 +17,15 @@ export default function Conocerte() {
   const [params] = useSearchParams();
   const editar = params.get('editar') === '1';
   const [paso, setPaso] = useState(0);
-  const [nombre, setNombre] = useState(perfil.nombre);
+  // El nombre ya lo dio al crear la cuenta (o viene de Google): no se vuelve a pedir
+  // (Un invitado no dio su nombre: se le pide.)
+  const nombreDado = usuario.invitado ? '' : perfil.nombre || usuario.nombre || '';
+  const [nombre, setNombre] = useState(nombreDado || (perfil.nombre !== 'Invitado' ? perfil.nombre : ''));
+  const [cambiarNombre, setCambiarNombre] = useState(!nombreDado);
+  useEffect(() => {
+    const conocido = nombreDado;
+    if (conocido && !nombre) { setNombre(conocido); setCambiarNombre(false); }
+  }, [perfil.nombre, usuario.nombre]); // eslint-disable-line react-hooks/exhaustive-deps
   const [genero, setGenero] = useState<Genero | undefined>(perfil.genero);
   const [nacimiento, setNacimiento] = useState(perfil.nacimiento ?? '1995-01-01');
   const [altura, setAltura] = useState(perfil.altura ?? 165);
@@ -68,11 +76,15 @@ export default function Conocerte() {
           <>
             <Laurel size={48} />
             <div className="grupo mt-4">I · Conocerte</div>
-            <h1 className="titulo mt-2">{editar ? 'Tus datos' : 'Empecemos por vos'}</h1>
+            <h1 className="titulo mt-2">{editar ? 'Tus datos' : nombre && !cambiarNombre ? `Hola, ${nombre.trim().split(' ')[0]}` : 'Empecemos por vos'}</h1>
             <p className="mt-2 text-mu">Con estos datos calculamos cuánto te conviene comer cada día. Podés cambiarlos cuando quieras.</p>
-            <label className="mt-7 block"><span className="etiqueta">¿Cómo te llamás?</span>
-              <input className="campo mt-2" value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={80} aria-label="Tu nombre" placeholder="Tu nombre" />
-            </label>
+            {cambiarNombre ? (
+              <label className="mt-7 block"><span className="etiqueta">¿Cómo te llamás?</span>
+                <input className="campo mt-2" value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={80} aria-label="Tu nombre" placeholder="Tu nombre" />
+              </label>
+            ) : !editar && (
+              <button className="mt-3 text-[13px] font-semibold text-mu underline" onClick={() => setCambiarNombre(true)}>¿No es tu nombre? Cambialo</button>
+            )}
             <div className="etiqueta mt-6">Sexo (para la fórmula)</div>
             <div className="mt-2 grid grid-cols-2 gap-3" role="radiogroup" aria-label="Sexo">
               {([['mujer', 'Mujer'], ['hombre', 'Hombre']] as const).map(([v, t]) => (
