@@ -2,6 +2,7 @@ import { Capacitor } from '@capacitor/core';
 import { useEffect, useRef, useState } from 'react';
 import { codigoValido } from '../lib/openfoodfacts';
 import { Icono } from '../../familia/iconos';
+import { SIN_POSTER } from './CamaraFoto';
 
 type Detector = { detect: (v: HTMLVideoElement) => Promise<{ rawValue: string }[]> };
 const FORMATOS = ['ean_13', 'ean_8', 'upc_a', 'upc_e'];
@@ -80,7 +81,8 @@ export function Escaner({ alLeer }: { alLeer: (codigo: string) => void }) {
     <div>
       {estado !== 'sin-camara' && estado !== 'denegado' && (
         <div className="relative overflow-hidden rounded-[16px] bg-black" style={{ aspectRatio: '4 / 3' }}>
-          <video ref={video} className="h-full w-full object-cover" playsInline muted aria-label="Cámara" />
+          <video ref={video} className={`h-full w-full object-cover transition-opacity ${estado === 'buscando' ? 'opacity-100' : 'opacity-0'}`}
+            playsInline muted autoPlay poster={SIN_POSTER} aria-label="Cámara" />
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className="relative h-[38%] w-[78%] rounded-[12px] border-2 border-lat-on" style={{ boxShadow: '0 0 0 9999px color-mix(in srgb, var(--icono-fondo) 40%, transparent)' }}>
               <span className="absolute inset-x-3 top-1/2 h-0.5 -translate-y-1/2 animate-pulse bg-[var(--icono-laurel)]" />

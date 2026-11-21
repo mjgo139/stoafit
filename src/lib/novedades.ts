@@ -1,6 +1,11 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.11.1',
+    fecha: '2026-11-21',
+    cambios: ['La cámara del escáner y de la etiqueta ya no muestra un ícono gris de "reproducir" mientras arranca.'],
+  },
+  {
     version: '1.11.0',
     fecha: '2026-11-21',
     cambios: [

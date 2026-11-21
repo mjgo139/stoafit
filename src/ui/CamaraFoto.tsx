@@ -10,6 +10,9 @@ import { useCerrarConAtras } from './atras';
  * Con la cámara adentro (getUserMedia, el mismo permiso CAMERA del escáner) la app nunca se va al fondo.
  * "Elegir de la galería" queda como alternativa (y si no hay cámara o no hay permiso).
  */
+/** Imagen vacía: sin esto, el WebView de Android muestra un ícono gris de "reproducir" mientras arranca la cámara. */
+export const SIN_POSTER = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
 export function CamaraFoto({ alSacar, alCerrar }: { alSacar: (foto: Blob) => void; alCerrar: () => void }) {
   const video = useRef<HTMLVideoElement>(null);
   const galeria = useRef<HTMLInputElement>(null);
@@ -56,7 +59,8 @@ export function CamaraFoto({ alSacar, alCerrar }: { alSacar: (foto: Blob) => voi
         <button className="flex h-11 w-11 items-center justify-center rounded-full" onClick={alCerrar} aria-label="Cerrar cámara"><Icono n="cerrar" size={22} /></button>
       </div>
       <div className="relative flex-1 overflow-hidden">
-        <video ref={video} className="absolute inset-0 h-full w-full object-cover" playsInline muted />
+        <video ref={video} className={`absolute inset-0 h-full w-full object-cover transition-opacity ${estado === 'lista' ? 'opacity-100' : 'opacity-0'}`}
+          playsInline muted autoPlay poster={SIN_POSTER} />
         {estado === 'lista' && (
           <div className="pointer-events-none absolute inset-x-6 top-[12%] bottom-[12%] rounded-[16px] border-2 border-lat-on/70" aria-hidden />
         )}
