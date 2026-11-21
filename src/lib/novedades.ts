@@ -1,6 +1,14 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.10.0',
+    fecha: '2026-11-21',
+    cambios: [
+      'La frase estoica del Panel del día sale de la lista común de la familia (sobre medida y templanza) y se ve igual que en las otras apps.',
+      'Sin el emblema chiquito en el panel.',
+    ],
+  },
+  {
     version: '1.9.1',
     fecha: '2026-11-21',
     cambios: [

@@ -4,7 +4,7 @@ import { claveDia, hastaHoy, formatoNumero, racha, romano, semana } from '../lib
 import { comidasDelDia, comidasRegistradas, metasDe, repartoDe } from '../lib/nutricion';
 import { useComidas } from '../ui/comidas';
 import { useSesion } from '../ui/contexto';
-import { Emblema, Grupo, PanelDia, TuSemana } from '../ui/familia';
+import { Grupo, PanelDia, TuSemana } from '../ui/familia';
 import { Icono } from '../../familia/iconos';
 import { Anillo, Macros3, TarjetaComida } from '../ui/nutri';
 import { Cargando } from '../ui/piezas';
@@ -28,8 +28,7 @@ export default function Hoy() {
     <div className="pt-6 lg:pt-10">
       <div className="entrar">
         <PanelDia nombre={nombre}
-          linea={<span className="font-display italic">“{frase.texto}” <span className="not-italic">— {frase.autor}</span></span>}
-          esquina={<Link to="/perfil" aria-label="Ir a mi perfil" className="toque flex items-center justify-center"><Emblema size={40} /></Link>}
+          frase={frase}
           fichas={<>
             <Link to="/progreso" className="ficha"><Icono n="fuego" size={16} className="oro" />{r ? `${r} día${r > 1 ? 's' : ''} de racha` : 'Empezá tu racha'}<span aria-hidden className="ir">›</span></Link>
             <Link to="/diario" className="ficha"><Icono n="plato" size={16} className="oro" />{dia ? comidasRegistradas(dia) : 0}/{lista.length} comidas<span aria-hidden className="ir">›</span></Link>
