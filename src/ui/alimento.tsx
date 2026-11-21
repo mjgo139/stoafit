@@ -9,6 +9,7 @@ import { Icono } from '../../familia/iconos';
 import { CamaraFoto } from './CamaraFoto';
 import { Escaner } from './Escaner';
 import { codigoValido } from '../lib/openfoodfacts';
+import { CODIGO_VALIDO as CODIGO_VALIDO_UI } from '../lib/productos';
 import { Selector } from './piezas';
 
 const CANTIDADES = [0.5, 1, 1.5, 2, 3];
@@ -269,7 +270,7 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar, codigoFijo, pedirCo
       <label className="block"><span className="etiqueta">Nombre</span>
         <input className="campo mt-1.5" value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={80} aria-label="Nombre del alimento" placeholder={codigoFijo ? 'Ej.: Pan de leche' : 'Ej.: Guiso de la abuela'} />
       </label>
-      <div className={codigoFijo ? 'grid grid-cols-2 gap-2' : ''}>
+      <div className={codigoFijo && CODIGO_VALIDO_UI.test(codigoFijo) ? 'grid grid-cols-2 gap-2' : ''}>
         <label className="block"><span className="etiqueta">Marca (opcional)</span>
           <input className="campo mt-1.5" value={marca} onChange={(e) => setMarca(e.target.value)} maxLength={60} aria-label="Marca" />
         </label>
@@ -285,12 +286,12 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar, codigoFijo, pedirCo
             </div>
             {escanear && <div className="mt-2"><Escaner alLeer={(c) => { setCodigo(c); setEscanear(false); }} /></div>}
             <p className="mt-1.5 text-[12.5px] text-mu">
-              {conCodigo ? <b className="oro">Con código queda en la base de StoaFit: quien lo escanee después lo encuentra.</b>
-                : codigo ? 'El código no es válido: revisá los números de abajo de las barras.' : 'Si es un producto envasado, cargá su código para que todos lo encuentren al escanear.'}
+              {conCodigo ? <b className="oro">Con el código, quien lo escanee después lo encuentra.</b>
+                : codigo ? 'El código no es válido: revisá los números de abajo de las barras.' : 'Opcional. Si es un producto envasado, con el código lo encuentran también escaneándolo.'}
             </p>
           </div>
         )}
-        {codigoFijo && (
+        {codigoFijo && CODIGO_VALIDO_UI.test(codigoFijo) && (
           <div><span className="etiqueta">Código de barras</span>
             <div className="campo mt-1.5 flex items-center gap-2 bg-sf2 text-mu" aria-label="Código de barras" data-testid="codigo-fijo"><Icono n="barras" size={16} />{codigoFijo}</div>
           </div>

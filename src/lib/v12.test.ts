@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { macrosDe } from './nutricion';
-import { CODIGO_VALIDO, alimentoDeProducto, claveBusqueda, codigoDeId, idProducto, limpiarLectura, prefijosDe, productoDeEtiqueta } from './productos';
+import { CODIGO_VALIDO, ID_SIN_CODIGO, alimentoDeProducto, claveBusqueda, codigoDeId, idProducto, limpiarLectura, prefijosDe, productoDeEtiqueta } from './productos';
 
 describe('base compartida: un código = un producto', () => {
   const e = { nombre: 'Pan de leche', marca: 'Bimbo', codigo: '7840042000414', modo: 'porcion' as const, porcion: '1½ unidad', gramos: 50, kcal: 145, prot: 3.5, carb: 27, gras: 2.6 };
@@ -32,8 +32,7 @@ describe('base compartida: un código = un producto', () => {
     expect(p.verificadoPor).toBe('carga');
     expect(p.actualizado).toBe(2000);
   });
-  it('sin código válido no se puede crear', () => {
-    expect(() => productoDeEtiqueta({ ...e, codigo: '' }, 'u1', false, 'manual')).toThrow();
+  it('un código mal escrito no se puede crear (sin código sí: v1.15.0)', () => {
     expect(() => productoDeEtiqueta({ ...e, codigo: '12' }, 'u1', false, 'manual')).toThrow();
   });
 });
@@ -62,5 +61,19 @@ describe('v1.14.0: buscar productos por nombre', () => {
   it('el producto nuevo ya trae sus prefijos', () => {
     const p = productoDeEtiqueta({ nombre: 'Pre Pizza', marca: 'PANTODOS', codigo: '7840131003463', modo: 'porcion', porcion: '40 g', gramos: 40, kcal: 117, prot: 3.3, carb: 22, gras: 1.8, otras: [] }, 'u1', true, 'foto', 1);
     expect(p.prefijos).toContain('pizza');
+  });
+});
+
+describe('v1.15.0: alimentos compartidos sin código de barras', () => {
+  it('sin código recibe una llave "n-" al azar; con código, el código es la llave', () => {
+    const base = { nombre: 'Chipa de la casa', marca: '', modo: 'porcion' as const, porcion: '1 unidad', gramos: 60, kcal: 200, prot: 5, carb: 25, gras: 8, otras: [] };
+    const sin = productoDeEtiqueta({ ...base, codigo: '' }, 'u1', false, 'manual', 1);
+    expect(sin.codigo).toMatch(ID_SIN_CODIGO);
+    expect(alimentoDeProducto(sin).codigo).toBeUndefined();
+    expect(alimentoDeProducto(sin).compartido).toBe(true);
+    const con = productoDeEtiqueta({ ...base, codigo: '7840131003463' }, 'u1', false, 'manual', 1);
+    expect(con.codigo).toBe('7840131003463');
+    // Al corregir, la llave no cambia
+    expect(productoDeEtiqueta({ ...base, codigo: sin.codigo }, 'u2', true, 'manual', 2, sin).codigo).toBe(sin.codigo);
   });
 });

@@ -284,6 +284,10 @@ export class RepoMemoria implements Repo {
     return copia([...this.comun.productos.values()].filter((p) => (p.prefijos ?? prefijosDe(p.nombre, p.marca)).includes(clave)).slice(0, max));
   }
   async leerTodosProductos() { await this.puedeCorregir(); return copia([...this.comun.productos.values()]); }
+  async contarPendientes() {
+    await this.puedeCorregir();
+    return { reportes: this.comun.reportes.size, sinVerificar: [...this.comun.productos.values()].filter((p) => !p.verificado).length };
+  }
   async leerSinVerificar() { await this.puedeCorregir(); return copia([...this.comun.productos.values()].filter((p) => !p.verificado).sort((a, b) => b.creado - a.creado)); }
   async reportar(r: Reporte) { this.conSesion(); this.comun.reportes.set(r.id, copia(r)); this.guardar(); }
   async leerReportes() { await this.puedeCorregir(); return copia([...this.comun.reportes.values()].sort((a, b) => b.fecha - a.fecha)); }

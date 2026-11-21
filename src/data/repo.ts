@@ -55,6 +55,8 @@ export interface Repo {
   guardarProducto(p: Producto): Promise<void>;
   borrarProducto(codigo: string): Promise<void>;
   leerSinVerificar(): Promise<Producto[]>;
+  /** Cargadores y admin: cuántos reportes y productos sin verificar esperan (2 lecturas de conteo, no lee los documentos) */
+  contarPendientes(): Promise<{ reportes: number; sinVerificar: number }>;
   /** Busca por nombre en la base compartida (una palabra de 3 a 15 letras, sin tildes); pocas lecturas */
   buscarProductos(clave: string, max?: number): Promise<Producto[]>;
   /** Solo admin: todos los productos (para completar la búsqueda por nombre de los viejos) */

@@ -131,6 +131,14 @@ describe('reglas de Firestore', () => {
       await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), 'productos/7840000000017')));
     });
 
+    it('v1.15.0: alimento compartido sin código (llave n-…) y prefijos para buscar por nombre', async () => {
+      await preparar();
+      const beto = env.authenticatedContext('beto').firestore();
+      await assertSucceeds(setDoc(doc(beto, 'productos/n-abc123def4'), { ...prod('n-abc123def4', 'beto'), prefijos: ['chi', 'chip', 'chipa'] }));
+      await assertFails(setDoc(doc(beto, 'productos/n-ABC'), prod('n-ABC', 'beto')));
+      await assertFails(setDoc(doc(beto, 'productos/n-abc123def5'), { ...prod('n-abc123def5', 'beto'), prefijos: 'chipa' }));
+    });
+
     it('cargadores y admin corrigen y verifican; el código no cambia', async () => {
       await preparar();
       const beto = env.authenticatedContext('beto').firestore();

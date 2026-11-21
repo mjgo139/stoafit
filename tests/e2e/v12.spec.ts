@@ -182,3 +182,42 @@ test('recetas: pestaña propia y una receta con un producto de StoaFit en gramos
   await page.getByRole('tab', { name: 'Mis alimentos' }).click();
   await expect(page.getByTestId('alimento').filter({ hasText: 'Tostadas de la casa' })).toHaveCount(0);
 });
+
+test('crear alimento sin código: queda para todos; el privado de Mis alimentos solo lo ve quien lo creó', async ({ page }) => {
+  await entrar(page, 'lucas@ejemplo.com', 'Lucas');
+  await page.goto('/agregar?comida=merienda');
+  // Público, sin código
+  await page.getByRole('button', { name: /Crear alimento/ }).filter({ visible: true }).first().click();
+  await expect(page.getByTestId('aviso-visibilidad')).toContainText('lo encuentren todos');
+  await page.getByLabel('Nombre del alimento').fill('Chipa de doña Rosa');
+  await page.getByLabel('Calorías').fill('210');
+  await page.getByRole('button', { name: 'Guardar alimento' }).click();
+  await expect(page.getByText(/quedó cargado para todos/)).toBeVisible();
+  await page.keyboard.press('Escape');
+  // Privado, desde Mis alimentos
+  await page.goto('/agregar?comida=merienda');
+  await page.getByRole('tab', { name: 'Mis alimentos' }).click();
+  await page.getByTestId('crear-privado').click();
+  await expect(page.getByTestId('aviso-visibilidad')).toContainText('Solo lo ves vos');
+  await page.getByLabel('Nombre del alimento').fill('Torta secreta de mi abuela');
+  await page.getByLabel('Calorías').fill('350');
+  await page.getByRole('button', { name: 'Guardar alimento' }).click();
+  await expect(page.getByText(/quedó guardado/)).toBeVisible();
+
+  // Otra cuenta (sin borrar la base de prueba): Sofía encuentra la chipa por nombre pero no la torta privada
+  await page.goto('/perfil');
+  await page.getByRole('button', { name: 'Salir' }).click();
+  await page.getByRole('button', { name: 'Iniciar sesión' }).click();
+  await page.getByLabel('Correo').fill('sofia@ejemplo.com');
+  await page.getByLabel('Contraseña', { exact: true }).fill('stoafit');
+  await page.getByRole('button', { name: 'Entrar' }).click();
+  await expect(page.getByText('sofia@ejemplo.com').filter({ visible: true }).first()).toBeVisible();
+  await page.goto('/agregar?comida=merienda');
+  await page.getByLabel('Buscar alimento').fill('doña rosa');
+  await expect(page.getByTestId('alimento').filter({ hasText: 'Chipa de doña Rosa' })).toBeVisible();
+  await page.getByLabel('Buscar alimento').fill('torta secreta');
+  await expect(page.getByTestId('alimento').filter({ hasText: 'Torta secreta' })).toHaveCount(0);
+  // Sofía (admin) ve en Perfil cuántos pendientes hay para revisar
+  await page.goto('/perfil');
+  await expect(page.getByTestId('pendientes')).toBeVisible();
+});

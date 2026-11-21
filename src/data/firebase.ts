@@ -8,6 +8,7 @@ import {
   collection, deleteDoc, doc, getDoc, getDocs, initializeFirestore, limit, orderBy, documentId,
   persistentLocalCache, persistentMultipleTabManager, query, runTransaction, setDoc, where,
   writeBatch, type Firestore,
+  getCountFromServer,
 } from 'firebase/firestore';
 import type { Alimento, Cargador, ComidaGuardada, Dia, Perfil, Plan, Producto, RegistroCuerpo, Reporte } from '../lib/tipos';
 import { firebaseConfig } from '../firebaseConfig';
@@ -216,6 +217,13 @@ export class RepoFirebase implements Repo {
   async leerTodosProductos() {
     const s = await getDocs(query(collection(this.db, 'productos'), limit(500)));
     return s.docs.map((d) => ({ ...(d.data() as Producto), codigo: d.id }));
+  }
+  async contarPendientes() {
+    const [r, p] = await Promise.all([
+      getCountFromServer(collection(this.db, 'reportes')),
+      getCountFromServer(query(collection(this.db, 'productos'), where('verificado', '==', false))),
+    ]);
+    return { reportes: r.data().count, sinVerificar: p.data().count };
   }
   async leerSinVerificar() {
     const s = await getDocs(query(collection(this.db, 'productos'), where('verificado', '==', false), limit(100)));

@@ -25,7 +25,7 @@ service cloud.firestore {
     function productoValido(codigo) {
       let d = request.resource.data;
       return d.keys().hasOnly(['codigo', 'nombre', 'marca', 'por100', 'porciones', 'verificado', 'creadoPor', 'creado', 'actualizado', 'verificadoPor', 'via', 'prefijos'])
-        && d.codigo == codigo && codigo.matches('^([0-9]{8}|[0-9]{12,14})$')
+        && d.codigo == codigo && (codigo.matches('^([0-9]{8}|[0-9]{12,14})$') || codigo.matches('^n-[a-z0-9]{10}$'))
         && d.nombre is string && d.nombre.size() > 0 && d.nombre.size() <= 80
         && (!('marca' in d) || (d.marca is string && d.marca.size() <= 60))
         && d.por100.kcal is number && d.por100.kcal >= 0 && d.por100.kcal <= 1000

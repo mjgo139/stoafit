@@ -1,6 +1,15 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.15.0',
+    fecha: '2026-11-21',
+    cambios: [
+      '"Crear alimento" ahora lo deja en StoaFit para que todos lo encuentren por nombre, tenga o no código de barras.',
+      'En Mis alimentos podés crear alimentos privados, que solo ves vos.',
+      'Cualquiera puede reportar un error en un alimento de StoaFit; el admin y los cargadores ven cuántos reportes esperan en Perfil.',
+    ],
+  },
+  {
     version: '1.14.0',
     fecha: '2026-11-21',
     cambios: [

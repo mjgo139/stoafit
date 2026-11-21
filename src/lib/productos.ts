@@ -9,10 +9,19 @@ export const codigoDeId = (id: string) => (id.startsWith('cod-') ? id.slice(4) :
 
 /** Un código de barras válido para la base compartida (EAN-8, UPC-A, EAN-13, GTIN-14) */
 export const CODIGO_VALIDO = /^[0-9]{8}$|^[0-9]{12,14}$/;
+/** Alimento compartido SIN código de barras (v1.15.0): su llave es "n-" + 10 letras/números al azar */
+export const ID_SIN_CODIGO = /^n-[a-z0-9]{10}$/;
+export const esLlaveProducto = (c: string) => CODIGO_VALIDO.test(c) || ID_SIN_CODIGO.test(c);
+export function nuevaLlaveSinCodigo(): string {
+  const l = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let s = 'n-';
+  for (let i = 0; i < 10; i++) s += l[Math.floor(Math.random() * l.length)];
+  return s;
+}
 
 export function alimentoDeProducto(p: Producto): Alimento {
   return {
-    id: idProducto(p.codigo), nombre: p.nombre, grupo: 'envasados', codigo: p.codigo, compartido: true, verificado: p.verificado,
+    id: idProducto(p.codigo), nombre: p.nombre, grupo: 'envasados', ...(CODIGO_VALIDO.test(p.codigo) ? { codigo: p.codigo } : {}), compartido: true, verificado: p.verificado,
     ...(p.marca ? { marca: p.marca } : {}), por100: p.por100, porciones: p.porciones,
   };
 }
@@ -37,10 +46,12 @@ export function claveBusqueda(texto: string): string | null {
 
 /** Arma el producto a partir de la etiqueta; el código manda y no se puede cambiar después */
 export function productoDeEtiqueta(e: Etiqueta, uid: string, verificado: boolean, via: Producto['via'], ahora = Date.now(), previo?: Producto): Producto {
-  if (!e.codigo || !CODIGO_VALIDO.test(e.codigo)) throw new Error('Falta un código de barras válido');
+  // Con código de barras, el código es la llave (un código = un producto). Sin código, una llave nueva al azar.
+  if (e.codigo && !esLlaveProducto(e.codigo)) throw new Error('El código de barras no es válido');
+  const llave = previo?.codigo ?? (e.codigo || nuevaLlaveSinCodigo());
   const a = alimentoDeEtiqueta('x', e);
   return {
-    codigo: previo?.codigo ?? e.codigo, nombre: a.nombre, ...(a.marca ? { marca: a.marca } : {}), por100: a.por100, porciones: a.porciones,
+    codigo: llave, nombre: a.nombre, ...(a.marca ? { marca: a.marca } : {}), por100: a.por100, porciones: a.porciones,
     verificado, creadoPor: previo?.creadoPor ?? uid, creado: previo?.creado ?? ahora, actualizado: ahora,
     ...(verificado ? { verificadoPor: uid } : {}), via: via ?? previo?.via ?? 'manual',
     prefijos: prefijosDe(a.nombre, a.marca),

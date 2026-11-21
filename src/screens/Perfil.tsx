@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { mensajeError } from '../data/repo';
 import { edad, fechaCorta, formatoNumero } from '../lib/logica';
@@ -23,6 +23,9 @@ export default function Perfil() {
   const [nombre, setNombre] = useState(perfil.nombre);
   const [borrar, setBorrar] = useState(false);
   const [cuenta, setCuenta] = useState(false);
+  // Cargadores y admin: cuántos reportes esperan (2 lecturas de conteo al abrir Perfil)
+  const [pendientes, setPendientes] = useState<{ reportes: number; sinVerificar: number } | null>(null);
+  useEffect(() => { if (cargador) repo.contarPendientes().then(setPendientes).catch(() => undefined); }, [cargador, repo]);
   const [editarNombre, setEditarNombre] = useState(false);
   const [error, setError] = useState('');
   const metas = metasDe(perfil);
@@ -146,6 +149,9 @@ export default function Perfil() {
               <Link to="/productos" className="tarjeta flex items-center gap-3" data-testid="ir-productos">
                 <Icono n="barras" className="oro" />
                 <span className="flex-1"><b>Productos</b><span className="block text-[12.5px] text-mu">Reportes, productos sin verificar{admin ? ' y cargadores' : ''}</span></span>
+                {pendientes && pendientes.reportes + pendientes.sinVerificar > 0 && (
+                  <span className="chip chip-on shrink-0" data-testid="pendientes">{pendientes.reportes ? `${pendientes.reportes} reporte${pendientes.reportes === 1 ? '' : 's'}` : `${pendientes.sinVerificar} sin verificar`}</span>
+                )}
                 <Icono n="der" size={20} className="text-mu" />
               </Link>
             </section>

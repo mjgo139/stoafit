@@ -4,7 +4,7 @@ import { BIBLIOTECA, GRUPOS, buscar, buscarAlimento } from '../lib/alimentos';
 import { claveDia, fechaCorta, formatoNumero, nuevoId, sumarDias } from '../lib/logica';
 import { alimentoDeEtiqueta, nombreComida, copiarItems, etiquetaDe, itemDe, sumar, type Etiqueta } from '../lib/nutricion';
 import { FUENTE_OFF, PRODUCTOS_PRUEBA, buscarEnOFF } from '../lib/openfoodfacts';
-import { alimentoDeProducto, codigoDeId, productosEnCache, recordarProducto } from '../lib/productos';
+import { CODIGO_VALIDO, alimentoDeProducto, codigoDeId, productosEnCache, recordarProducto } from '../lib/productos';
 import type { Alimento, ComidaGuardada, Dia, GrupoAlimento, ItemComida, TipoComida } from '../lib/tipos';
 import { ElegirPorcion, FormEtiqueta } from '../ui/alimento';
 import { useSesion } from '../ui/contexto';
@@ -43,7 +43,7 @@ export default function Agregar() {
   const [guardadas, setGuardadas] = useState<ComidaGuardada[]>([]);
   const [previos, setPrevios] = useState<Dia[]>([]);
   const [elegido, setElegido] = useState<Alimento | null>(null);
-  const [form, setForm] = useState<{ inicial: Partial<Etiqueta>; editar?: Alimento; aviso?: string; codigo?: string } | null>(null);
+  const [form, setForm] = useState<{ inicial: Partial<Etiqueta>; editar?: Alimento; aviso?: string; codigo?: string; privado?: boolean } | null>(null);
   const [reportar, setReportar] = useState<Alimento | null>(null);
   const [cache, setCache] = useState<Alimento[]>(() => productosEnCache());
   const productos = useProductos();
@@ -292,7 +292,7 @@ export default function Agregar() {
           <>
             {!buscandoTexto && pestana === 'mios' && (
               <div className="mb-4 grid grid-cols-2 gap-3">
-                <button className="btn-sec" onClick={() => setForm({ inicial: {} })}><Icono n="mas" size={20} />Crear alimento</button>
+                <button className="btn-sec" onClick={() => setForm({ inicial: {}, privado: true })} data-testid="crear-privado"><Icono n="mas" size={20} />Alimento privado</button>
                 <Link className="btn-sec" to="/receta"><Icono n="receta" size={20} />Crear receta</Link>
               </div>
             )}
@@ -313,7 +313,7 @@ export default function Agregar() {
               ) : (
                 <div className="tarjeta py-6 text-center text-[15px] text-mu">
                   {buscandoTexto ? (remotos.buscando ? 'Buscando en StoaFit…' : <>No encontramos “{texto}”.</>) : pestana === 'favoritos' ? 'Tocá la estrella de un alimento para tenerlo acá.' : 'Todavía no hay historial. Buscá un alimento arriba.'}
-                  {buscandoTexto && <button className="mt-3 block w-full font-semibold oro" onClick={() => setForm({ inicial: { nombre: texto } })}>Crear “{texto}” como alimento propio →</button>}
+                  {buscandoTexto && <button className="mt-3 block w-full font-semibold oro" onClick={() => setForm({ inicial: { nombre: texto } })}>Crear “{texto}” →</button>}
                 </div>
               )
             ) : (
@@ -330,7 +330,7 @@ export default function Agregar() {
                         </span>
                         <span className="mt-0.5 block truncate text-[13.5px] text-mu">
                           <b className="font-semibold text-tx">{formatoNumero(it.kcal)} kcal</b>{a.marca ? ` · ${a.marca}` : ''} · {textoCantidad(it)}
-                          {(a.propio || a.compartido) && <span className="ml-1.5 text-[11px] font-bold uppercase tracking-[.1em] acento">{a.receta ? 'receta' : a.codigo ? 'envasado' : 'propio'}</span>}
+                          {(a.propio || a.compartido) && <span className="ml-1.5 text-[11px] font-bold uppercase tracking-[.1em] acento">{a.receta ? 'receta' : a.codigo ? 'envasado' : a.compartido ? 'StoaFit' : 'privado'}</span>}
                         </span>
                       </button>
                       <button className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-goldbg oro transition-transform active:scale-95" aria-label={`Agregar ${a.nombre} ya`}
@@ -387,19 +387,24 @@ export default function Agregar() {
               const a = elegido;
               setElegido(null);
               if (a.receta) nav(`/receta?id=${encodeURIComponent(a.id)}`);
-              else setForm({ inicial: etiquetaDe(a), editar: a, codigo: a.compartido ? a.codigo : undefined });
+              else setForm({ inicial: etiquetaDe(a), editar: a, codigo: a.compartido ? (a.codigo ?? codigoDeId(a.id) ?? undefined) : undefined, privado: !a.compartido });
             } : undefined}
             alReportar={elegido.compartido && !productos.cargador ? () => { const a = elegido; setElegido(null); setReportar(a); } : undefined}
             fecha={fecha} alAgregar={(item, otros) => agregarElegido(elegido, item, otros)} />
         )}
       </Hoja>
 
-      <Hoja abierta={!!form} alCerrar={() => setForm(null)} etiqueta={form?.codigo ? 'Producto envasado' : form?.editar ? 'Editar' : 'Alimento propio'}
-        titulo={form?.editar ? (form.codigo ? 'Corregir producto' : form.editar.nombre) : form?.codigo ? 'Cargar producto' : 'Crear alimento'}>
+      <Hoja abierta={!!form} alCerrar={() => setForm(null)} etiqueta={form?.codigo ? (CODIGO_VALIDO.test(form.codigo) ? 'Producto envasado' : 'Alimento de StoaFit') : form?.privado ? 'Solo para vos' : ''}
+        titulo={form?.editar ? (form.codigo ? 'Corregir producto' : form.editar.nombre) : form?.codigo ? 'Cargar producto' : form?.privado ? 'Crear alimento privado' : 'Crear alimento'}>
         {form && (
           <>
             {form.aviso && <p className="mb-3 rounded-[12px] bg-acentobg p-3 text-[13.5px]" role="status" data-testid="aviso-codigo">{form.aviso}</p>}
-            <FormEtiqueta key={form.editar?.id ?? form.codigo ?? 'nuevo'} inicial={form.inicial} codigoFijo={form.codigo} pedirCodigo={!form.editar && !form.codigo}
+            {!form.editar && !form.codigo && (
+              <p className="mb-3 text-[13.5px] text-mu" data-testid="aviso-visibilidad">
+                {form.privado ? 'Solo lo ves vos: no aparece en las búsquedas de otros usuarios.' : 'Queda en StoaFit para que lo encuentren todos. Si es algo solo tuyo, creálo como privado desde Mis alimentos.'}
+              </p>
+            )}
+            <FormEtiqueta key={form.editar?.id ?? form.codigo ?? 'nuevo'} inicial={form.inicial} codigoFijo={form.codigo} pedirCodigo={!form.editar && !form.codigo && !form.privado}
               leerFoto={productos.leerFoto}
               textoGuardar={form.codigo ? (form.editar ? 'Guardar y verificar' : 'Guardar producto') : 'Guardar alimento'}
               alBorrar={form.editar && !form.codigo ? async () => {
@@ -418,7 +423,7 @@ export default function Agregar() {
                     setForm(null);
                     aviso(`${a.nombre} quedó corregido y verificado`);
                     setElegido(a);
-                  } else if (form.codigo || e.codigo) {
+                  } else if (form.codigo || e.codigo || !form.privado) {
                     // Producto nuevo de la base compartida (el código es la llave)
                     const r = await productos.crear(e, via);
                     setCache(productosEnCache());

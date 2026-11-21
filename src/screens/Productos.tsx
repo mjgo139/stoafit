@@ -14,6 +14,9 @@ import { useProductos } from '../ui/usarProductos';
 
 type Vista = 'reportes' | 'sin-verificar' | 'cargadores';
 
+/** El código de barras, o que es un alimento compartido sin código (llave "n-…") */
+const textoCodigo = (c: string) => (CODIGO_VALIDO.test(c) ? `Código ${c}` : 'Sin código de barras');
+
 /** Panel de la base compartida: reportes, productos sin verificar y (admin) cargadores */
 export default function Productos() {
   const { repo, usuario, admin, cargador, aviso } = useSesion();
@@ -78,7 +81,7 @@ export default function Productos() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="font-semibold">{r.nombre}</div>
-                    <div className="text-[12.5px] text-mu">Código {r.codigo} · {fechaCorta(r.fecha)}</div>
+                    <div className="text-[12.5px] text-mu">{textoCodigo(r.codigo)} · {fechaCorta(r.fecha)}</div>
                     <p className="mt-2 text-[15px]">“{r.motivo}”</p>
                   </div>
                 </div>
@@ -101,7 +104,7 @@ export default function Productos() {
               return (
                 <li key={p.codigo} className="tarjeta" data-testid="pendiente">
                   <div className="font-semibold">{p.nombre}{p.marca ? <span className="font-normal text-mu"> · {p.marca}</span> : null}</div>
-                  <div className="text-[12.5px] text-mu">Código {p.codigo} · cargado el {fechaCorta(p.creado)}</div>
+                  <div className="text-[12.5px] text-mu">{textoCodigo(p.codigo)} · cargado el {fechaCorta(p.creado)}</div>
                   <div className="mt-1 text-[13.5px]">{a.porciones[0].nombre}: <b>{formatoNumero(m.kcal)} kcal</b> · P {formatoNumero(m.prot, 1)} · C {formatoNumero(m.carb, 1)} · G {formatoNumero(m.gras, 1)}</div>
                   <div className="mt-3 flex gap-2">
                     <button className="btn h-10 flex-1 px-3 text-[12.5px]" onClick={() => verificar(p)}><Icono n="check" size={16} />Está bien</button>
@@ -139,7 +142,7 @@ export default function Productos() {
         )}
       </div>
 
-      <Hoja abierta={!!editar} alCerrar={() => setEditar(null)} etiqueta={editar ? `Código ${editar.codigo}` : ''} titulo="Corregir producto">
+      <Hoja abierta={!!editar} alCerrar={() => setEditar(null)} etiqueta={editar ? textoCodigo(editar.codigo) : ''} titulo="Corregir producto">
         {editar && (
           <>
             <p className="mb-3 text-[13.5px] text-mu">{editar.verificado ? 'Verificado' : 'Sin verificar'} · cargado {editar.via === 'foto' ? 'con foto' : 'a mano'} el {fechaCorta(editar.creado)}</p>
