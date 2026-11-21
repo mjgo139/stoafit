@@ -22,7 +22,7 @@ const ESQUEMA = Schema.object({
 });
 
 const PEDIDO = `Sos un lector de etiquetas nutricionales de alimentos envasados de Paraguay (formato MERCOSUR).
-Leé la tabla "Información Nutricional" de la foto y devolvé SOLO los valores de la columna "Cantidad por porción" (no el %VD).
+La foto puede estar girada o al revés. Leé la tabla "Información Nutricional" de la foto y devolvé SOLO los valores de la columna "Cantidad por porción" (no el %VD).
 Usá punto decimal. La energía en kcal, no en kJ. Si la etiqueta da valores por 100 g en vez de por porción, usá porcion "100 g" y gramos 100.
 Si un dato no se lee con seguridad, no lo inventes: dejalo afuera.`;
 
@@ -54,6 +54,8 @@ export async function leerEtiquetaConGemini(app: FirebaseApp, foto: Blob): Promi
   }
   const m = String((ultimo as Error)?.message ?? ultimo);
   const code = /429|quota|RESOURCE_EXHAUSTED/i.test(m) ? 'ia/limite'
+    // App Check obligatorio en AI Logic sin App Check configurado en la app → 401 "Firebase App Check token is invalid"
+    : /App ?Check|401|UNAUTHENTICATED/i.test(m) ? 'ia/app-check'
     : /403|PERMISSION|api-not-enabled|not been used|disabled|API key/i.test(m) ? 'ia/no-disponible' : 'ia/no-leyo';
   throw Object.assign(new Error(code), { code, detalle: m });
 }

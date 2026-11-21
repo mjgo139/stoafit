@@ -1,6 +1,11 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.11.2',
+    fecha: '2026-11-21',
+    cambios: ['Leer etiqueta: avisos más claros cuando el servicio de lectura no responde, y lee también fotos giradas o al revés.'],
+  },
+  {
     version: '1.11.1',
     fecha: '2026-11-21',
     cambios: ['La cámara del escáner y de la etiqueta ya no muestra un ícono gris de "reproducir" mientras arranca.'],

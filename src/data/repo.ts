@@ -120,6 +120,7 @@ export function mensajeError(e: unknown): string {
     'pro/propio': 'No podés ser cliente de vos mismo.',
     'cargador/no-existe': 'No hay ninguna cuenta de StoaFit con ese correo.',
     'ia/no-disponible': 'La lectura de etiquetas todavía no está activada.',
+    'ia/app-check': 'La lectura de etiquetas está bloqueada por la Verificación de aplicaciones (App Check) de Firebase.',
     'ia/limite': 'Se alcanzó el límite de lecturas por hoy. Cargá la etiqueta a mano.',
     'ia/no-leyo': 'No pudimos leer la etiqueta. Probá con otra foto, más cerca y sin brillo.',
   };
