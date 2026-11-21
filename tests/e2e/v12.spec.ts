@@ -221,3 +221,19 @@ test('crear alimento sin código: queda para todos; el privado de Mis alimentos 
   await page.goto('/perfil');
   await expect(page.getByTestId('pendientes')).toBeVisible();
 });
+
+test('líquidos: un alimento en ml se agrega en mililitros', async ({ page }) => {
+  await entrar(page, 'lucas@ejemplo.com', 'Lucas');
+  await page.goto('/agregar?comida=merienda');
+  await page.getByRole('button', { name: /Crear alimento/ }).filter({ visible: true }).first().click();
+  await page.getByLabel('Nombre del alimento').fill('Jugo en polvo preparado');
+  await page.getByLabel('Nombre de la porción').fill('1 vaso 200 ml');
+  await expect(page.getByRole('radio', { name: 'Líquido (ml)' })).toBeChecked();
+  await page.getByLabel('Gramos de la porción').fill('200');
+  await page.getByLabel('Calorías').fill('3');
+  await page.getByRole('button', { name: 'Guardar alimento' }).click();
+  const d = page.getByRole('dialog', { name: 'Jugo en polvo preparado' });
+  await expect(d).toBeVisible();
+  await expect(d.getByLabel('Unidad')).toContainText('mililitros (ml)');
+  await expect(d.getByLabel('Unidad')).toContainText('100 ml');
+});

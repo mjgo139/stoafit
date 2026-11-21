@@ -1,6 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { useEffect, useRef, useState } from 'react';
-import { codigoValido } from '../lib/openfoodfacts';
+import { codigoValido, digitoOk } from '../lib/openfoodfacts';
 import { Icono } from '../../familia/iconos';
 import { SIN_POSTER } from './CamaraFoto';
 
@@ -34,6 +34,11 @@ export function Escaner({ alLeer }: { alLeer: (codigo: string) => void }) {
   const [estado, setEstado] = useState<'iniciando' | 'buscando' | 'sin-camara' | 'denegado'>('iniciando');
   const [manual, setManual] = useState('');
   const leido = useRef(false);
+  // Para no leer mal: el mismo código tiene que verse en 3 cuadros seguidos y su dígito verificador tiene que cerrar.
+  // Después se muestra el número y la persona confirma (o vuelve a escanear).
+  const [encontrado, setEncontrado] = useState<string | null>(null);
+  const ultimo = useRef<{ c: string; n: number }>({ c: '', n: 0 });
+  const [vuelta, setVuelta] = useState(0);
 
   useEffect(() => {
     let vivo = true;
@@ -60,11 +65,12 @@ export function Escaner({ alLeer }: { alLeer: (codigo: string) => void }) {
         try {
           if (v.readyState >= 2) {
             const r = await detector.detect(v);
-            const c = r.map((x) => codigoValido(x.rawValue)).find(Boolean);
-            if (c && vivo && !leido.current) {
+            const c = r.map((x) => codigoValido(x.rawValue)).find((x): x is string => !!x && digitoOk(x));
+            if (c) ultimo.current = ultimo.current.c === c ? { c, n: ultimo.current.n + 1 } : { c, n: 1 };
+            if (c && ultimo.current.n >= 3 && vivo && !leido.current) {
               leido.current = true;
               navigator.vibrate?.(60);
-              alLeer(c);
+              setEncontrado(c);
               return;
             }
           }
@@ -74,7 +80,7 @@ export function Escaner({ alLeer }: { alLeer: (codigo: string) => void }) {
       mirar();
     })();
     return () => { vivo = false; clearTimeout(t); flujo?.getTracks().forEach((x) => x.stop()); };
-  }, [alLeer]);
+  }, [alLeer, vuelta]);
 
   const valido = codigoValido(manual);
   return (
@@ -91,6 +97,16 @@ export function Escaner({ alLeer }: { alLeer: (codigo: string) => void }) {
           <p className="absolute inset-x-0 bottom-3 text-center text-[13.5px] font-semibold text-lat-on">
             {estado === 'iniciando' ? 'Abriendo la cámara…' : 'Apuntá al código de barras del envase'}
           </p>
+          {encontrado && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[var(--icono-fondo)] p-5 text-center text-lat-on" data-testid="codigo-leido">
+              <span className="text-[13.5px] text-lat-mu">Leímos este código. ¿Coincide con el del envase?</span>
+              <span className="num text-[28px] tracking-[.06em]">{encontrado}</span>
+              <div className="grid w-full max-w-[320px] grid-cols-2 gap-2">
+                <button type="button" className="btn-sec" onClick={() => { leido.current = false; ultimo.current = { c: '', n: 0 }; setEncontrado(null); setVuelta((x) => x + 1); }}>Escanear de nuevo</button>
+                <button type="button" className="btn" onClick={() => alLeer(encontrado)}>Usar este</button>
+              </div>
+            </div>
+          )}
         </div>
       )}
       {(estado === 'sin-camara' || estado === 'denegado') && (

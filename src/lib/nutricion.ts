@@ -253,6 +253,8 @@ export interface Etiqueta {
   kcal: number; prot: number; carb: number; gras: number;
   /** Otras medidas caseras: "1 paquete" = 200 g */
   otras?: Porcion[];
+  /** v1.16.0: líquidos en ml (bebidas, leche, jugos). Se toma 1 ml ≈ 1 g para la cuenta */
+  unidad?: 'g' | 'ml';
 }
 
 /** Arma un alimento propio a partir de la etiqueta del envase */
@@ -261,7 +263,8 @@ export function alimentoDeEtiqueta(id: string, e: Etiqueta, fuente: Alimento['fu
   const porciones: Porcion[] = [];
   if (e.porcion.trim() && e.gramos > 0) porciones.push({ nombre: e.porcion.trim(), gramos: Math.round(e.gramos) });
   for (const o of e.otras ?? []) if (o.nombre.trim() && o.gramos > 0 && !porciones.some((p) => p.nombre === o.nombre.trim())) porciones.push({ nombre: o.nombre.trim(), gramos: Math.round(o.gramos) });
-  if (!porciones.some((p) => p.nombre === '100 g')) porciones.push({ nombre: '100 g', gramos: 100 });
+  const base = e.unidad === 'ml' ? '100 ml' : '100 g';
+  if (!porciones.some((p) => p.nombre === base)) porciones.push({ nombre: base, gramos: 100 });
   return {
     id, nombre: e.nombre.trim().slice(0, 80), grupo: e.codigo ? 'envasados' : 'tipicos', propio: true, fuente,
     ...(e.marca?.trim() ? { marca: e.marca.trim().slice(0, 60) } : {}),
@@ -277,7 +280,8 @@ export function etiquetaDe(a: Alimento): Etiqueta {
   const m = macrosDe(a, p.gramos);
   return {
     nombre: a.nombre, marca: a.marca, codigo: a.codigo, modo: 'porcion', porcion: p.nombre, gramos: p.gramos, ...m,
-    otras: a.porciones.slice(1).filter((x) => x.nombre !== '100 g'),
+    otras: a.porciones.slice(1).filter((x) => x.nombre !== '100 g' && x.nombre !== '100 ml'),
+    unidad: unidadSuelta(a),
   };
 }
 

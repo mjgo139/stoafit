@@ -78,6 +78,7 @@ export interface LecturaEtiqueta {
   nombre?: string; marca?: string;
   porcion?: string; gramos?: number;
   kcal?: number; prot?: number; carb?: number; gras?: number;
+  unidad?: 'g' | 'ml';
 }
 
 /** Valida y redondea lo que devolvió la IA; descarta lo imposible */
@@ -93,5 +94,7 @@ export function limpiarLectura(x: unknown): LecturaEtiqueta {
     gramos: n(o.gramos, 5000), kcal: n(o.kcal, 3000), prot: n(o.prot, 500), carb: n(o.carb, 500), gras: n(o.gras, 500),
   };
   if (r.gramos === 0) r.gramos = undefined;
+  // Líquidos: si la IA lo dice, o si la porción está en ml / litros
+  if (o.unidad === 'ml' || /\d\s*(ml|cc|l)\b/i.test(r.porcion ?? '')) r.unidad = 'ml';
   return Object.fromEntries(Object.entries(r).filter(([, v]) => v !== undefined)) as LecturaEtiqueta;
 }

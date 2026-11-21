@@ -29,13 +29,16 @@ const ESQUEMA = Schema.object({
     prot: Schema.number({ description: 'Proteínas en gramos por porción' }),
     carb: Schema.number({ description: 'Carbohidratos totales en gramos por porción' }),
     gras: Schema.number({ description: 'Grasas totales en gramos por porción' }),
+    unidad: Schema.enumString({ enum: ['g', 'ml'], description: 'ml si la porción es un líquido (bebida, leche, jugo preparado), g si es sólido' }),
   },
-  optionalProperties: ['nombre', 'marca', 'porcion', 'gramos', 'kcal', 'prot', 'carb', 'gras'],
+  optionalProperties: ['nombre', 'marca', 'porcion', 'gramos', 'kcal', 'prot', 'carb', 'gras', 'unidad'],
 });
 
 const PEDIDO = `Sos un lector de etiquetas nutricionales de alimentos envasados de Paraguay (formato MERCOSUR).
 La foto puede estar girada o al revés. Leé la tabla "Información Nutricional" de la foto y devolvé SOLO los valores de la columna "Cantidad por porción" (no el %VD).
 Usá punto decimal. La energía en kcal, no en kJ. Si la etiqueta da valores por 100 g en vez de por porción, usá porcion "100 g" y gramos 100.
+Si la porción es en ml (líquidos o polvos para preparar), poné gramos = los ml y unidad "ml".
+Si la etiqueta dice que no aporta cantidades significativas de un nutriente (proteínas, grasas…), ponelo en 0.
 Si un dato no se lee con seguridad, no lo inventes: dejalo afuera.`;
 
 async function aBase64(b: Blob): Promise<string> {

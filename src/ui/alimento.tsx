@@ -201,6 +201,7 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar, codigoFijo, pedirCo
   const [modo, setModo] = useState<Etiqueta['modo']>(inicial.modo ?? 'porcion');
   const [porcion, setPorcion] = useState(inicial.porcion ?? '1 porción');
   const [gramos, setGramos] = useState(t(inicial.gramos ?? 100));
+  const [unidad, setUnidad] = useState<'g' | 'ml'>(inicial.unidad ?? 'g');
   const [v, setV] = useState({ kcal: t(inicial.kcal), prot: t(inicial.prot), carb: t(inicial.carb), gras: t(inicial.gras) });
   const [otras, setOtras] = useState<{ nombre: string; gramos: string }[]>((inicial.otras ?? []).map((o) => ({ nombre: o.nombre, gramos: String(o.gramos) })));
   const [borrar, setBorrar] = useState(false);
@@ -218,7 +219,7 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar, codigoFijo, pedirCo
     const o: Porcion[] = otras.filter((x) => x.nombre.trim() && num(x.gramos) > 0).map((x) => ({ nombre: x.nombre.trim().slice(0, 40), gramos: num(x.gramos) }));
     alGuardar({
       nombre, marca, codigo: codigoFijo ?? (codigoValido(codigo) || ''), modo, porcion: porcion.trim().slice(0, 40) || '1 porción', gramos: g,
-      kcal: num(v.kcal), prot: num(v.prot), carb: num(v.carb), gras: num(v.gras), otras: o,
+      kcal: num(v.kcal), prot: num(v.prot), carb: num(v.carb), gras: num(v.gras), otras: o, unidad,
     }, via);
   }
 
@@ -227,14 +228,16 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar, codigoFijo, pedirCo
     setErrorFoto('');
     setLeyendo(true);
     try {
-      const l = await leerFoto(await comprimir(f));
+      const l = await leerFoto(await comprimir(f, 2048, 0.9));
       const t = (n?: number) => (n === undefined ? undefined : String(n).replace('.', ','));
       if (l.nombre && !nombre.trim()) setNombre(l.nombre);
       if (l.marca && !marca.trim()) setMarca(l.marca);
       setModo('porcion');
       if (l.porcion) setPorcion(l.porcion);
       if (l.gramos) setGramos(t(l.gramos)!);
-      setV((x) => ({ kcal: t(l.kcal) ?? x.kcal, prot: t(l.prot) ?? x.prot, carb: t(l.carb) ?? x.carb, gras: t(l.gras) ?? x.gras }));
+      if (l.unidad) setUnidad(l.unidad);
+      // Lo que la etiqueta no trae ("no aporta cantidades significativas") queda en 0, a la vista
+      setV((x) => ({ kcal: t(l.kcal) ?? x.kcal, prot: t(l.prot) ?? (x.prot || '0'), carb: t(l.carb) ?? (x.carb || '0'), gras: t(l.gras) ?? (x.gras || '0') }));
       setVia('foto');
       setLeida(true);
     } catch (e) {
@@ -300,17 +303,23 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar, codigoFijo, pedirCo
       <div>
         <div className="etiqueta mb-1.5">La etiqueta dice los valores…</div>
         <Selector<Etiqueta['modo']> nombre="Valores de la etiqueta" valor={modo} alCambiar={setModo}
-          opciones={[{ v: 'porcion', t: 'Por porción' }, { v: '100', t: 'Cada 100 g / ml' }]} />
+          opciones={[{ v: 'porcion', t: 'Por porción' }, { v: '100', t: unidad === 'ml' ? 'Cada 100 ml' : 'Cada 100 g' }]} />
       </div>
       <div className="grid grid-cols-[1fr_110px] gap-2">
         <label className="block"><span className="etiqueta">Porción</span>
-          <input className="campo mt-1.5" value={porcion} onChange={(e) => setPorcion(e.target.value)} maxLength={40} aria-label="Nombre de la porción" placeholder="1 paquete, 2 galletitas…" />
+          <input className="campo mt-1.5" value={porcion} maxLength={40} aria-label="Nombre de la porción" placeholder="1 paquete, 1 vaso…"
+            onChange={(e) => { setPorcion(e.target.value); if (/\d\s*(ml|cc|l)\b/i.test(e.target.value)) setUnidad('ml'); }} />
         </label>
-        <label className="block"><span className="etiqueta">Gramos</span>
+        <label className="block"><span className="etiqueta">{unidad === 'ml' ? 'Mililitros' : 'Gramos'}</span>
           <input className="campo mt-1.5" inputMode="decimal" value={gramos} onChange={(e) => setGramos(e.target.value)} aria-label="Gramos de la porción" />
         </label>
       </div>
-      <p className="text-[13.5px] text-mu">Lo que aporta <b>{modo === 'porcion' ? `esa porción (${formatoNumero(g)} g)` : 'cada 100 g o 100 ml'}</b>:</p>
+      <div>
+        <div className="etiqueta mb-1.5">Es…</div>
+        <Selector<'g' | 'ml'> nombre="Sólido o líquido" valor={unidad} alCambiar={setUnidad}
+          opciones={[{ v: 'g', t: 'Sólido (g)' }, { v: 'ml', t: 'Líquido (ml)' }]} />
+      </div>
+      <p className="text-[13.5px] text-mu">Lo que aporta <b>{modo === 'porcion' ? `esa porción (${formatoNumero(g)} ${unidad})` : `cada 100 ${unidad}`}</b>:</p>
       <div className="grid grid-cols-2 gap-2">
         {campo('kcal', 'Calorías')}{campo('prot', 'Proteínas (g)')}{campo('carb', 'Carbohidratos (g)')}{campo('gras', 'Grasas (g)')}
       </div>
@@ -339,7 +348,7 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar, codigoFijo, pedirCo
 }
 
 /** Achica la foto (máximo 1280 px, JPEG) para que la lectura sea rápida y barata */
-export async function comprimir(f: Blob, max = 1280): Promise<Blob> {
+export async function comprimir(f: Blob, max = 1280, calidad = 0.8): Promise<Blob> {
   try {
     const img = await createImageBitmap(f);
     const k = Math.min(1, max / Math.max(img.width, img.height));
@@ -347,7 +356,7 @@ export async function comprimir(f: Blob, max = 1280): Promise<Blob> {
     c.width = Math.round(img.width * k);
     c.height = Math.round(img.height * k);
     c.getContext('2d')!.drawImage(img, 0, 0, c.width, c.height);
-    return await new Promise<Blob>((ok) => c.toBlob((b) => ok(b ?? f), 'image/jpeg', 0.8));
+    return await new Promise<Blob>((ok) => c.toBlob((b) => ok(b ?? f), 'image/jpeg', calidad));
   } catch {
     return f;
   }

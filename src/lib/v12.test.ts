@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { macrosDe } from './nutricion';
+import { alimentoDeEtiqueta, etiquetaDe, macrosDe, unidadSuelta } from './nutricion';
+import { digitoOk } from './openfoodfacts';
 import { CODIGO_VALIDO, ID_SIN_CODIGO, alimentoDeProducto, claveBusqueda, codigoDeId, idProducto, limpiarLectura, prefijosDe, productoDeEtiqueta } from './productos';
 
 describe('base compartida: un código = un producto', () => {
@@ -75,5 +76,24 @@ describe('v1.15.0: alimentos compartidos sin código de barras', () => {
     expect(con.codigo).toBe('7840131003463');
     // Al corregir, la llave no cambia
     expect(productoDeEtiqueta({ ...base, codigo: sin.codigo }, 'u2', true, 'manual', 2, sin).codigo).toBe(sin.codigo);
+  });
+});
+
+describe('v1.16.0: líquidos y lectura del código', () => {
+  it('un alimento en ml usa "100 ml" y se agrega en mililitros', () => {
+    const a = alimentoDeEtiqueta('x', { nombre: 'Zuko', modo: 'porcion', porcion: '200 ml', gramos: 200, kcal: 3, prot: 0, carb: 1, gras: 0, otras: [], unidad: 'ml' });
+    expect(a.porciones.map((p) => p.nombre)).toEqual(['200 ml', '100 ml']);
+    expect(unidadSuelta(a)).toBe('ml');
+    expect(etiquetaDe(a).unidad).toBe('ml');
+  });
+  it('la lectura con porción en ml queda como líquido', () => {
+    expect(limpiarLectura({ porcion: '200 ml', gramos: 200, kcal: 3 }).unidad).toBe('ml');
+    expect(limpiarLectura({ porcion: '1 vaso', unidad: 'ml' }).unidad).toBe('ml');
+    expect(limpiarLectura({ porcion: '40 g', kcal: 117 }).unidad).toBeUndefined();
+  });
+  it('dígito verificador del código de barras', () => {
+    expect(digitoOk('7802800716562')).toBe(true);
+    expect(digitoOk('7840131003463')).toBe(true);
+    expect(digitoOk('7802800716563')).toBe(false);
   });
 });

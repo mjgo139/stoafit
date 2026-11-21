@@ -1,6 +1,15 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.16.0',
+    fecha: '2026-11-21',
+    cambios: [
+      'Líquidos: al crear un alimento elegís Sólido (g) o Líquido (ml); la leche, jugos y bebidas se agregan en mililitros.',
+      'Leer etiqueta: la cámara saca la foto con la resolución completa del teléfono y enfoque continuo; lo que la etiqueta dice que "no aporta" queda en 0.',
+      'Escáner de códigos: espera a leer el mismo número varias veces, revisa el dígito verificador y te muestra el código para confirmarlo.',
+    ],
+  },
+  {
     version: '1.15.0',
     fecha: '2026-11-21',
     cambios: [

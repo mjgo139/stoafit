@@ -16,6 +16,8 @@ export const SIN_POSTER = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAE
 export function CamaraFoto({ alSacar, alCerrar }: { alSacar: (foto: Blob) => void; alCerrar: () => void }) {
   const video = useRef<HTMLVideoElement>(null);
   const galeria = useRef<HTMLInputElement>(null);
+  const pista = useRef<MediaStreamTrack | null>(null);
+  const [sacando, setSacando] = useState(false);
   const [estado, setEstado] = useState<'iniciando' | 'lista' | 'sin-camara' | 'denegado'>('iniciando');
   useCerrarConAtras(true, alCerrar);
 
@@ -26,13 +28,17 @@ export function CamaraFoto({ alSacar, alCerrar }: { alSacar: (foto: Blob) => voi
       if (!navigator.mediaDevices?.getUserMedia) { setEstado('sin-camara'); return; }
       try {
         flujo = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false,
+          // La mayor resolución que dé la cámara de atrás (la foto final sale con takePhoto, a resolución completa)
+          video: { facingMode: { ideal: 'environment' }, width: { ideal: 4096 }, height: { ideal: 2160 } }, audio: false,
         });
       } catch (e) {
         if (vivo) setEstado((e as DOMException)?.name === 'NotAllowedError' ? 'denegado' : 'sin-camara');
         return;
       }
       if (!vivo) { flujo.getTracks().forEach((x) => x.stop()); return; }
+      pista.current = flujo.getVideoTracks()[0] ?? null;
+      // Enfoque continuo si la cámara lo permite (las etiquetas se sacan de cerca)
+      try { await pista.current?.applyConstraints({ advanced: [{ focusMode: 'continuous' } as MediaTrackConstraintSet] }); } catch { /* no lo soporta */ }
       const v = video.current!;
       v.srcObject = flujo;
       await v.play().catch(() => undefined);
@@ -41,15 +47,21 @@ export function CamaraFoto({ alSacar, alCerrar }: { alSacar: (foto: Blob) => voi
     return () => { vivo = false; flujo?.getTracks().forEach((x) => x.stop()); };
   }, []);
 
-  function sacar() {
+  async function sacar() {
     const v = video.current;
-    if (!v || !v.videoWidth) return;
+    if (!v || !v.videoWidth || sacando) return;
+    setSacando(true);
+    navigator.vibrate?.(40);
+    // Foto de verdad con la cámara (resolución completa, enfoque y exposición del teléfono), si el navegador lo permite
+    const IC = (globalThis as unknown as { ImageCapture?: new (t: MediaStreamTrack) => { takePhoto: () => Promise<Blob> } }).ImageCapture;
+    if (IC && pista.current) {
+      try { const b = await new IC(pista.current).takePhoto(); if (b.size) { alSacar(b); return; } } catch { /* se usa el cuadro del video */ }
+    }
     const c = document.createElement('canvas');
     c.width = v.videoWidth;
     c.height = v.videoHeight;
     c.getContext('2d')!.drawImage(v, 0, 0);
-    navigator.vibrate?.(40);
-    c.toBlob((b) => { if (b) alSacar(b); }, 'image/jpeg', 0.92);
+    c.toBlob((b) => { setSacando(false); if (b) alSacar(b); }, 'image/jpeg', 0.95);
   }
 
   return createPortal(
@@ -78,7 +90,7 @@ export function CamaraFoto({ alSacar, alCerrar }: { alSacar: (foto: Blob) => voi
           Galería
         </button>
         <button className="flex h-[72px] w-[72px] items-center justify-center rounded-full border-4 border-lat-on disabled:opacity-40"
-          onClick={sacar} disabled={estado !== 'lista'} aria-label="Sacar foto" data-testid="sacar-foto">
+          onClick={sacar} disabled={estado !== 'lista' || sacando} aria-label="Sacar foto" data-testid="sacar-foto">
           <span className="h-[54px] w-[54px] rounded-full bg-[var(--lat-tx-on)]" />
         </button>
         <span className="w-[88px]" aria-hidden />

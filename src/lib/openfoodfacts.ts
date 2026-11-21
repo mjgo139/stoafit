@@ -8,6 +8,15 @@ import type { Alimento, Porcion } from './tipos';
 export const FUENTE_OFF = 'Datos de productos: Open Food Facts (ODbL)';
 
 /** Normaliza lo leído: solo dígitos; EAN-8, UPC-A (12), EAN-13 o GTIN-14 */
+/** Dígito verificador de EAN-8, UPC-A, EAN-13 y GTIN-14: si no cierra, la lectura de la cámara estuvo mal */
+export function digitoOk(c: string): boolean {
+  if (!/^\d+$/.test(c) || ![8, 12, 13, 14].includes(c.length)) return false;
+  const d = c.split('').map(Number);
+  const control = d.pop()!;
+  const suma = d.reverse().reduce((s, n, i) => s + n * (i % 2 === 0 ? 3 : 1), 0);
+  return (10 - (suma % 10)) % 10 === control;
+}
+
 export function codigoValido(t: string): string | null {
   const s = t.replace(/\D/g, '');
   return [8, 12, 13, 14].includes(s.length) ? s : null;
