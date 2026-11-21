@@ -1,6 +1,13 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.8.1',
+    fecha: '2026-11-21',
+    cambios: [
+      'La barra lateral de la PC y las pestañas del celular ahora son las mismas piezas que usan todas las apps de la familia estoica.',
+    ],
+  },
+  {
     version: '1.8.0',
     fecha: '2026-11-21',
     cambios: [

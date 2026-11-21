@@ -25,8 +25,8 @@ input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin
 .regla::-webkit-scrollbar { display: none; }
 
 /* La barra de pestañas y la lateral quedan quietas en el fundido entre pantallas */
-.pestanas-fijas { view-transition-name: pestanas; }
-.lateral-fija { view-transition-name: lateral; }
+.pestanas { view-transition-name: pestanas; }
+.lateral { view-transition-name: lateral; }
 ::view-transition-group(pestanas), ::view-transition-group(lateral) { animation: none; }
 
 /* Anillo de calorías del panel del día */

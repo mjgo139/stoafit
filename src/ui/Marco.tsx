@@ -1,10 +1,9 @@
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { flushSync } from 'react-dom';
-import { useEffect } from 'react';
+import { useEffect, type MouseEvent } from 'react';
 import { useSesion } from './contexto';
-import { Icono } from '../../familia/iconos';
+import { BarraLateral, Pestanas, iniciales } from '../../familia/react';
 import { Emblema } from './familia';
-import { iniciales } from '../pro/logica';
 import { useRecordatorio } from './recordatorio';
 
 export const PESTANAS = [
@@ -34,49 +33,21 @@ export function Marco() {
   useRecordatorio(perfil);
   const activa = (a: string) => (a === '/' ? loc.pathname === '/' : loc.pathname.startsWith(a)) || (a === '/diario' && (loc.pathname === '/agregar' || loc.pathname === '/receta')) || (a === '/perfil' && loc.pathname === '/productos');
 
+  const secciones = PESTANAS.map((p) => ({ href: p.a, icono: p.i, texto: p.t, activa: activa(p.a) }));
+  const alTocar = (e: MouseEvent<HTMLAnchorElement>, href: string) => { e.preventDefault(); ir(href); };
+  const nombre = perfil.nombre || 'Invitado';
+
   return (
-    <div className="min-h-screen lg:flex">
-      <aside className="lateral-fija sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col border-r border-black/20 px-4 py-7 text-lat-tx lg:flex" style={{ background: 'var(--lateral)', ['--gold' as string]: 'var(--lat-oro)', ['--marfil' as string]: 'var(--lat-marfil)' }}>
-        {/* Marca como en StoaGym: emblema (laurel + manzana), nombre en Cinzel dorado y una línea dorada que se desvanece */}
-        <div className="flex items-center gap-2.5 px-2" data-testid="marca-lateral">
-          <Emblema size={42} />
-          <span className="marca text-[26px] leading-none text-lat-oro" style={{ textShadow: 'var(--brillo-marca)' }}>StoaFit</span>
-        </div>
-        <div className="divisor mx-1 mt-6" aria-hidden />
-        <nav className="mt-6 flex flex-col gap-1" aria-label="Secciones">
-          {PESTANAS.map((p) => (
-            <NavLink key={p.a} to={p.a} onClick={(e) => { e.preventDefault(); ir(p.a); }}
-              className={`flex h-[46px] items-center gap-3 rounded-[10px] px-3 text-[15px] font-semibold transition-colors ${activa(p.a) ? 'bg-lat-activo text-lat-oro' : 'text-lat-tx hover:bg-lat-activo hover:text-lat-on'}`}>
-              <Icono n={p.i} size={22} />{p.t}
-            </NavLink>
-          ))}
-        </nav>
-        <div className="mt-auto flex items-center gap-3 border-t border-white/10 px-2 pt-5" data-testid="persona-lateral">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-lat-borde font-display text-[15px] font-semibold text-lat-oro">
-            {iniciales(perfil.nombre || 'Invitado')}
-          </span>
-          <span className="min-w-0">
-            <span className="block truncate text-[15px] font-semibold text-lat-on">{perfil.nombre || 'Invitado'}</span>
-            <span className="block truncate text-[12.5px] text-lat-mu">{usuario.invitado ? 'Modo invitado' : usuario.email}</span>
-          </span>
-        </div>
-      </aside>
+    <div className="con-lateral min-h-screen">
+      {/* Barra lateral (PC) y pestañas (celular): piezas comunes de la familia estoica */}
+      <BarraLateral emblema={<Emblema size={42} />} nombreApp="StoaFit" secciones={secciones} ir={alTocar}
+        persona={{ avatar: iniciales(nombre), nombre, detalle: usuario.invitado ? 'Modo invitado' : usuario.email ?? '' }} />
 
       <main className="pagina pb-seguro mx-auto w-full max-w-[480px] px-[17px] lg:max-w-[1480px] lg:px-12" key={loc.pathname}>
         <Outlet />
       </main>
 
-      <nav aria-label="Pestañas" className="pestanas-fijas fixed inset-x-0 bottom-0 z-40 border-t border-ln bg-nav/95 backdrop-blur lg:hidden"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-        <div className="mx-auto flex max-w-[480px] justify-around">
-          {PESTANAS.map((p) => (
-            <NavLink key={p.a} to={p.a} onClick={(e) => { e.preventDefault(); ir(p.a); }}
-              className={`flex h-[64px] flex-1 flex-col items-center justify-center gap-1 text-[11px] ${activa(p.a) ? 'oro font-semibold' : 'text-mu2'}`}>
-              <Icono n={p.i} size={23} />{p.t}
-            </NavLink>
-          ))}
-        </div>
-      </nav>
+      <Pestanas secciones={secciones} ir={alTocar} />
     </div>
   );
 }
