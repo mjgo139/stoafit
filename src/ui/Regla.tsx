@@ -51,7 +51,7 @@ export function Regla({ valor, min, max, paso = 1, unidad, etiqueta, alCambiar, 
   return (
     <div>
       <div className="text-center">
-        <span className="num text-[44px] leading-none oro">{formatoNumero(valor, decimales)}</span>
+        <span className="num text-[48px] leading-none oro">{formatoNumero(valor, decimales)}</span>
         <span className="ml-1.5 text-[16px] font-semibold text-mu">{unidad}</span>
       </div>
       <div role="slider" tabIndex={0} aria-label={etiqueta} aria-valuemin={min} aria-valuemax={max} aria-valuenow={valor} data-testid="regla"

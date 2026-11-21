@@ -2,7 +2,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { flushSync } from 'react-dom';
 import { useEffect } from 'react';
 import { useSesion } from './contexto';
-import { Icono } from './Icono';
+import { Icono } from '../../familia/iconos';
 import { Emblema } from './familia';
 import { iniciales } from '../pro/logica';
 import { useRecordatorio } from './recordatorio';
@@ -36,28 +36,28 @@ export function Marco() {
 
   return (
     <div className="min-h-screen lg:flex">
-      <aside className="lateral-fija sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col border-r border-black/20 px-4 py-7 text-[#e9e2d3] lg:flex" style={{ background: 'var(--lateral)', ['--gold' as string]: '#f2c55c' }}>
+      <aside className="lateral-fija sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col border-r border-black/20 px-4 py-7 text-lat-tx lg:flex" style={{ background: 'var(--lateral)', ['--gold' as string]: 'var(--lat-oro)', ['--marfil' as string]: 'var(--lat-marfil)' }}>
         {/* Marca como en StoaGym: emblema (laurel + manzana), nombre en Cinzel dorado y una línea dorada que se desvanece */}
         <div className="flex items-center gap-2.5 px-2" data-testid="marca-lateral">
           <Emblema size={42} />
-          <span className="marca text-[26px] leading-none text-[#f2c55c]" style={{ textShadow: '0 0 18px rgba(242,197,92,.25)' }}>StoaFit</span>
+          <span className="marca text-[26px] leading-none text-lat-oro" style={{ textShadow: 'var(--brillo-marca)' }}>StoaFit</span>
         </div>
-        <div className="divisor mx-1 mt-6" style={{ background: 'linear-gradient(90deg, transparent, rgba(242,197,92,.85), transparent)' }} aria-hidden />
+        <div className="divisor mx-1 mt-6" aria-hidden />
         <nav className="mt-6 flex flex-col gap-1" aria-label="Secciones">
           {PESTANAS.map((p) => (
             <NavLink key={p.a} to={p.a} onClick={(e) => { e.preventDefault(); ir(p.a); }}
-              className={`flex h-[46px] items-center gap-3 rounded-[10px] px-3 text-[14.5px] font-semibold transition-colors ${activa(p.a) ? 'bg-[#2a2113] text-[#f2c55c]' : 'text-[#c9bda7] hover:bg-white/[.04] hover:text-[#f7f1e7]'}`}>
+              className={`flex h-[46px] items-center gap-3 rounded-[10px] px-3 text-[15px] font-semibold transition-colors ${activa(p.a) ? 'bg-lat-activo text-lat-oro' : 'text-lat-tx hover:bg-lat-activo hover:text-lat-on'}`}>
               <Icono n={p.i} size={22} />{p.t}
             </NavLink>
           ))}
         </nav>
         <div className="mt-auto flex items-center gap-3 border-t border-white/10 px-2 pt-5" data-testid="persona-lateral">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#a66c16] font-display text-[15px] font-semibold text-[#f2c55c]">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-lat-borde font-display text-[15px] font-semibold text-lat-oro">
             {iniciales(perfil.nombre || 'Invitado')}
           </span>
           <span className="min-w-0">
-            <span className="block truncate text-[15px] font-semibold text-[#f7f1e7]">{perfil.nombre || 'Invitado'}</span>
-            <span className="block truncate text-[12.5px] text-[#9d927d]">{usuario.invitado ? 'Modo invitado' : usuario.email}</span>
+            <span className="block truncate text-[15px] font-semibold text-lat-on">{perfil.nombre || 'Invitado'}</span>
+            <span className="block truncate text-[12.5px] text-lat-mu">{usuario.invitado ? 'Modo invitado' : usuario.email}</span>
           </span>
         </div>
       </aside>

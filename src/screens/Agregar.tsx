@@ -9,7 +9,7 @@ import type { Alimento, ComidaGuardada, Dia, GrupoAlimento, ItemComida, TipoComi
 import { ElegirPorcion, FormEtiqueta } from '../ui/alimento';
 import { useSesion } from '../ui/contexto';
 import { Escaner } from '../ui/Escaner';
-import { Icono } from '../ui/Icono';
+import { Icono } from '../../familia/iconos';
 import { Celebracion, Hoja, Vacio } from '../ui/piezas';
 import { textoCantidad } from '../ui/nutri';
 import { useCopiar, useDia } from '../ui/usarDia';

@@ -7,7 +7,7 @@ import type { Alimento, ItemComida } from '../lib/tipos';
 import { ElegirPorcion } from '../ui/alimento';
 import { useSesion } from '../ui/contexto';
 import { Grupo } from '../ui/familia';
-import { Icono } from '../ui/Icono';
+import { Icono } from '../../familia/iconos';
 import { LineaMacros, textoCantidad } from '../ui/nutri';
 import { Cargando, Encabezado, Hoja } from '../ui/piezas';
 

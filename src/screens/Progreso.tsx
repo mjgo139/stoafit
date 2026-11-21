@@ -5,7 +5,7 @@ import { cantidadItems, diaCumplido, metasDe, promedio, reparto } from '../lib/n
 import type { Dia, RegistroCuerpo } from '../lib/tipos';
 import { useSesion } from '../ui/contexto';
 import { CabeceraPagina, Grupo } from '../ui/familia';
-import { Icono } from '../ui/Icono';
+import { Icono } from '../../familia/iconos';
 import { Cargando, GraficoBarras, GraficoLinea, Hoja, Selector } from '../ui/piezas';
 
 type Medida = 'peso' | 'cintura' | 'cadera' | 'brazo' | 'muslo';
@@ -108,7 +108,7 @@ export default function Progreso() {
                 return (
                   <li key={d.fecha} className="fila last:border-0">
                     <Link to={`/diario?fecha=${d.fecha}`} className="flex flex-1 items-center gap-3 py-2">
-                      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${ok ? 'text-white' : 'border border-ln3 text-mu2'}`} style={ok ? { background: 'var(--verde)' } : undefined}>
+                      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${ok ? 'hecho border' : 'border border-ln3 text-mu2'}`}>
                         <Icono n={ok ? 'check' : 'plato'} size={16} />
                       </span>
                       <span className="flex-1"><b className="first-letter:uppercase">{new Intl.DateTimeFormat('es-PY', { weekday: 'long', day: 'numeric', month: 'short' }).format(fechaDeClave(d.fecha)).replace('.', '')}</b>
@@ -140,7 +140,7 @@ function Dato({ t, v }: { t: string; v: string }) {
   return (
     <div className="tarjeta py-3 text-center">
       <div className="etiqueta truncate">{t}</div>
-      <div className="num mt-1 text-[22px] oro">{v}</div>
+      <div className="num mt-1 text-[20px] oro">{v}</div>
     </div>
   );
 }

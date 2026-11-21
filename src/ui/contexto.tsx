@@ -28,7 +28,9 @@ export function aplicarTema(t: Tema) {
   try { localStorage.setItem('stoafit-tema', t); } catch { /* sin almacenamiento */ }
   const oscuro = t === 'oscuro' || (t === 'sistema' && matchMedia('(prefers-color-scheme: dark)').matches);
   document.documentElement.dataset.theme = oscuro ? 'dark' : 'light';
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', oscuro ? '#090909' : '#ECE6DB');
+  // El color de la barra del sistema sale del fondo de la familia (--bg del modo elegido)
+  const fondo = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+  if (fondo) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', fondo);
 }
 
 /** Color propio de StoaFit (oliva, terracota o bronce) */

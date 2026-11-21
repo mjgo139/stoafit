@@ -2,7 +2,7 @@ import { useCerrarConAtras } from './atras';
 import { Grupo } from './familia';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Icono } from './Icono';
+import { Icono } from '../../familia/iconos';
 
 /** Ritmo de cada pantalla: etiqueta pequeña, título grande y una línea de explicación */
 export function Encabezado({ etiqueta, titulo, linea, atras, accion }: {

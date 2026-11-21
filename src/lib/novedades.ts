@@ -1,6 +1,15 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.8.0',
+    fecha: '2026-11-21',
+    cambios: [
+      'El diseño ahora sale de la familia estoica (el mismo de StoaGym, Stoica y la futura app de mente): colores, letras, íconos y piezas iguales en las 4 apps.',
+      'Barra lateral de la PC con los colores de la familia; los días cumplidos se marcan con el verde de la familia.',
+      'Tu color de acento y los colores de los gráficos se mantienen.',
+    ],
+  },
+  {
     version: '1.7.2',
     fecha: '2026-11-20',
     cambios: [

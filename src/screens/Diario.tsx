@@ -8,7 +8,7 @@ import { productosEnCache } from '../lib/productos';
 import { ElegirPorcion } from '../ui/alimento';
 import { useSesion } from '../ui/contexto';
 import { CabeceraPagina } from '../ui/familia';
-import { Icono } from '../ui/Icono';
+import { Icono } from '../../familia/iconos';
 import { LineaMacros, Vasos, textoCantidad } from '../ui/nutri';
 import { Cargando, Hoja } from '../ui/piezas';
 import { useCopiar, useDia } from '../ui/usarDia';
@@ -250,7 +250,7 @@ function EditarItem({ item, alGuardar, alQuitar }: { item: ItemComida; alGuardar
       <div className="text-[15px] text-mu">{item.porcion}</div>
       <div className="mt-3 flex items-center justify-center gap-3">
         <button className="chip h-11 w-11" aria-label="Menos cantidad" onClick={() => setCantidad((c) => Math.max(paso === 10 ? 1 : 0.25, c - paso))}><Icono n="menos" size={16} /></button>
-        <span className="num w-24 text-center text-[32px] oro">{formatoNumero(cantidad, 2)}{paso === 10 ? <span className="ml-1 text-[16px]">{item.porcion}</span> : null}</span>
+        <span className="num w-24 text-center text-[28px] oro">{formatoNumero(cantidad, 2)}{paso === 10 ? <span className="ml-1 text-[16px]">{item.porcion}</span> : null}</span>
         <button className="chip h-11 w-11" aria-label="Más cantidad" onClick={() => setCantidad((c) => c + paso)}><Icono n="mas" size={16} /></button>
       </div>
       <p className="mt-2 text-center text-[15px] text-mu">{formatoNumero(nuevo.gramos)} g · <b className="text-tx">{formatoNumero(nuevo.kcal)} kcal</b></p>

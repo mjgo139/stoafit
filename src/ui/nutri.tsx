@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { formatoNumero } from '../lib/logica';
 import { estadoMeta } from '../lib/nutricion';
 import type { ItemComida, Macros, Metas, TipoComida } from '../lib/tipos';
-import { Icono } from './Icono';
+import { Icono } from '../../familia/iconos';
 
 /** Anillo de calorías: lo comido contra la meta */
 export function Anillo({ valor, meta, tam = 148 }: { valor: number; meta: number; tam?: number }) {

@@ -5,7 +5,7 @@ import { comidasDelDia, comidasRegistradas, metasDe, repartoDe } from '../lib/nu
 import { useComidas } from '../ui/comidas';
 import { useSesion } from '../ui/contexto';
 import { Ficha, Grupo, Laurel } from '../ui/familia';
-import { Icono } from '../ui/Icono';
+import { Icono } from '../../familia/iconos';
 import { Anillo, Macros3, TarjetaComida } from '../ui/nutri';
 import { Cargando } from '../ui/piezas';
 import { useDia } from '../ui/usarDia';
@@ -76,8 +76,8 @@ export default function Hoy() {
                   return (
                     <div key={d.clave} className="flex flex-col items-center gap-1.5">
                       <span className={`text-[11px] font-bold ${d.hoy ? 'oro' : 'text-mu2'}`}>{d.letra}</span>
-                      <span className={`num flex h-9 w-9 items-center justify-center rounded-full border text-[15px] ${ok ? 'border-transparent text-white' : con ? 'border-ln3' : d.futuro ? 'border-ln2 text-mu2' : 'border-ln2 text-mu'}`}
-                        style={ok ? { background: 'var(--verde)' } : undefined} aria-label={`${d.numero}${ok ? ', cumplido' : ''}`}>
+                      <span className={`num flex h-9 w-9 items-center justify-center rounded-full border text-[15px] ${ok ? 'hecho' : con ? 'border-ln3' : d.futuro ? 'border-ln2 text-mu2' : 'border-ln2 text-mu'}`}
+                        aria-label={`${d.numero}${ok ? ', cumplido' : ''}`}>
                         {ok ? <Icono n="check" size={16} /> : d.numero}
                       </span>
                       <span className={`h-0.5 w-5 rounded-full ${d.hoy ? 'bg-gold' : 'bg-transparent'}`} />

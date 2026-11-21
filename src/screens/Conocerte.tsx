@@ -5,7 +5,7 @@ import { ACTIVIDADES, OBJETIVOS, calcularMetas, imc } from '../lib/nutricion';
 import type { Actividad, Genero, ObjetivoPeso } from '../lib/tipos';
 import { useSesion } from '../ui/contexto';
 import { Laurel } from '../ui/familia';
-import { Icono } from '../ui/Icono';
+import { Icono } from '../../familia/iconos';
 import { Regla } from '../ui/Regla';
 
 const PASOS = ['Vos', 'Nacimiento', 'Altura', 'Peso', 'Actividad', 'Objetivo', 'Tu medida'] as const;
@@ -164,10 +164,10 @@ export default function Conocerte() {
             <div className="panel-dia mt-6 text-center" data-testid="meta-calculada">
               <Laurel size={150} fondo />
               <div className="etiqueta">Calorías por día</div>
-              <div className="num mt-1 text-[56px] leading-none oro">{formatoNumero(metas.kcal)}</div>
+              <div className="num mt-1 text-[48px] leading-none oro">{formatoNumero(metas.kcal)}</div>
               <div className="mt-5 grid grid-cols-3 gap-2 text-[13.5px]">
                 {([['Proteínas', metas.prot, 'var(--prot)'], ['Carbohidratos', metas.carb, 'var(--carb)'], ['Grasas', metas.gras, 'var(--gras)']] as const).map(([t, v, c]) => (
-                  <div key={t}><span className="num block text-[22px]" style={{ color: c }}>{v} g</span><span className="text-mu">{t}</span></div>
+                  <div key={t}><span className="num block text-[20px]" style={{ color: c }}>{v} g</span><span className="text-mu">{t}</span></div>
                 ))}
               </div>
               <div className="mt-4 flex items-center justify-center gap-2 text-[15px] text-mu"><Icono n="agua" size={20} className="acento" />Agua: <b className="text-tx">{formatoNumero(metas.agua / 1000, 2)} litros</b> ({metas.agua / 250} vasos)</div>

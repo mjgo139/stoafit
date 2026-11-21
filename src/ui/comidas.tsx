@@ -3,7 +3,7 @@ import { nuevoId } from '../lib/logica';
 import { COMIDAS, MAX_COMIDAS, comidasDe, limpiarComidas } from '../lib/nutricion';
 import type { ComidaDelDia } from '../lib/tipos';
 import { useSesion } from './contexto';
-import { Icono } from './Icono';
+import { Icono } from '../../familia/iconos';
 
 /** Las comidas del día de la persona (con nombre y orden propios) */
 export function useComidas(): ComidaDelDia[] {

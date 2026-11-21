@@ -6,7 +6,7 @@ import { PLANTILLAS, itemsDePlantilla, totalesPlantilla, type Plantilla } from '
 import type { ItemComida, Metas, Plan as TPlan, RegistroCuerpo, TipoComida } from '../lib/tipos';
 import { useSesion } from '../ui/contexto';
 import { CabeceraPagina, Grupo } from '../ui/familia';
-import { Icono } from '../ui/Icono';
+import { Icono } from '../../familia/iconos';
 import { LineaMacros, textoCantidad } from '../ui/nutri';
 import { Cargando, Hoja } from '../ui/piezas';
 import { useDia } from '../ui/usarDia';
@@ -71,7 +71,7 @@ export default function Plan() {
             <div className="mt-5 grid grid-cols-3 gap-3">
               {([['Proteínas', metas.prot, pct.prot, 'var(--prot)'], ['Carbohidratos', metas.carb, pct.carb, 'var(--carb)'], ['Grasas', metas.gras, pct.gras, 'var(--gras)']] as const).map(([t, g, p, c]) => (
                 <div key={t} className="rounded-[12px] border border-ln2 p-3 text-center">
-                  <div className="num text-[22px]" style={{ color: c }}>{g} g</div>
+                  <div className="num text-[20px]" style={{ color: c }}>{g} g</div>
                   <div className="text-[12.5px] text-mu">{t}<span className="block">{p} %</span></div>
                 </div>
               ))}

@@ -8,7 +8,7 @@ import type { Cargador, Producto, Reporte } from '../lib/tipos';
 import { FormEtiqueta } from '../ui/alimento';
 import { useSesion } from '../ui/contexto';
 import { Grupo } from '../ui/familia';
-import { Icono } from '../ui/Icono';
+import { Icono } from '../../familia/iconos';
 import { Cargando, Encabezado, Hoja, Selector, Vacio } from '../ui/piezas';
 import { useProductos } from '../ui/usarProductos';
 

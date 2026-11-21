@@ -5,7 +5,7 @@ import { useSesion } from './contexto';
 import type { Alimento, ItemComida, Porcion } from '../lib/tipos';
 import type { LecturaEtiqueta } from '../lib/productos';
 import { mensajeError } from '../data/repo';
-import { Icono } from './Icono';
+import { Icono } from '../../familia/iconos';
 import { Selector } from './piezas';
 
 const CANTIDADES = [0.5, 1, 1.5, 2, 3];
@@ -67,7 +67,7 @@ export function ElegirPorcion({ alimento: a, favorito, alFavorito, alAgregar, al
       <div className="etiqueta">Cuánto</div>
       <div className="mt-2 flex items-center gap-2">
         <button className="chip h-11 w-11 shrink-0" aria-label="Menos cantidad" onClick={() => setCant((c) => texto(Math.max(enGramos ? 1 : 0.25, num(c) - (enGramos ? 10 : 0.5))))}><Icono n="menos" size={16} /></button>
-        <input className="campo num h-11 w-[84px] shrink-0 text-center text-[22px]" inputMode="decimal" value={cant} aria-label="Cantidad"
+        <input className="campo num h-11 w-[84px] shrink-0 text-center text-[20px]" inputMode="decimal" value={cant} aria-label="Cantidad"
           onChange={(e) => setCant(e.target.value.replace(/[^0-9.,]/g, '').slice(0, 7))} onFocus={(e) => e.target.select()} />
         <button className="chip h-11 w-11 shrink-0" aria-label="Más cantidad" onClick={() => setCant((c) => texto(num(c) + (enGramos ? 10 : 0.5)))}><Icono n="mas" size={16} /></button>
         <select className="campo h-11 min-w-0 flex-1 px-3 text-[15px]" value={porcion} onChange={(e) => cambiarUnidad(e.target.value)} aria-label="Unidad">
@@ -167,7 +167,7 @@ function AnilloMacros({ kcal, r }: { kcal: number; r: { prot: number; carb: numb
         ))}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="num text-[22px] leading-none oro">{formatoNumero(kcal)}</span>
+        <span className="num text-[20px] leading-none oro">{formatoNumero(kcal)}</span>
         <span className="mt-0.5 text-[11px] uppercase tracking-[.08em] text-mu">kcal</span>
       </div>
     </div>

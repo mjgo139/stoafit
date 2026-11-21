@@ -8,14 +8,14 @@ import type { Acento, Tema, Unidad } from '../lib/tipos';
 import { COMMIT, FECHA_ARMADO, VERSION } from '../ui/actualizar';
 import { useSesion } from '../ui/contexto';
 import { CabeceraPagina, Grupo } from '../ui/familia';
-import { Icono } from '../ui/Icono';
+import { Icono } from '../../familia/iconos';
 import { Hoja, Selector } from '../ui/piezas';
 import { iniciales } from '../pro/logica';
 
 const ACENTOS: { v: Acento; t: string; c: string }[] = [
-  { v: 'oliva', t: 'Oliva', c: '#5e6b33' },
-  { v: 'terracota', t: 'Terracota', c: '#a4512f' },
-  { v: 'bronce', t: 'Bronce', c: '#7e5d22' },
+  { v: 'oliva', t: 'Oliva', c: 'var(--muestra-oliva)' },
+  { v: 'terracota', t: 'Terracota', c: 'var(--muestra-terracota)' },
+  { v: 'bronce', t: 'Bronce', c: 'var(--muestra-bronce)' },
 ];
 
 /** Perfil: datos, apariencia, unidades, recordatorios, exportar, borrar cuenta y ajustes (admin) */
@@ -99,7 +99,7 @@ export default function Perfil() {
                   {ACENTOS.map((a) => (
                     <button key={a.v} role="radio" aria-checked={(perfil.acento ?? 'oliva') === a.v} onClick={() => cambiarPerfil({ acento: a.v })}
                       className={`chip h-10 flex-1 gap-2 ${(perfil.acento ?? 'oliva') === a.v ? 'chip-on' : ''}`}>
-                      <span className="h-3.5 w-3.5 rounded-full border border-white/40" style={{ background: a.c }} />{a.t}
+                      <span className="h-3.5 w-3.5 rounded-full border border-ln" style={{ background: a.c }} />{a.t}
                     </button>
                   ))}
                 </div>
@@ -174,7 +174,7 @@ export default function Perfil() {
         <p className="text-mu">Se borra todo: tu diario, tus medidas, tus planes y tu cuenta. No se puede deshacer. Si querés, primero exportá tus datos.</p>
         {error && <p className="mt-3 text-[15px] text-miss" role="alert">{error}</p>}
         <div className="mt-5 flex flex-col gap-3">
-          <button className="btn" style={{ background: 'var(--miss)', borderColor: 'var(--miss)', color: '#fff' }} onClick={borrarCuenta}>Sí, borrar todo</button>
+          <button className="btn btn-peligro" onClick={borrarCuenta}>Sí, borrar todo</button>
           <button className="btn-sec" onClick={() => setBorrar(false)}>Cancelar</button>
         </div>
       </Hoja>
