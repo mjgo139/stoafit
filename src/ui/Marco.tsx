@@ -2,7 +2,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { flushSync } from 'react-dom';
 import { useEffect, type MouseEvent } from 'react';
 import { useSesion } from './contexto';
-import { AvisoPrueba, BarraLateral, Pestanas, iniciales } from '../../familia/react';
+import { AvisoPrueba, Avatar, BarraLateral, Pestanas } from '../../familia/react';
 import { Emblema } from './familia';
 import { useRecordatorio } from './recordatorio';
 
@@ -41,7 +41,7 @@ export function Marco() {
     <div className="con-lateral min-h-screen">
       {/* Barra lateral (PC) y pestañas (celular): piezas comunes de la familia estoica */}
       <BarraLateral emblema={<Emblema size={40} />} nombreApp="StoaFit" secciones={secciones} ir={alTocar}
-        persona={{ avatar: iniciales(nombre), nombre, detalle: usuario.invitado ? 'Modo invitado' : usuario.email ?? '', href: '/perfil' }}
+        persona={{ avatar: <Avatar foto={perfil?.foto} nombre={nombre} />, nombre, detalle: usuario.invitado ? 'Modo invitado' : usuario.email ?? '', href: '/perfil' }}
         nota={repo.modo === 'prueba' ? 'Modo prueba' : 'Nutrición · Medida · Constancia'} />
 
       <main className="pagina pb-seguro mx-auto w-full max-w-[480px] px-[17px] lg:max-w-[1480px] lg:px-12" key={loc.pathname}>

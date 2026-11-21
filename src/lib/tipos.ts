@@ -147,6 +147,8 @@ export interface Perfil {
   email: string;
   tema: Tema;
   acento?: Acento;
+  /** Foto de perfil (data URL WebP/JPEG 256×256, v1.11.0); null = sin foto */
+  foto?: string | null;
   unidad: Unidad;
   recordatorio: Recordatorio;
   creado: number;

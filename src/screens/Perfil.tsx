@@ -7,10 +7,9 @@ import { ACTIVIDADES, OBJETIVOS, metasDe } from '../lib/nutricion';
 import type { Acento, Tema, Unidad } from '../lib/tipos';
 import { COMMIT, FECHA_ARMADO, VERSION } from '../ui/actualizar';
 import { useSesion } from '../ui/contexto';
-import { CabeceraPagina, Grupo, TEMAS } from '../ui/familia';
+import { Avatar, BotonFoto, CabeceraPagina, Grupo, TarjetaPerfil, TEMAS } from '../ui/familia';
 import { Icono } from '../../familia/iconos';
 import { Hoja, Selector } from '../ui/piezas';
-import { iniciales } from '../pro/logica';
 
 const ACENTOS: { v: Acento; t: string; c: string }[] = [
   { v: 'oliva', t: 'Oliva', c: 'var(--muestra-oliva)' },
@@ -24,6 +23,7 @@ export default function Perfil() {
   const [nombre, setNombre] = useState(perfil.nombre);
   const [borrar, setBorrar] = useState(false);
   const [cuenta, setCuenta] = useState(false);
+  const [editarNombre, setEditarNombre] = useState(false);
   const [error, setError] = useState('');
   const metas = metasDe(perfil);
   const rec = perfil.recordatorio;
@@ -66,17 +66,18 @@ export default function Perfil() {
 
       <div className="mt-7 grid grid-cols-1 gap-7 lg:grid-cols-2 lg:gap-6">
         <div className="flex flex-col gap-7">
+          <TarjetaPerfil nombre={perfil.nombre || 'Invitado'} correo={usuario.invitado ? undefined : usuario.email ?? undefined}
+            avatar={<Avatar foto={perfil.foto} nombre={perfil.nombre || 'Invitado'} />}
+            detalle={<>{usuario.invitado ? 'Cuenta de invitado' : repo.modo === 'prueba' ? 'Cuenta de prueba' : 'Entra con correo'}{admin ? ' · Admin' : ''}</>}
+            acciones={<>
+              <BotonFoto alElegir={async (foto) => { await cambiarPerfil({ foto }); aviso('Foto guardada'); }} alFallar={() => aviso('No se pudo abrir esa imagen')}>Cambiar foto</BotonFoto>
+              {perfil.foto && <button type="button" className="btn-borde" onClick={async () => { await cambiarPerfil({ foto: null }); aviso('Foto quitada'); }}>Quitar foto</button>}
+              <button type="button" className="btn-borde" onClick={() => { setNombre(perfil.nombre); setEditarNombre(true); }}>Cambiar nombre</button>
+            </>} />
           <section>
             <Grupo n={1} className="mb-3">Vos</Grupo>
             <div className="tarjeta">
-              {/* La etiqueta arriba de todo: así la inicial y el campo quedan a la misma altura */}
-              <label htmlFor="perfil-nombre" className="etiqueta">Nombre</label>
-              <div className="mt-1.5 flex items-center gap-3">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-gold2 font-display text-[20px] font-semibold oro" aria-hidden>{iniciales(perfil.nombre || 'Invitado')}</span>
-                <input id="perfil-nombre" className="campo min-w-0 flex-1" value={nombre} maxLength={80} aria-label="Nombre" onChange={(e) => setNombre(e.target.value)}
-                  onBlur={() => nombre.trim() && nombre.trim() !== perfil.nombre && cambiarPerfil({ nombre: nombre.trim() }).then(() => aviso('Nombre guardado'))} />
-              </div>
-              <Link to="/conocerte?editar=1" className={`${fila} mt-3 border-t border-ln2 border-b-0`}>
+              <Link to="/conocerte?editar=1" className={`${fila} border-b-0`}>
                 <Icono n="cuerpo" className="oro" />
                 <span className="flex-1"><b>Mis datos y meta</b>
                   <span className="block text-[12.5px] text-mu">
@@ -170,6 +171,11 @@ export default function Perfil() {
         </div>
       </div>
 
+      <Hoja abierta={editarNombre} alCerrar={() => setEditarNombre(false)} etiqueta="Tu cuenta" titulo="Cambiar nombre">
+        <input className="campo" value={nombre} onChange={(e) => setNombre(e.target.value)} aria-label="Nombre" maxLength={80} />
+        <button className="btn mt-4 w-full" disabled={!nombre.trim() || nombre.trim() === perfil.nombre}
+          onClick={async () => { await cambiarPerfil({ nombre: nombre.trim() }); setEditarNombre(false); aviso('Nombre guardado'); }}>Guardar</button>
+      </Hoja>
       <Hoja abierta={borrar} alCerrar={() => setBorrar(false)} etiqueta="Confirmar" titulo="¿Borrar tu cuenta?">
         <p className="text-mu">Se borra todo: tu diario, tus medidas, tus planes y tu cuenta. No se puede deshacer. Si querés, primero exportá tus datos.</p>
         {error && <p className="mt-3 text-[15px] text-miss" role="alert">{error}</p>}

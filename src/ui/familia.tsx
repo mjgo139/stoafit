@@ -4,7 +4,7 @@ import { Emblema as EmblemaFamilia } from '../../familia/react';
  * Las piezas comunes salen de la familia estoica (carpeta `familia/`, no se edita).
  * Acá solo queda lo propio de StoaFit: la manzana del emblema.
  */
-export { Laurel, Grupo, Ficha, CabeceraPagina, romano, PanelDia, TuSemana, ElegirTema, AvisoPrueba, TEMAS, TEMA_PREDETERMINADO } from '../../familia/react';
+export { Laurel, Grupo, Ficha, CabeceraPagina, romano, PanelDia, TuSemana, ElegirTema, AvisoPrueba, TEMAS, TEMA_PREDETERMINADO, Avatar, BotonFoto, TarjetaPerfil } from '../../familia/react';
 
 /** Manzana de StoaFit sobre el lienzo de 512×512 del emblema (igual que en el ícono, agrandada ×1,42). */
 const MANZANA = (
