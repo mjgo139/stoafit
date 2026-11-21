@@ -1,6 +1,14 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.9.1',
+    fecha: '2026-11-21',
+    cambios: [
+      'Leer etiqueta con foto: la cámara ahora se abre dentro de StoaFit. Antes, en algunos celulares, al aceptar la foto la app volvía al inicio y la foto se perdía.',
+      'También podés elegir una foto de la galería.',
+    ],
+  },
+  {
     version: '1.9.0',
     fecha: '2026-11-21',
     cambios: [

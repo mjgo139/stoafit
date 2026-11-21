@@ -6,6 +6,7 @@ import type { Alimento, ItemComida, Porcion } from '../lib/tipos';
 import type { LecturaEtiqueta } from '../lib/productos';
 import { mensajeError } from '../data/repo';
 import { Icono } from '../../familia/iconos';
+import { CamaraFoto } from './CamaraFoto';
 import { Selector } from './piezas';
 
 const CANTIDADES = [0.5, 1, 1.5, 2, 3];
@@ -201,6 +202,7 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar, codigoFijo, leerFot
   const [errorFoto, setErrorFoto] = useState('');
   const [leida, setLeida] = useState(false);
   const archivo = useRef<HTMLInputElement>(null);
+  const [camara, setCamara] = useState(false);
   const num = (s: string) => Number(s.replace(',', '.')) || 0;
   const g = num(gramos);
   const valido = nombre.trim() && v.kcal !== '' && g > 0;
@@ -213,7 +215,7 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar, codigoFijo, leerFot
     }, via);
   }
 
-  async function foto(f: File | undefined) {
+  async function foto(f: Blob | undefined) {
     if (!f || !leerFoto) return;
     setErrorFoto('');
     setLeyendo(true);
@@ -244,14 +246,17 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar, codigoFijo, leerFot
     <div className="flex flex-col gap-3">
       {leerFoto && (
         <div className="rounded-[14px] border border-gold2 p-3" data-testid="leer-foto">
-          <input ref={archivo} type="file" accept="image/*" capture="environment" className="hidden" aria-label="Foto de la etiqueta"
+          {/* Sin "capture": la cámara del sistema puede hacer que Android cierre la app (ver CamaraFoto). Este campo es solo la galería. */}
+          <input ref={archivo} type="file" accept="image/*" className="hidden" aria-label="Foto de la etiqueta"
             onChange={(e) => foto(e.target.files?.[0])} />
-          <button className="btn w-full" disabled={leyendo} onClick={() => archivo.current?.click()}>
+          {camara && <CamaraFoto alCerrar={() => setCamara(false)} alSacar={(b) => { setCamara(false); foto(b); }} />}
+          <button className="btn w-full" disabled={leyendo} onClick={() => setCamara(true)}>
             <Icono n="camara" size={20} />{leyendo ? 'Leyendo la etiqueta…' : leida ? 'Leer otra foto' : 'Leer etiqueta con foto'}
           </button>
           <p className="mt-2 text-center text-[12.5px] text-mu">
             {leida ? <b className="oro">Listo: revisá los valores antes de guardar.</b> : 'Sacale una foto de cerca a la tabla "Información Nutricional", sin brillo.'}
           </p>
+          {!leyendo && <button className="mx-auto mt-1 block text-[13.5px] font-semibold oro" onClick={() => archivo.current?.click()}>o elegir una foto de la galería</button>}
           {errorFoto && <p className="mt-1 text-center text-[13.5px] text-miss" role="alert">{errorFoto}</p>}
         </div>
       )}

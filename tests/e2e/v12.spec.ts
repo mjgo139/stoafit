@@ -113,3 +113,23 @@ test('cargador: "Leer etiqueta con foto" también al crear un alimento propio', 
   await page.getByRole('button', { name: /Crear alimento/ }).filter({ visible: true }).first().click();
   await expect(page.getByTestId('leer-foto')).toBeVisible();
 });
+
+test('etiqueta: la foto se saca con la cámara de adentro de la app (sin salir a la cámara del sistema)', async ({ page }) => {
+  await entrar(page, 'sofia@ejemplo.com', 'Sofía');
+  await page.goto('/agregar?comida=desayuno');
+  await escanear(page, '7840000000086');
+  await page.getByRole('button', { name: 'Leer etiqueta con foto' }).click();
+  await expect(page.getByTestId('camara-foto')).toBeVisible();
+  await expect(page.getByTestId('sacar-foto')).toBeEnabled();
+  await page.screenshot({ path: `capturas/${test.info().project.name}/93b-camara-etiqueta.png`, animations: 'disabled' });
+  await page.getByTestId('sacar-foto').click();
+  await expect(page.getByTestId('camara-foto')).toHaveCount(0);
+  await expect(page.getByTestId('leer-foto')).toContainText('revisá los valores');
+  await expect(page.getByLabel('Calorías')).toHaveValue('145');
+  // El botón atrás de Android cierra la cámara sin salir de la pantalla
+  await page.getByRole('button', { name: 'Leer otra foto' }).click();
+  await expect(page.getByTestId('camara-foto')).toBeVisible();
+  await page.evaluate(() => window.dispatchEvent(new Event('stoafit:atras')));
+  await expect(page.getByTestId('camara-foto')).toHaveCount(0);
+  await expect(page.getByTestId('leer-foto')).toBeVisible();
+});

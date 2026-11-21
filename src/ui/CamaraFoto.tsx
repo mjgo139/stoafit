@@ -1,0 +1,87 @@
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Icono } from '../../familia/iconos';
+import { useCerrarConAtras } from './atras';
+
+/**
+ * Cámara dentro de la app para sacar la foto de la etiqueta.
+ * Por qué no se usa la cámara del sistema (<input capture>): en la APK, al abrir la app de cámara de Android,
+ * el sistema puede cerrar StoaFit para liberar memoria; al volver, la app arranca de nuevo en Hoy y la foto se pierde.
+ * Con la cámara adentro (getUserMedia, el mismo permiso CAMERA del escáner) la app nunca se va al fondo.
+ * "Elegir de la galería" queda como alternativa (y si no hay cámara o no hay permiso).
+ */
+export function CamaraFoto({ alSacar, alCerrar }: { alSacar: (foto: Blob) => void; alCerrar: () => void }) {
+  const video = useRef<HTMLVideoElement>(null);
+  const galeria = useRef<HTMLInputElement>(null);
+  const [estado, setEstado] = useState<'iniciando' | 'lista' | 'sin-camara' | 'denegado'>('iniciando');
+  useCerrarConAtras(true, alCerrar);
+
+  useEffect(() => {
+    let vivo = true;
+    let flujo: MediaStream | null = null;
+    (async () => {
+      if (!navigator.mediaDevices?.getUserMedia) { setEstado('sin-camara'); return; }
+      try {
+        flujo = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false,
+        });
+      } catch (e) {
+        if (vivo) setEstado((e as DOMException)?.name === 'NotAllowedError' ? 'denegado' : 'sin-camara');
+        return;
+      }
+      if (!vivo) { flujo.getTracks().forEach((x) => x.stop()); return; }
+      const v = video.current!;
+      v.srcObject = flujo;
+      await v.play().catch(() => undefined);
+      if (vivo) setEstado('lista');
+    })();
+    return () => { vivo = false; flujo?.getTracks().forEach((x) => x.stop()); };
+  }, []);
+
+  function sacar() {
+    const v = video.current;
+    if (!v || !v.videoWidth) return;
+    const c = document.createElement('canvas');
+    c.width = v.videoWidth;
+    c.height = v.videoHeight;
+    c.getContext('2d')!.drawImage(v, 0, 0);
+    navigator.vibrate?.(40);
+    c.toBlob((b) => { if (b) alSacar(b); }, 'image/jpeg', 0.92);
+  }
+
+  return createPortal(
+    <div className="fixed inset-0 z-[70] flex flex-col bg-[var(--icono-fondo)] text-lat-on" role="dialog" aria-label="Cámara para la etiqueta" data-testid="camara-foto">
+      <div className="flex items-center justify-between px-4 pt-[max(14px,env(safe-area-inset-top))] pb-3">
+        <span className="text-[15px] font-semibold">Foto de la etiqueta</span>
+        <button className="flex h-11 w-11 items-center justify-center rounded-full" onClick={alCerrar} aria-label="Cerrar cámara"><Icono n="cerrar" size={22} /></button>
+      </div>
+      <div className="relative flex-1 overflow-hidden">
+        <video ref={video} className="absolute inset-0 h-full w-full object-cover" playsInline muted />
+        {estado === 'lista' && (
+          <div className="pointer-events-none absolute inset-x-6 top-[12%] bottom-[12%] rounded-[16px] border-2 border-lat-on/70" aria-hidden />
+        )}
+        {estado !== 'lista' && (
+          <div className="absolute inset-0 flex items-center justify-center p-8 text-center text-[15px]">
+            {estado === 'iniciando' ? 'Abriendo la cámara…'
+              : estado === 'denegado' ? 'StoaFit no tiene permiso para usar la cámara. Podés darle permiso en los ajustes del teléfono o elegir una foto de la galería.'
+              : 'No se pudo abrir la cámara. Elegí una foto de la galería.'}
+          </div>
+        )}
+      </div>
+      <p className="px-6 pt-3 text-center text-[13.5px] text-lat-mu">Encuadrá la tabla "Información Nutricional", de cerca y sin brillo.</p>
+      <div className="flex items-center justify-between gap-3 px-6 pt-4 pb-[max(22px,env(safe-area-inset-bottom))]">
+        <button className="flex h-11 items-center gap-2 rounded-[12px] px-2 text-[15px]" onClick={() => galeria.current?.click()}>
+          Galería
+        </button>
+        <button className="flex h-[72px] w-[72px] items-center justify-center rounded-full border-4 border-lat-on disabled:opacity-40"
+          onClick={sacar} disabled={estado !== 'lista'} aria-label="Sacar foto" data-testid="sacar-foto">
+          <span className="h-[54px] w-[54px] rounded-full bg-[var(--lat-tx-on)]" />
+        </button>
+        <span className="w-[88px]" aria-hidden />
+      </div>
+      <input ref={galeria} type="file" accept="image/*" className="hidden" aria-label="Elegir foto de la galería"
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) alSacar(f); e.target.value = ''; }} />
+    </div>,
+    document.body,
+  );
+}

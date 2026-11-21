@@ -2,6 +2,8 @@ import { defineConfig, devices } from '@playwright/test';
 
 // En la nube de GitHub se usa el Chromium de Playwright; en otra máquina se puede indicar uno con PW_CHROME
 const executablePath = process.env.PW_CHROME || undefined;
+// Cámara de mentira (imagen de prueba de Chrome) y permiso dado: así se prueba la cámara de la etiqueta
+const args = ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'];
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -14,7 +16,7 @@ export default defineConfig({
     locale: 'es-PY',
     timezoneId: 'America/Asuncion',
     serviceWorkers: 'block',
-    launchOptions: { executablePath },
+    launchOptions: { executablePath, args },
   },
   webServer: {
     command: 'npx vite build --mode demo && npx vite preview --port 4173 --strictPort',
@@ -23,7 +25,7 @@ export default defineConfig({
     timeout: 120_000,
   },
   projects: [
-    { name: 'celular', use: { ...devices['Pixel 7'], launchOptions: { executablePath } } },
-    { name: 'pc', use: { viewport: { width: 1366, height: 860 }, launchOptions: { executablePath } } },
+    { name: 'celular', use: { ...devices['Pixel 7'], launchOptions: { executablePath, args } } },
+    { name: 'pc', use: { viewport: { width: 1366, height: 860 }, launchOptions: { executablePath, args } } },
   ],
 });
