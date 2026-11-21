@@ -9,5 +9,11 @@ export const firebaseConfig = {
   appId: '1:390256309581:web:b130a911418476bcf9b304',
 };
 
+/**
+ * Clave del SITIO de reCAPTCHA (Fraud Defense / Enterprise) para App Check (PÚBLICA, va en la página).
+ * App Check prueba que los pedidos a la IA (lectura de etiquetas) salen de StoaFit. Vacía = App Check apagado.
+ */
+export const recaptchaSitio = '6Lc27CsuAAAAABz23hBRIFanVhAhP_1zT6KXUSYC';
+
 /** Hasta que se cargue la configuración, la app funciona en modo prueba */
 export const firebaseListo = Boolean(firebaseConfig.apiKey && firebaseConfig.appId);

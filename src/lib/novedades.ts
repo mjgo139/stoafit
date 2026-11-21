@@ -1,6 +1,11 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.12.0',
+    fecha: '2026-11-21',
+    cambios: ['Leer etiqueta con foto ahora va protegido: Firebase comprueba que el pedido sale de StoaFit (App Check).'],
+  },
+  {
     version: '1.11.2',
     fecha: '2026-11-21',
     cambios: ['Leer etiqueta: avisos más claros cuando el servicio de lectura no responde, y lee también fotos giradas o al revés.'],

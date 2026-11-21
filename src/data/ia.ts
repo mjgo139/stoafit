@@ -1,5 +1,17 @@
 import type { FirebaseApp } from 'firebase/app';
 import { GoogleAIBackend, Schema, getAI, getGenerativeModel } from 'firebase/ai';
+import { ReCaptchaEnterpriseProvider, initializeAppCheck, type AppCheck } from 'firebase/app-check';
+import { recaptchaSitio } from '../firebaseConfig';
+
+/**
+ * App Check (Fraud Defense = reCAPTCHA Enterprise, gratis hasta 10.000 por mes): se prende recién la primera vez que alguien lee una etiqueta,
+ * así el resto de los usuarios no carga el script de reCAPTCHA. Firebase AI Logic exige el token.
+ */
+let appCheck: AppCheck | null = null;
+function prenderAppCheck(app: FirebaseApp) {
+  if (appCheck || !recaptchaSitio) return;
+  appCheck = initializeAppCheck(app, { provider: new ReCaptchaEnterpriseProvider(recaptchaSitio), isTokenAutoRefreshEnabled: true });
+}
 
 /**
  * Lee una etiqueta nutricional con Gemini (Firebase AI Logic, Gemini Developer API, nivel gratuito).
@@ -34,6 +46,7 @@ async function aBase64(b: Blob): Promise<string> {
 }
 
 export async function leerEtiquetaConGemini(app: FirebaseApp, foto: Blob): Promise<unknown> {
+  prenderAppCheck(app);
   const ai = getAI(app, { backend: new GoogleAIBackend() });
   const datos = await aBase64(foto);
   let ultimo: unknown;
