@@ -133,3 +133,20 @@ test('etiqueta: la foto se saca con la cámara de adentro de la app (sin salir a
   await expect(page.getByTestId('camara-foto')).toHaveCount(0);
   await expect(page.getByTestId('leer-foto')).toBeVisible();
 });
+
+test('crear alimento con código de barras: queda en la base compartida y otro usuario lo encuentra al escanear', async ({ page }) => {
+  await entrar(page, 'sofia@ejemplo.com', 'Sofía');
+  await page.goto('/agregar?comida=desayuno');
+  await page.getByRole('button', { name: /Crear alimento/ }).filter({ visible: true }).first().click();
+  await page.getByLabel('Foto de la etiqueta').setInputFiles('public/icono-192.png');
+  await expect(page.getByTestId('leer-foto')).toContainText('revisá los valores');
+  await page.getByLabel('Código de barras del alimento').fill('7840000000111');
+  await expect(page.getByTestId('codigo-nuevo')).toContainText('quien lo escanee después lo encuentra');
+  await page.getByRole('button', { name: 'Guardar producto para todos' }).click();
+  await expect(page.getByText(/quedó cargado para todos/)).toBeVisible();
+
+  // Otro usuario lo escanea y le aparece el producto (modo prueba: la base está en memoria, misma sesión del navegador)
+  await page.goto('/agregar?comida=almuerzo');
+  await escanear(page, '7840000000111');
+  await expect(page.getByRole('dialog', { name: 'Pan de leche' })).toBeVisible();
+});

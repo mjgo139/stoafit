@@ -7,6 +7,8 @@ import type { LecturaEtiqueta } from '../lib/productos';
 import { mensajeError } from '../data/repo';
 import { Icono } from '../../familia/iconos';
 import { CamaraFoto } from './CamaraFoto';
+import { Escaner } from './Escaner';
+import { codigoValido } from '../lib/openfoodfacts';
 import { Selector } from './piezas';
 
 const CANTIDADES = [0.5, 1, 1.5, 2, 3];
@@ -179,10 +181,12 @@ function AnilloMacros({ kcal, r }: { kcal: number; r: { prot: number; carb: numb
  * Formulario de etiqueta nutricional: como viene en el envase ("por porción" o "cada 100 g"),
  * con marca, código de barras y otras medidas caseras.
  */
-export function FormEtiqueta({ inicial, alGuardar, alBorrar, codigoFijo, leerFoto, textoGuardar = 'Guardar alimento' }: {
+export function FormEtiqueta({ inicial, alGuardar, alBorrar, codigoFijo, pedirCodigo, leerFoto, textoGuardar = 'Guardar alimento' }: {
   inicial: Partial<Etiqueta>; alGuardar: (e: Etiqueta, via: 'manual' | 'foto') => void; alBorrar?: () => void;
   /** Producto de la base compartida: el código queda fijo (un código = un producto) */
   codigoFijo?: string;
+  /** Alimento nuevo: se puede escribir o escanear el código de barras. Con código, se guarda en la base compartida para todos. */
+  pedirCodigo?: boolean;
   /** Solo cargadores: leer la etiqueta con una foto */
   leerFoto?: (foto: Blob) => Promise<LecturaEtiqueta>;
   textoGuardar?: string;
@@ -190,7 +194,9 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar, codigoFijo, leerFot
   const t = (n?: number) => (n === undefined ? '' : String(n).replace('.', ','));
   const [nombre, setNombre] = useState(inicial.nombre ?? '');
   const [marca, setMarca] = useState(inicial.marca ?? '');
-  const codigo = inicial.codigo ?? '';
+  const [codigo, setCodigo] = useState(inicial.codigo ?? '');
+  const [escanear, setEscanear] = useState(false);
+  const conCodigo = !codigoFijo && !!codigoValido(codigo);
   const [modo, setModo] = useState<Etiqueta['modo']>(inicial.modo ?? 'porcion');
   const [porcion, setPorcion] = useState(inicial.porcion ?? '1 porción');
   const [gramos, setGramos] = useState(t(inicial.gramos ?? 100));
@@ -210,7 +216,7 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar, codigoFijo, leerFot
   function guardar() {
     const o: Porcion[] = otras.filter((x) => x.nombre.trim() && num(x.gramos) > 0).map((x) => ({ nombre: x.nombre.trim().slice(0, 40), gramos: num(x.gramos) }));
     alGuardar({
-      nombre, marca, codigo: codigoFijo ?? codigo.replace(/\D/g, ''), modo, porcion: porcion.trim().slice(0, 40) || '1 porción', gramos: g,
+      nombre, marca, codigo: codigoFijo ?? (codigoValido(codigo) || ''), modo, porcion: porcion.trim().slice(0, 40) || '1 porción', gramos: g,
       kcal: num(v.kcal), prot: num(v.prot), carb: num(v.carb), gras: num(v.gras), otras: o,
     }, via);
   }
@@ -267,6 +273,23 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar, codigoFijo, leerFot
         <label className="block"><span className="etiqueta">Marca (opcional)</span>
           <input className="campo mt-1.5" value={marca} onChange={(e) => setMarca(e.target.value)} maxLength={60} aria-label="Marca" />
         </label>
+        {pedirCodigo && !codigoFijo && (
+          <div className="mt-3" data-testid="codigo-nuevo">
+            <span className="etiqueta">Código de barras (si tiene)</span>
+            <div className="mt-1.5 flex gap-2">
+              <input className="campo flex-1" inputMode="numeric" value={codigo} placeholder="7840…" aria-label="Código de barras del alimento"
+                onChange={(e) => setCodigo(e.target.value.replace(/\D/g, '').slice(0, 14))} />
+              <button type="button" className="btn-sec shrink-0 px-3" onClick={() => setEscanear((x) => !x)} aria-label="Escanear el código de barras">
+                <Icono n="barras" size={20} />
+              </button>
+            </div>
+            {escanear && <div className="mt-2"><Escaner alLeer={(c) => { setCodigo(c); setEscanear(false); }} /></div>}
+            <p className="mt-1.5 text-[12.5px] text-mu">
+              {conCodigo ? <b className="oro">Con código queda en la base de StoaFit: quien lo escanee después lo encuentra.</b>
+                : codigo ? 'El código no es válido: revisá los números de abajo de las barras.' : 'Si es un producto envasado, cargá su código para que todos lo encuentren al escanear.'}
+            </p>
+          </div>
+        )}
         {codigoFijo && (
           <div><span className="etiqueta">Código de barras</span>
             <div className="campo mt-1.5 flex items-center gap-2 bg-sf2 text-mu" aria-label="Código de barras" data-testid="codigo-fijo"><Icono n="barras" size={16} />{codigoFijo}</div>
@@ -303,7 +326,7 @@ export function FormEtiqueta({ inicial, alGuardar, alBorrar, codigoFijo, leerFot
         ))}
         {otras.length < 4 && <button className="mt-2 text-[13.5px] font-semibold oro" onClick={() => setOtras([...otras, { nombre: '', gramos: '' }])}>+ Agregar medida</button>}
       </div>
-      <button className="btn mt-1 w-full" disabled={!valido || leyendo} onClick={guardar}>{textoGuardar}</button>
+      <button className="btn mt-1 w-full" disabled={!valido || leyendo} onClick={guardar}>{conCodigo ? 'Guardar producto para todos' : textoGuardar}</button>
       {alBorrar && (borrar ? (
         <div className="rounded-[12px] border border-miss p-3 text-[15px]">
           <p>¿Borrar <b>{nombre}</b>? Lo que ya registraste en el diario queda igual.</p>

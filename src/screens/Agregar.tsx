@@ -388,7 +388,7 @@ export default function Agregar() {
         {form && (
           <>
             {form.aviso && <p className="mb-3 rounded-[12px] bg-acentobg p-3 text-[13.5px]" role="status" data-testid="aviso-codigo">{form.aviso}</p>}
-            <FormEtiqueta key={form.editar?.id ?? form.codigo ?? 'nuevo'} inicial={form.inicial} codigoFijo={form.codigo}
+            <FormEtiqueta key={form.editar?.id ?? form.codigo ?? 'nuevo'} inicial={form.inicial} codigoFijo={form.codigo} pedirCodigo={!form.editar && !form.codigo}
               leerFoto={productos.leerFoto}
               textoGuardar={form.codigo ? (form.editar ? 'Guardar y verificar' : 'Guardar producto') : 'Guardar alimento'}
               alBorrar={form.editar && !form.codigo ? async () => {
@@ -407,7 +407,7 @@ export default function Agregar() {
                     setForm(null);
                     aviso(`${a.nombre} quedó corregido y verificado`);
                     setElegido(a);
-                  } else if (form.codigo) {
+                  } else if (form.codigo || e.codigo) {
                     // Producto nuevo de la base compartida (el código es la llave)
                     const r = await productos.crear(e, via);
                     setCache(productosEnCache());

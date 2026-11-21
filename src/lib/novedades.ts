@@ -1,6 +1,11 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.13.0',
+    fecha: '2026-11-21',
+    cambios: ['Crear alimento: si es un producto envasado, podés escribir o escanear su código de barras. Así queda en la base de StoaFit y quien lo escanee después lo encuentra.'],
+  },
+  {
     version: '1.12.0',
     fecha: '2026-11-21',
     cambios: ['Leer etiqueta con foto ahora va protegido: Firebase comprueba que el pedido sale de StoaFit (App Check).'],
