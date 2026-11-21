@@ -1,5 +1,6 @@
 import { redondear } from './logica';
 import { alimentoDeEtiqueta, type Etiqueta } from './nutricion';
+import { normalizar } from './alimentos';
 import type { Alimento, Producto } from './tipos';
 
 /** Id de un producto compartido cuando se usa como alimento: siempre derivado del código */
@@ -16,6 +17,24 @@ export function alimentoDeProducto(p: Producto): Alimento {
   };
 }
 
+/**
+ * Búsqueda por nombre en la base compartida: cada producto guarda los comienzos (de 3 a 15 letras)
+ * de cada palabra de su nombre y marca, sin tildes. Firestore busca con "array-contains" (1 consulta, pocas lecturas).
+ */
+export function prefijosDe(nombre: string, marca = ''): string[] {
+  const set = new Set<string>();
+  for (const w of normalizar(`${nombre} ${marca}`).split(/[^a-z0-9ñ]+/)) {
+    for (let i = 3; i <= Math.min(w.length, 15); i++) set.add(w.slice(0, i));
+    if (set.size >= 60) break;
+  }
+  return [...set].slice(0, 60);
+}
+/** La palabra más larga de lo escrito (3 a 15 letras) es la que se busca en la base; null si es muy corta */
+export function claveBusqueda(texto: string): string | null {
+  const w = normalizar(texto).split(/[^a-z0-9ñ]+/).sort((a, b) => b.length - a.length)[0] ?? '';
+  return w.length >= 3 ? w.slice(0, 15) : null;
+}
+
 /** Arma el producto a partir de la etiqueta; el código manda y no se puede cambiar después */
 export function productoDeEtiqueta(e: Etiqueta, uid: string, verificado: boolean, via: Producto['via'], ahora = Date.now(), previo?: Producto): Producto {
   if (!e.codigo || !CODIGO_VALIDO.test(e.codigo)) throw new Error('Falta un código de barras válido');
@@ -24,6 +43,7 @@ export function productoDeEtiqueta(e: Etiqueta, uid: string, verificado: boolean
     codigo: previo?.codigo ?? e.codigo, nombre: a.nombre, ...(a.marca ? { marca: a.marca } : {}), por100: a.por100, porciones: a.porciones,
     verificado, creadoPor: previo?.creadoPor ?? uid, creado: previo?.creado ?? ahora, actualizado: ahora,
     ...(verificado ? { verificadoPor: uid } : {}), via: via ?? previo?.via ?? 'manual',
+    prefijos: prefijosDe(a.nombre, a.marca),
   };
 }
 

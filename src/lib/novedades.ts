@@ -1,6 +1,15 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.14.0',
+    fecha: '2026-11-21',
+    cambios: [
+      'Buscá por nombre (o marca) los productos que cargó cualquiera en StoaFit, aunque nunca los hayas escaneado. El código de barras sigue siendo opcional.',
+      'Nueva pestaña Recetas en Agregar: tus comidas caseras, aparte de tus alimentos.',
+      'Las recetas se arman con ingredientes de la biblioteca, tus alimentos y productos de StoaFit, en gramos o en medidas caseras; StoaFit calcula calorías y macros.',
+    ],
+  },
+  {
     version: '1.13.0',
     fecha: '2026-11-21',
     cambios: ['Crear alimento: si es un producto envasado, podés escribir o escanear su código de barras. Así queda en la base de StoaFit y quien lo escanee después lo encuentra.'],

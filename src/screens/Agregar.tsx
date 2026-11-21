@@ -15,10 +15,10 @@ import { textoCantidad } from '../ui/nutri';
 import { useCopiar, useDia } from '../ui/usarDia';
 import { useComidas } from '../ui/comidas';
 import { LineaMacros } from '../ui/nutri';
-import { useProductos } from '../ui/usarProductos';
+import { useBuscarProductos, useProductos } from '../ui/usarProductos';
 import { mensajeError } from '../data/repo';
 
-type Pestana = 'recientes' | 'favoritos' | 'comidas' | 'mios' | 'todos';
+type Pestana = 'recientes' | 'favoritos' | 'comidas' | 'mios' | 'recetas' | 'todos';
 
 /** Buscar alimentos (o escanear el código de barras) y sumarlos a una comida */
 export default function Agregar() {
@@ -78,11 +78,14 @@ export default function Agregar() {
     return [...vistos.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => resolver(id)).filter(Boolean).slice(0, 20) as Alimento[];
   }, [previos, resolver]);
 
+  // Mientras se escribe, también se busca por nombre en la base compartida de StoaFit (productos que cargaron otros)
+  const remotos = useBuscarProductos(texto);
   const lista: Alimento[] = texto.trim()
-    ? buscar(texto, todos)
+    ? (() => { const l = buscar(texto, todos); return [...l, ...remotos.resultados.filter((r) => !l.some((x) => x.id === r.id))]; })()
     : grupo ? todos.filter((a) => a.grupo === grupo)
     : pestana === 'favoritos' ? favoritos.map((id) => resolver(id)).filter(Boolean) as Alimento[]
-    : pestana === 'mios' ? propios
+    : pestana === 'mios' ? propios.filter((a) => !a.receta)
+    : pestana === 'recetas' ? propios.filter((a) => a.receta)
     : pestana === 'todos' ? todos
     : recientes;
 
@@ -153,7 +156,7 @@ export default function Agregar() {
 
   const cambiarComida = (c: TipoComida) => setParams({ comida: c, fecha }, { replace: true });
   const yaHay = dia?.comidas[comida] ?? [];
-  const PESTANAS: [Pestana, string][] = [['recientes', 'Recientes'], ['favoritos', 'Favoritos'], ['comidas', 'Mis comidas'], ['mios', 'Mis alimentos'], ['todos', 'Todos']];
+  const PESTANAS: [Pestana, string][] = [['recientes', 'Recientes'], ['favoritos', 'Favoritos'], ['comidas', 'Mis comidas'], ['mios', 'Mis alimentos'], ['recetas', 'Recetas'], ['todos', 'Todos']];
   const buscandoTexto = !!texto.trim();
   /** Cómo se agrega con el "+": como la última vez, o la primera porción */
   const rapido = (a: Alimento) => {
@@ -293,15 +296,23 @@ export default function Agregar() {
                 <Link className="btn-sec" to="/receta"><Icono n="receta" size={20} />Crear receta</Link>
               </div>
             )}
+            {!buscandoTexto && pestana === 'recetas' && (
+              <div className="mb-4">
+                <Link className="btn w-full" to="/receta" data-testid="crear-receta"><Icono n="receta" size={20} />Crear receta</Link>
+                <p className="mt-2 text-center text-[12.5px] text-mu">Tus comidas caseras: elegí los ingredientes (de la biblioteca, tus alimentos o productos de StoaFit) con sus gramos y StoaFit calcula los valores.</p>
+              </div>
+            )}
             {!buscandoTexto && lista.length > 0 && (
-              <h2 className="titulo-tarjeta mb-2.5">{pestana === 'recientes' ? 'Historial' : pestana === 'favoritos' ? 'Tus favoritos' : pestana === 'mios' ? 'Tus alimentos y recetas' : grupo ? GRUPOS.find((g) => g.v === grupo)?.t : 'Todos los alimentos'}</h2>
+              <h2 className="titulo-tarjeta mb-2.5">{pestana === 'recientes' ? 'Historial' : pestana === 'favoritos' ? 'Tus favoritos' : pestana === 'mios' ? 'Tus alimentos' : pestana === 'recetas' ? 'Tus recetas' : grupo ? GRUPOS.find((g) => g.v === grupo)?.t : 'Todos los alimentos'}</h2>
             )}
             {lista.length === 0 ? (
               pestana === 'mios' && !buscandoTexto ? (
-                <Vacio titulo="Tus alimentos y recetas" linea="Cargá productos con su etiqueta (o escaneándolos) y las recetas de tu casa: quedan para la próxima." />
+                <Vacio titulo="Tus alimentos" linea="Cargá productos con su etiqueta (o escaneándolos): quedan para la próxima." />
+              ) : pestana === 'recetas' && !buscandoTexto ? (
+                <Vacio titulo="Tus recetas" linea="Armá las comidas de tu casa con sus ingredientes y gramos: StoaFit calcula calorías y macros." />
               ) : (
                 <div className="tarjeta py-6 text-center text-[15px] text-mu">
-                  {buscandoTexto ? <>No encontramos “{texto}”.</> : pestana === 'favoritos' ? 'Tocá la estrella de un alimento para tenerlo acá.' : 'Todavía no hay historial. Buscá un alimento arriba.'}
+                  {buscandoTexto ? (remotos.buscando ? 'Buscando en StoaFit…' : <>No encontramos “{texto}”.</>) : pestana === 'favoritos' ? 'Tocá la estrella de un alimento para tenerlo acá.' : 'Todavía no hay historial. Buscá un alimento arriba.'}
                   {buscandoTexto && <button className="mt-3 block w-full font-semibold oro" onClick={() => setForm({ inicial: { nombre: texto } })}>Crear “{texto}” como alimento propio →</button>}
                 </div>
               )

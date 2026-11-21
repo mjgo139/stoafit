@@ -1,6 +1,7 @@
 import type { Alimento, Cargador, ComidaGuardada, Dia, Perfil, Plan, Producto, RegistroCuerpo, Reporte } from '../lib/tipos';
 import { PRODUCTOS_COMPARTIDOS_PRUEBA, LECTURA_PRUEBA, REPORTES_PRUEBA } from './semilla';
 import { ErrorApp, type Repo, type Usuario } from './repo';
+import { prefijosDe } from '../lib/productos';
 import { CLAVE_PRUEBA, USUARIO_PRUEBA, datosDePrueba, perfilInicial } from './semilla';
 import type { Codigo, Comentario, Objetivo, Profesional, Solicitud, TipoProfesional, Vinculo } from '../pro/tipos';
 import { idVinculo, normalizarCodigo } from '../pro/logica';
@@ -278,6 +279,11 @@ export class RepoMemoria implements Repo {
   }
   async guardarProducto(p: Producto) { await this.puedeCorregir(); this.comun.productos.set(p.codigo, copia(p)); this.guardar(); }
   async borrarProducto(codigo: string) { await this.puedeCorregir(); this.comun.productos.delete(codigo); this.guardar(); }
+  async buscarProductos(clave: string, max = 8) {
+    this.conSesion(); await espera(80);
+    return copia([...this.comun.productos.values()].filter((p) => (p.prefijos ?? prefijosDe(p.nombre, p.marca)).includes(clave)).slice(0, max));
+  }
+  async leerTodosProductos() { await this.puedeCorregir(); return copia([...this.comun.productos.values()]); }
   async leerSinVerificar() { await this.puedeCorregir(); return copia([...this.comun.productos.values()].filter((p) => !p.verificado).sort((a, b) => b.creado - a.creado)); }
   async reportar(r: Reporte) { this.conSesion(); this.comun.reportes.set(r.id, copia(r)); this.guardar(); }
   async leerReportes() { await this.puedeCorregir(); return copia([...this.comun.reportes.values()].sort((a, b) => b.fecha - a.fecha)); }

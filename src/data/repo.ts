@@ -55,6 +55,10 @@ export interface Repo {
   guardarProducto(p: Producto): Promise<void>;
   borrarProducto(codigo: string): Promise<void>;
   leerSinVerificar(): Promise<Producto[]>;
+  /** Busca por nombre en la base compartida (una palabra de 3 a 15 letras, sin tildes); pocas lecturas */
+  buscarProductos(clave: string, max?: number): Promise<Producto[]>;
+  /** Solo admin: todos los productos (para completar la búsqueda por nombre de los viejos) */
+  leerTodosProductos(): Promise<Producto[]>;
   reportar(r: Reporte): Promise<void>;
   leerReportes(): Promise<Reporte[]>;
   borrarReporte(id: string): Promise<void>;

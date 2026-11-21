@@ -5,6 +5,8 @@ import { formatoNumero, nuevoId } from '../lib/logica';
 import { alimentoDeReceta, sumar } from '../lib/nutricion';
 import type { Alimento, ItemComida } from '../lib/tipos';
 import { ElegirPorcion } from '../ui/alimento';
+import { productosEnCache } from '../lib/productos';
+import { useBuscarProductos } from '../ui/usarProductos';
 import { useSesion } from '../ui/contexto';
 import { Grupo } from '../ui/familia';
 import { Icono } from '../../familia/iconos';
@@ -40,9 +42,14 @@ export default function Receta() {
     }).catch(() => setPropios([]));
   }, [repo, usuario.uid, editarId]);
 
-  // Ingredientes posibles: la biblioteca y los alimentos propios (no otras recetas)
-  const fuentes = useMemo(() => [...(propios ?? []).filter((a) => !a.receta), ...BIBLIOTECA], [propios]);
-  const resultados = texto.trim() ? buscar(texto, fuentes).slice(0, 12) : [];
+  // Ingredientes posibles: tus alimentos (no otras recetas), los productos de StoaFit que usaste, la biblioteca
+  // y, mientras escribís, los productos de la base compartida que coinciden por nombre
+  const fuentes = useMemo(() => {
+    const mios = (propios ?? []).filter((a) => !a.receta);
+    return [...mios, ...productosEnCache().filter((c) => !mios.some((m) => m.id === c.id)), ...BIBLIOTECA];
+  }, [propios]);
+  const remotos = useBuscarProductos(texto);
+  const resultados = texto.trim() ? (() => { const l = buscar(texto, fuentes); return [...l, ...remotos.resultados.filter((x) => !l.some((y) => y.id === x.id))].slice(0, 15); })() : [];
   const total = sumar(ingredientes);
   const crudo = ingredientes.reduce((s, i) => s + i.gramos, 0);
   const pesoNum = Number(peso.replace(',', '.')) || 0;
@@ -96,13 +103,16 @@ export default function Receta() {
                   {resultados.map((a) => (
                     <li key={a.id}>
                       <button className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-[10px] px-2 text-left hover:bg-sf2" onClick={() => setElegido(a)} data-testid="resultado-ingrediente">
-                        <span className="truncate">{a.nombre}</span><Icono n="mas" size={20} className="shrink-0 oro" />
+                        <span className="min-w-0"><span className="block truncate">{a.nombre}</span>
+                          {(a.marca || a.propio || a.compartido) && <span className="block truncate text-[12.5px] text-mu">{a.marca ?? (a.propio ? 'Tu alimento' : 'StoaFit')}</span>}</span>
+                        <Icono n="mas" size={20} className="shrink-0 oro" />
                       </button>
                     </li>
                   ))}
                 </ul>
               )}
-              {texto.trim() && !resultados.length && <p className="mt-2 text-[13.5px] text-mu">No encontramos “{texto}”. Podés crearlo como alimento propio desde Agregar.</p>}
+              {texto.trim() && !resultados.length && remotos.buscando && <p className="mt-2 text-[13.5px] text-mu">Buscando en StoaFit…</p>}
+              {texto.trim() && !resultados.length && !remotos.buscando && <p className="mt-2 text-[13.5px] text-mu">No encontramos “{texto}”. Podés crearlo como alimento propio desde Agregar.</p>}
             </div>
           </div>
         </section>

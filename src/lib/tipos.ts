@@ -58,6 +58,8 @@ export interface Producto {
   verificadoPor?: string;
   /** Cómo se cargó: a mano o leyendo la etiqueta con IA */
   via?: 'manual' | 'foto';
+  /** Comienzos de las palabras del nombre y la marca, para buscar por nombre (v1.14.0) */
+  prefijos?: string[];
 }
 
 /** Aviso de un usuario: "este producto tiene un error" — reportes/{id} */

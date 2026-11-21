@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { macrosDe } from './nutricion';
-import { CODIGO_VALIDO, alimentoDeProducto, codigoDeId, idProducto, limpiarLectura, productoDeEtiqueta } from './productos';
+import { CODIGO_VALIDO, alimentoDeProducto, claveBusqueda, codigoDeId, idProducto, limpiarLectura, prefijosDe, productoDeEtiqueta } from './productos';
 
 describe('base compartida: un código = un producto', () => {
   const e = { nombre: 'Pan de leche', marca: 'Bimbo', codigo: '7840042000414', modo: 'porcion' as const, porcion: '1½ unidad', gramos: 50, kcal: 145, prot: 3.5, carb: 27, gras: 2.6 };
@@ -44,5 +44,23 @@ describe('lectura de la etiqueta con IA', () => {
       .toEqual({ nombre: 'Pan', kcal: 145, prot: 3.5, carb: 27, gras: 2.6, gramos: 50, porcion: '1½ unidad' });
     expect(limpiarLectura({ kcal: -3, prot: 9999, carb: 'mucho', gramos: 0 })).toEqual({});
     expect(limpiarLectura(null)).toEqual({});
+  });
+});
+
+describe('v1.14.0: buscar productos por nombre', () => {
+  it('prefijos de nombre y marca, sin tildes, de 3 a 15 letras', () => {
+    const p = prefijosDe('Pre Pizza', 'Pantodós');
+    expect(p).toEqual(expect.arrayContaining(['pre', 'piz', 'pizza', 'pan', 'pantodos']));
+    expect(p).not.toContain('pi');
+    expect(prefijosDe('Mbejú')).toContain('mbeju');
+  });
+  it('la clave es la palabra más larga, con 3 letras o más', () => {
+    expect(claveBusqueda('pan de leche')).toBe('leche');
+    expect(claveBusqueda('Galletitas Cóco')).toBe('galletitas');
+    expect(claveBusqueda('pa')).toBeNull();
+  });
+  it('el producto nuevo ya trae sus prefijos', () => {
+    const p = productoDeEtiqueta({ nombre: 'Pre Pizza', marca: 'PANTODOS', codigo: '7840131003463', modo: 'porcion', porcion: '40 g', gramos: 40, kcal: 117, prot: 3.3, carb: 22, gras: 1.8, otras: [] }, 'u1', true, 'foto', 1);
+    expect(p.prefijos).toContain('pizza');
   });
 });

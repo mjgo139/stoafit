@@ -1,8 +1,9 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { normalizar } from '../lib/alimentos';
 import { ErrorApp } from '../data/repo';
 import type { Etiqueta } from '../lib/nutricion';
-import { alimentoDeProducto, limpiarLectura, productoDeEtiqueta, recordarProducto, type LecturaEtiqueta } from '../lib/productos';
-import type { Producto } from '../lib/tipos';
+import { alimentoDeProducto, claveBusqueda, prefijosDe, limpiarLectura, productoDeEtiqueta, recordarProducto, type LecturaEtiqueta } from '../lib/productos';
+import type { Alimento, Producto } from '../lib/tipos';
 import { useSesion } from './contexto';
 
 /** Operaciones sobre la base compartida de productos (un código = un producto) */
@@ -36,4 +37,54 @@ export function useProductos() {
   }, [repo, usuario.uid]);
 
   return { leerFoto: cargador ? leerFoto : undefined, crear, corregir, cargador };
+}
+
+/**
+ * Busca por nombre en la base compartida de StoaFit mientras se escribe (espera 450 ms sin teclear).
+ * Solo consulta con 3 letras o más y guarda lo ya buscado en esta sesión: cada búsqueda nueva = hasta 8 lecturas.
+ */
+const yaBuscado = new Map<string, Alimento[]>();
+export function useBuscarProductos(texto: string, activo = true): { resultados: Alimento[]; buscando: boolean } {
+  const { repo } = useSesion();
+  const clave = activo ? claveBusqueda(texto) : null;
+  const [estado, setEstado] = useState<{ clave: string | null; resultados: Alimento[]; buscando: boolean }>({ clave: null, resultados: [], buscando: false });
+  useEffect(() => {
+    if (!clave) { setEstado({ clave: null, resultados: [], buscando: false }); return; }
+    const guardado = yaBuscado.get(clave);
+    if (guardado) { setEstado({ clave, resultados: guardado, buscando: false }); return; }
+    setEstado((e) => ({ ...e, clave, buscando: true }));
+    let vivo = true;
+    const t = window.setTimeout(async () => {
+      try {
+        const r = (await repo.buscarProductos(clave)).map(alimentoDeProducto);
+        yaBuscado.set(clave, r);
+        if (vivo) setEstado({ clave, resultados: r, buscando: false });
+      } catch { if (vivo) setEstado({ clave, resultados: [], buscando: false }); }
+    }, 450);
+    return () => { vivo = false; clearTimeout(t); };
+  }, [clave, repo]);
+  // Lo de la base también tiene que coincidir con el resto de las palabras escritas
+  const resultados = useMemo(() => {
+    if (estado.clave !== clave) return [];
+    const palabras = normalizar(texto).split(/\s+/).filter(Boolean);
+    return estado.resultados.filter((a) => { const t = normalizar(`${a.nombre} ${a.marca ?? ''}`); return palabras.every((w) => t.includes(w)); });
+  }, [estado, clave, texto]);
+  return { resultados, buscando: estado.buscando };
+}
+
+/**
+ * Una sola vez (por teléfono del admin): los productos cargados antes de la v1.14.0 reciben sus "prefijos"
+ * para que cualquiera los encuentre buscando por nombre. Lecturas = cantidad de productos; escrituras = los que falten.
+ */
+export function useIndiceNombres() {
+  const { repo, admin } = useSesion();
+  useEffect(() => {
+    if (!admin || repo.modo === 'prueba') return;
+    const CLAVE = 'stoafit-indice-nombres-v1';
+    try { if (localStorage.getItem(CLAVE)) return; } catch { return; }
+    repo.leerTodosProductos().then(async (todos) => {
+      for (const p of todos) if (!p.prefijos?.length) await repo.guardarProducto({ ...p, prefijos: prefijosDe(p.nombre, p.marca) });
+      try { localStorage.setItem(CLAVE, '1'); } catch { /* sin espacio */ }
+    }).catch(() => undefined);
+  }, [admin, repo]);
 }

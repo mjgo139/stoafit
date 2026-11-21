@@ -5,6 +5,7 @@ import { useSesion } from './contexto';
 import { AvisoPrueba, Avatar, BarraLateral, Pestanas } from '../../familia/react';
 import { Emblema } from './familia';
 import { useRecordatorio } from './recordatorio';
+import { useIndiceNombres } from './usarProductos';
 
 export const PESTANAS = [
   { a: '/', t: 'Hoy', i: 'hoy' },
@@ -27,6 +28,7 @@ export function useNavegarSuave() {
 /** Estructura de la app: barra lateral en PC (248 px) y pestañas abajo en el celular */
 export function Marco() {
   const { perfil, usuario, repo } = useSesion();
+  useIndiceNombres();
   const loc = useLocation();
   const ir = useNavegarSuave();
   useEffect(() => { window.scrollTo({ top: 0 }); }, [loc.pathname]);

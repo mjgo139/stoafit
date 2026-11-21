@@ -150,3 +150,35 @@ test('crear alimento con código de barras: queda en la base compartida y otro u
   await escanear(page, '7840000000111');
   await expect(page.getByRole('dialog', { name: 'Pan de leche' })).toBeVisible();
 });
+
+test('buscar por nombre: un usuario común encuentra productos de la base compartida que nunca escaneó', async ({ page }) => {
+  await entrar(page, 'lucas@ejemplo.com', 'Lucas');
+  await page.goto('/agregar?comida=desayuno');
+  await page.getByLabel('Buscar alimento').fill('lactal');
+  await expect(page.getByTestId('alimento').filter({ hasText: 'Pan lactal integral' })).toBeVisible();
+  // También por la marca
+  await page.getByLabel('Buscar alimento').fill('panificadora');
+  await expect(page.getByTestId('alimento').filter({ hasText: 'Pan lactal integral' })).toBeVisible();
+});
+
+test('recetas: pestaña propia y una receta con un producto de StoaFit en gramos', async ({ page }) => {
+  await entrar(page, 'lucas@ejemplo.com', 'Lucas');
+  await page.goto('/agregar?comida=almuerzo');
+  await page.getByRole('tab', { name: 'Recetas' }).click();
+  await expect(page.getByText('Tus recetas').first()).toBeVisible();
+  await page.getByTestId('crear-receta').click();
+  await page.getByLabel('Nombre de la receta').fill('Tostadas de la casa');
+  await page.getByLabel('Buscar ingrediente').fill('lactal');
+  await page.getByTestId('resultado-ingrediente').filter({ hasText: 'Pan lactal integral' }).click();
+  const d = page.getByRole('dialog');
+  await d.getByLabel('Unidad').selectOption('g');
+  await d.getByLabel('Cantidad', { exact: true }).fill('200');
+  await d.getByRole('button', { name: 'Sumar a la receta' }).click();
+  await expect(page.getByTestId('ingrediente')).toHaveCount(1);
+  await expect(page.getByTestId('ingrediente')).toContainText('500'); // 200 g × 250 kcal/100 g
+  await page.getByRole('button', { name: 'Guardar receta' }).click();
+  await page.getByRole('tab', { name: 'Recetas' }).click();
+  await expect(page.getByTestId('alimento').filter({ hasText: 'Tostadas de la casa' })).toBeVisible();
+  await page.getByRole('tab', { name: 'Mis alimentos' }).click();
+  await expect(page.getByTestId('alimento').filter({ hasText: 'Tostadas de la casa' })).toHaveCount(0);
+});

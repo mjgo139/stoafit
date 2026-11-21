@@ -209,6 +209,14 @@ export class RepoFirebase implements Repo {
   async borrarProducto(codigo: string) {
     await deleteDoc(doc(this.db, 'productos', codigo));
   }
+  async buscarProductos(clave: string, max = 8) {
+    const s = await getDocs(query(collection(this.db, 'productos'), where('prefijos', 'array-contains', clave), limit(max)));
+    return s.docs.map((d) => ({ ...(d.data() as Producto), codigo: d.id }));
+  }
+  async leerTodosProductos() {
+    const s = await getDocs(query(collection(this.db, 'productos'), limit(500)));
+    return s.docs.map((d) => ({ ...(d.data() as Producto), codigo: d.id }));
+  }
   async leerSinVerificar() {
     const s = await getDocs(query(collection(this.db, 'productos'), where('verificado', '==', false), limit(100)));
     return s.docs.map((d) => ({ ...(d.data() as Producto), codigo: d.id })).sort((a, b) => b.creado - a.creado);
