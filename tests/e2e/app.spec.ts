@@ -101,7 +101,7 @@ test('hoy: panel del día y semana; el agua y los nutrientes en el Diario', asyn
   await expect(page.getByTestId('anillo')).toBeVisible();
   await expect(page.getByTestId('comida-desayuno')).not.toContainText('Todavía nada');
   await expect(page.getByTestId('agua')).toHaveCount(0);
-  await expect(page.getByTestId('tu-semana')).toContainText('/7 días cumplidos');
+  await expect(page.getByTestId('tu-semana')).toContainText('días cumplidos');
   if (test.info().project.name === 'pc') await expect(page.getByTestId('persona-lateral')).toContainText('Sofía');
   await captura(page, '10-hoy');
   // En el Diario: agua, y un resumen distinto al de Hoy (tabla de nutrientes y calorías por comida, sin anillo)
@@ -226,7 +226,9 @@ test('progreso: peso, semanas, promedios e historial', async ({ page }) => {
 test('perfil: apariencia, unidades, versión y exportar', async ({ page }) => {
   await entrar(page);
   await ir(page, 'Perfil');
-  await page.getByRole('radio', { name: 'Oscuro' }).click();
+  await page.getByRole('radio', { name: 'Mármol' }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await page.getByRole('radio', { name: 'Noche romana' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await page.getByRole('radio', { name: 'Terracota' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-acento', 'terracota');

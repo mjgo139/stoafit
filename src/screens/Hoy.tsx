@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 import { fraseDelDia } from '../lib/frases';
-import { claveDia, fechaLarga, hastaHoy, formatoNumero, racha, romano, saludo, semana } from '../lib/logica';
+import { claveDia, hastaHoy, formatoNumero, racha, romano, semana } from '../lib/logica';
 import { comidasDelDia, comidasRegistradas, metasDe, repartoDe } from '../lib/nutricion';
 import { useComidas } from '../ui/comidas';
 import { useSesion } from '../ui/contexto';
-import { Ficha, Grupo, Laurel } from '../ui/familia';
+import { Emblema, Grupo, PanelDia, TuSemana } from '../ui/familia';
 import { Icono } from '../../familia/iconos';
 import { Anillo, Macros3, TarjetaComida } from '../ui/nutri';
 import { Cargando } from '../ui/piezas';
@@ -21,25 +21,20 @@ export default function Hoy() {
   const cumplidos = hastaHoy(perfil.resumen.cumplidos, hoy);
   const r = racha(cumplidos, hoy);
   const sem = semana(hoy);
-  const enSemana = sem.filter((d) => cumplidos.includes(d.clave)).length;
   const frase = fraseDelDia();
   const nombre = (perfil.nombre || 'Invitado').split(' ')[0];
 
   return (
     <div className="pt-6 lg:pt-10">
-      <section className="panel-dia entrar" data-testid="panel-dia">
-        <Laurel size={230} fondo />
-        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:gap-10">
-          <div className="min-w-0 flex-1">
-            <div className="etiqueta first-letter:uppercase">{fechaLarga(hoy)}</div>
-            <h1 className="mt-1.5 font-display text-[26px] font-bold leading-tight lg:text-[40px]">{saludo()}, {nombre}</h1>
-            <p className="mt-2 max-w-[520px] font-display text-[15px] italic text-mu lg:text-[16px]">“{frase.texto}” <span className="not-italic">— {frase.autor}</span></p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Ficha><Icono n="fuego" size={16} className="oro" />{r ? `${r} día${r > 1 ? 's' : ''} de racha` : 'Empezá tu racha'}</Ficha>
-              <Ficha><Icono n="plato" size={16} className="acento" />{dia ? comidasRegistradas(dia) : 0}/{lista.length} comidas</Ficha>
-            </div>
-          </div>
-          {dia ? (
+      <div className="entrar">
+        <PanelDia nombre={nombre}
+          linea={<span className="font-display italic">“{frase.texto}” <span className="not-italic">— {frase.autor}</span></span>}
+          esquina={<Link to="/perfil" aria-label="Ir a mi perfil" className="toque flex items-center justify-center"><Emblema size={40} /></Link>}
+          fichas={<>
+            <Link to="/progreso" className="ficha"><Icono n="fuego" size={16} className="oro" />{r ? `${r} día${r > 1 ? 's' : ''} de racha` : 'Empezá tu racha'}<span aria-hidden className="ir">›</span></Link>
+            <Link to="/diario" className="ficha"><Icono n="plato" size={16} className="oro" />{dia ? comidasRegistradas(dia) : 0}/{lista.length} comidas<span aria-hidden className="ir">›</span></Link>
+          </>}
+          lado={dia ? (
             <div className="flex items-center gap-5 lg:w-[420px]">
               <Anillo valor={dia.totales.kcal} meta={metas.kcal} tam={132} />
               <div className="min-w-0 flex-1">
@@ -47,9 +42,8 @@ export default function Hoy() {
                 <Macros3 t={dia.totales} metas={metas} />
               </div>
             </div>
-          ) : <div className="lg:w-[420px]"><Cargando forma="tarjeta" /></div>}
-        </div>
-      </section>
+          ) : <div className="lg:w-[420px]"><Cargando forma="tarjeta" /></div>} />
+      </div>
 
       <div className="mt-7 grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:gap-6">
         <section>
@@ -68,30 +62,10 @@ export default function Hoy() {
         <div className="flex flex-col gap-7 lg:gap-6">
           <section>
             <Grupo n={2} className="mb-3">Tu semana</Grupo>
-            <div className="tarjeta" data-testid="tu-semana">
-              <div className="flex justify-between">
-                {sem.map((d) => {
-                  const ok = cumplidos.includes(d.clave);
-                  const con = perfil.resumen.dias.includes(d.clave);
-                  return (
-                    <div key={d.clave} className="flex flex-col items-center gap-1.5">
-                      <span className={`text-[11px] font-bold ${d.hoy ? 'oro' : 'text-mu2'}`}>{d.letra}</span>
-                      <span className={`num flex h-9 w-9 items-center justify-center rounded-full border text-[15px] ${ok ? 'hecho' : con ? 'border-ln3' : d.futuro ? 'border-ln2 text-mu2' : 'border-ln2 text-mu'}`}
-                        aria-label={`${d.numero}${ok ? ', cumplido' : ''}`}>
-                        {ok ? <Icono n="check" size={16} /> : d.numero}
-                      </span>
-                      <span className={`h-0.5 w-5 rounded-full ${d.hoy ? 'bg-gold' : 'bg-transparent'}`} />
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="mt-3 flex items-center justify-between text-[13.5px] text-mu">
-                <span><b className="num text-[18px] text-tx">{enSemana}</b>/7 días cumplidos</span>
-                <span>Racha <b className="num text-[18px] oro">{r ? romano(r) : '0'}</b></span>
-              </div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ln2"><div className="h-full rounded-full bg-gold transition-all" style={{ width: `${(enSemana / 7) * 100}%` }} /></div>
-              <p className="mt-3 text-[12.5px] text-mu2">Un día se cumple con 2 comidas o más y las calorías entre el 85 % y el 110 % de tu meta.</p>
-            </div>
+            <TuSemana texto="días cumplidos"
+              dias={sem.map((d) => ({ fecha: d.clave, hecho: cumplidos.includes(d.clave), hoy: d.hoy, plan: !!d.futuro && perfil.resumen.dias.includes(d.clave) }))}
+              extra={<>Racha <b className="num text-[18px] oro">{r ? romano(r) : '0'}</b></>}
+              nota="Un día se cumple con 2 comidas o más y las calorías entre el 85 % y el 110 % de tu meta." />
           </section>
         </div>
       </div>

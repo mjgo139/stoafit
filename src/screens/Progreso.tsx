@@ -53,7 +53,7 @@ export default function Progreso() {
 
   return (
     <div className="pt-6 lg:pt-10">
-      <CabeceraPagina etiqueta="Progreso" titulo="Tu camino" linea="Lo que se mide, se puede mejorar."
+      <CabeceraPagina etiqueta="Tu camino" titulo="Progreso" linea="Lo que se mide, se puede mejorar."
         accion={<button className="btn h-11 px-4 text-[12.5px]" onClick={() => setRegistrar(true)}><Icono n="balanza" size={16} />Registrar</button>} />
 
       <div className="mt-6 grid grid-cols-2 gap-2.5 lg:grid-cols-4" data-testid="resumen-progreso">

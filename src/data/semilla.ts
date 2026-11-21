@@ -14,7 +14,7 @@ export function perfilInicial(u: Usuario): Perfil {
     uid: u.uid,
     nombre: u.nombre || (u.invitado ? 'Invitado' : ''),
     email: u.email,
-    tema: 'sistema',
+    tema: 'oscuro',
     unidad: 'kg',
     recordatorio: { activo: false, hora: '12:00', dias: [1, 2, 3, 4, 5, 6, 7] },
     creado: Date.now(),

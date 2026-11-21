@@ -7,7 +7,7 @@ import { ACTIVIDADES, OBJETIVOS, metasDe } from '../lib/nutricion';
 import type { Acento, Tema, Unidad } from '../lib/tipos';
 import { COMMIT, FECHA_ARMADO, VERSION } from '../ui/actualizar';
 import { useSesion } from '../ui/contexto';
-import { CabeceraPagina, Grupo } from '../ui/familia';
+import { CabeceraPagina, Grupo, TEMAS } from '../ui/familia';
 import { Icono } from '../../familia/iconos';
 import { Hoja, Selector } from '../ui/piezas';
 import { iniciales } from '../pro/logica';
@@ -54,7 +54,7 @@ export default function Perfil() {
   const fila = 'fila w-full text-left';
   return (
     <div className="pt-6 lg:pt-10">
-      <CabeceraPagina etiqueta="Perfil" titulo={perfil.nombre || 'Invitado'} linea={usuario.invitado ? 'Estás como invitado.' : usuario.email} />
+      <CabeceraPagina etiqueta="Tu cuenta" titulo="Perfil" linea={usuario.invitado ? 'Estás como invitado.' : 'Datos, apariencia y ajustes.'} />
 
       {usuario.invitado && (
         <div className="tarjeta mt-5 flex items-center gap-3 border-gold2" data-testid="aviso-invitado">
@@ -92,7 +92,7 @@ export default function Perfil() {
             <div className="tarjeta flex flex-col gap-4">
               <div><div className="etiqueta mb-2">Tema</div>
                 <Selector<Tema> nombre="Tema" valor={perfil.tema} alCambiar={(t) => cambiarPerfil({ tema: t })}
-                  opciones={[{ v: 'claro', t: 'Mármol' }, { v: 'oscuro', t: 'Oscuro' }, { v: 'sistema', t: 'Sistema' }]} />
+                  opciones={TEMAS} />
               </div>
               <div><div className="etiqueta mb-2">Color de acento</div>
                 <div role="radiogroup" aria-label="Color de acento" className="flex gap-[5px]">

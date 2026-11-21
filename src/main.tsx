@@ -10,7 +10,6 @@ import '@fontsource/playfair-display/500.css';
 import '@fontsource/playfair-display/600.css';
 import '@fontsource/playfair-display/700.css';
 import '../familia/familia.css';
-import './colores-propios.css';
 import './index.css';
 import App from './App';
 import { ProveedorApp } from './ui/contexto';

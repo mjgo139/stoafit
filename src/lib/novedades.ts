@@ -1,6 +1,16 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.9.0',
+    fecha: '2026-11-21',
+    cambios: [
+      'Ahora StoaFit arranca en Noche romana, como el resto de la familia. El tema se elige entre Noche romana, Mármol y Sistema.',
+      'El Panel del día y Tu semana son las mismas piezas que en StoaGym.',
+      'Perfil, Progreso y Plan tienen la cabecera igual que en las otras apps (por ejemplo, "Tu camino" arriba y "Progreso" como título).',
+      'Aviso de modo prueba arriba de cada pantalla, como en StoaGym.',
+    ],
+  },
+  {
     version: '1.8.1',
     fecha: '2026-11-21',
     cambios: [

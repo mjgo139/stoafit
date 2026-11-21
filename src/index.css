@@ -5,13 +5,13 @@
 /*
   StoaFit · lo común (colores, letras, piezas, movimiento) viene de la familia estoica:
   `familia/familia.css`, que se carga antes que este archivo (ver main.tsx). No repetir nada de eso acá.
-  Acá queda solo lo propio de StoaFit. Los colores propios (acento y datos) están en colores-propios.css.
+  Acá queda solo lo propio de StoaFit. Los colores de acento y de datos vienen de familia/tokens.css.
 */
 
 input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
 @layer components {
-  .acento { color: var(--acento); }
+  .acento { color: var(--elegido); }
 }
 
 .pb-seguro { padding-bottom: calc(env(safe-area-inset-bottom) + 92px); }
@@ -35,4 +35,4 @@ input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin
 .anillo-pasado { stroke: var(--miss); }
 /* Vasos de agua */
 .vaso { @apply flex h-10 w-8 items-end justify-center rounded-b-[8px] rounded-t-[3px] border-2 border-ln3 transition-colors; }
-.vaso-lleno { border-color: var(--acento); background: linear-gradient(to top, color-mix(in srgb, var(--acento) 55%, transparent) 70%, transparent 70%); }
+.vaso-lleno { border-color: var(--elegido); background: linear-gradient(to top, color-mix(in srgb, var(--elegido) 55%, transparent) 70%, transparent 70%); }

@@ -10,7 +10,7 @@
     <title>StoaFit</title>
     <script>
       try {
-        var t = localStorage.getItem('stoafit-tema') || 'sistema';
+        var t = localStorage.getItem('stoafit-tema') || 'oscuro';
         var o = t === 'oscuro' || (t === 'sistema' && matchMedia('(prefers-color-scheme: dark)').matches);
         document.documentElement.dataset.theme = o ? 'dark' : 'light';
         document.documentElement.dataset.acento = localStorage.getItem('stoafit-acento') || 'oliva';

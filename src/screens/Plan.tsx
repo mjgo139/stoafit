@@ -55,7 +55,7 @@ export default function Plan() {
 
   return (
     <div className="pt-6 lg:pt-10">
-      <CabeceraPagina etiqueta="Plan" titulo="Tu medida" linea="Cuánto te conviene comer y cómo repartirlo en el día." />
+      <CabeceraPagina etiqueta="Tu medida" titulo="Plan" linea="Cuánto te conviene comer y cómo repartirlo en el día." />
 
       <div className="mt-7 grid grid-cols-1 gap-7 lg:grid-cols-2 lg:gap-6">
         <section>

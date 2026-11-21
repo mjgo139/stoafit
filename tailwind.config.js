@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       // Propio de StoaFit: el color de acento elegido en Perfil → Apariencia
-      colors: { acento: 'var(--acento)', acentobg: 'var(--acentobg)' },
+      colors: { acento: 'var(--elegido)', acentobg: 'var(--elegidobg)' },
     },
   },
   plugins: [],
