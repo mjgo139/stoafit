@@ -1,6 +1,13 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.17.1',
+    fecha: '2026-11-22',
+    cambios: [
+      'Iniciar sesión, crear cuenta y recuperar la contraseña pasan a ser la misma pieza en todas las apps de la familia.',
+    ],
+  },
+  {
     version: '1.17.0',
     fecha: '2026-11-22',
     cambios: [
