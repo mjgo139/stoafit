@@ -1,6 +1,13 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.18.0',
+    fecha: '2026-11-22',
+    cambios: [
+      'La web publicada ya no tiene modo prueba (?prueba=1): los datos de ejemplo solo existen en las pruebas automáticas.',
+    ],
+  },
+  {
     version: '1.17.1',
     fecha: '2026-11-22',
     cambios: [
