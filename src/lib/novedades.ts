@@ -1,6 +1,15 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.17.0',
+    fecha: '2026-11-22',
+    cambios: [
+      'Abre más rápido: lo que ya está guardado en tu teléfono se muestra al instante y lo nuevo se trae por detrás, sin esqueletos cada vez.',
+      'Las actualizaciones ya no recargan la app mientras la estás usando: se aplican cuando la dejás en segundo plano.',
+      'Pantalla de acceso nueva con la estatua del filósofo, igual en todas las apps de la familia. Continuar con Google está ahora dentro de Iniciar sesión y Crear cuenta.',
+    ],
+  },
+  {
     version: '1.16.0',
     fecha: '2026-11-21',
     cambios: [
