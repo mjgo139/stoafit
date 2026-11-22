@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { mensajeError } from '../data/repo';
 import { useApp } from '../ui/contexto';
-import { Emblema, FormularioAcceso, PantallaAcceso, PortadaAcceso, type VistaAcceso } from '../ui/familia';
+import { DescargarApp, Emblema, FormularioAcceso, PantallaAcceso, PortadaAcceso, type VistaAcceso } from '../ui/familia';
 import portada from '../../familia/portada-filosofo.webp';
 import { Icono } from '../../familia/iconos';
 
@@ -24,6 +24,7 @@ export default function Acceso() {
         <button className="btn" onClick={() => setVista('ingresar')}><Icono n="corona" size={20} />Iniciar sesión</button>
         <button className="btn-sec" onClick={() => setVista('registrar')}>Crear cuenta</button>
         <button className="portada-invitado" disabled={enviando} onClick={invitado}>Continuar como invitado</button>
+        <DescargarApp apk="https://github.com/mjgo139/stoafit/releases/download/apk-ultima/stoafit.apk" />
         {error && <p role="alert" className="text-center text-[15px] text-miss">{error}</p>}
         {repo.modo === 'prueba' && (
           <p className="mt-4 rounded-[12px] border border-dashed border-ln3 p-3 text-center text-[13.5px] text-mu" data-testid="aviso-prueba">
