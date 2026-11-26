@@ -1,6 +1,13 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.21.0',
+    fecha: '2026-11-26',
+    cambios: [
+      'Widget para Windows nuevo, en negro y oro: "Tu día" con el anillo de calorías (cuánto te queda), proteína, carbohidratos y grasas, tus comidas de hoy y tu semana; y "Tu mes" con tus días cumplidos de las últimas 5 semanas (clic derecho → Agregar "Tu mes"). Para verlo: Perfil → Widget para Windows → Descargar de nuevo.',
+    ],
+  },
+  {
     version: '1.20.0',
     fecha: '2026-11-26',
     cambios: [

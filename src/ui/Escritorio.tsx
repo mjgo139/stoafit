@@ -1,12 +1,12 @@
 /**
- * Widget para Windows (v1.20.0): fila y hoja en Perfil, y el hook que mantiene el resumen al día.
+ * Widget para Windows (v1.20.0; diseño nuevo en v1.21.0): fila y hoja en Perfil, y el hook que mantiene el resumen al día.
  * No aparece en la APK (es para la PC).
  */
 import { Capacitor } from '@capacitor/core';
 import { useEffect, useState } from 'react';
-import { armarTextoEscritorio, bajarArchivo, horaCorta, nuevoCodigoEscritorio, paqueteEscritorio, subirResumenEscritorio } from '../../familia/escritorio';
+import { bajarArchivo, horaCorta, nuevoCodigoEscritorio, subirResumenEscritorio } from '../../familia/escritorio';
 import { firebaseConfig } from '../firebaseConfig';
-import { APP_ESCRITORIO, CLAVE_ESCRITORIO, resumenStoaFit } from '../lib/escritorio';
+import { ARCHIVO_ESCRITORIO, CLAVE_ESCRITORIO, paqueteStoaFit, textoStoaFit } from '../lib/escritorio';
 import { claveDia } from '../lib/logica';
 import type { Perfil } from '../lib/tipos';
 import type { Repo } from '../data/repo';
@@ -14,12 +14,12 @@ import { useApp, useSesion } from './contexto';
 import { Icono } from '../../familia/iconos';
 import { Hoja } from './piezas';
 
-const APP = APP_ESCRITORIO((firebaseConfig as { projectId?: string }).projectId || 'stoafit-app');
-const ARCHIVO = 'StoaFit.rmskin';
+const PROYECTO = (firebaseConfig as { projectId?: string }).projectId || 'stoafit-app';
+const ARCHIVO = ARCHIVO_ESCRITORIO;
 
 async function subir(repo: Repo, uid: string, perfil: Perfil, codigo: string, forzar = false) {
   const dia = await repo.leerDia(uid, claveDia()).catch(() => null);
-  const texto = armarTextoEscritorio(resumenStoaFit(perfil, dia), horaCorta());
+  const texto = textoStoaFit(perfil, dia, horaCorta());
   await subirResumenEscritorio(CLAVE_ESCRITORIO, codigo, texto, (c, t) => repo.guardarEscritorio(uid, c, t), forzar);
 }
 
@@ -53,7 +53,7 @@ export function FilaEscritorio() {
         await cambiarPerfil({ escritorio: c });
         if (anterior) await repo.borrarEscritorio(anterior).catch(() => undefined);
       }
-      bajarArchivo(await paqueteEscritorio(APP, c), ARCHIVO);
+      bajarArchivo(await paqueteStoaFit(PROYECTO, c), ARCHIVO);
       aviso(nuevo ? 'Enlace nuevo: el widget anterior dejó de andar' : `Se bajó ${ARCHIVO}: abrilo con doble clic`);
     } catch {
       aviso('No se pudo armar el widget. Probá de nuevo.');
@@ -87,10 +87,10 @@ export function FilaEscritorio() {
         <ol className="flex list-decimal flex-col gap-2 pl-5 text-[15px]">
           <li>Instalá <b>Rainmeter</b> (gratis) desde <a href="https://www.rainmeter.net" target="_blank" rel="noreferrer" className="oro font-semibold">rainmeter.net</a>.</li>
           <li>Tocá el botón de abajo: se baja {ARCHIVO}.</li>
-          <li>Abrilo con doble clic y tocá <b>Install</b>. La tarjeta aparece en tu escritorio; arrastrala a donde quieras.</li>
-          <li>Clic derecho en la tarjeta: <b>Siguiente meta</b> o <b>Agregar otra tarjeta</b>. La lista de hoy está en Rainmeter → StoaFit → Hoy.</li>
+          <li>Abrilo con doble clic y tocá <b>Install</b>. Aparece <b>Tu día</b> (calorías, macros, comidas y semana); arrastralo a donde quieras.</li>
+          <li>Clic derecho → <b>Agregar “Tu mes”</b> para ver tus últimas 5 semanas.</li>
         </ol>
-        <p className="mt-3 text-[13.5px] text-mu">Se actualiza cada 15 minutos con lo que anotás en la app (en el celular o en la PC). Muestra solo tus calorías, tus comidas de hoy y tu racha.</p>
+        <p className="mt-3 text-[13.5px] text-mu">Se actualiza cada 15 minutos con lo que anotás en la app (en el celular o en la PC). Muestra solo tus calorías, tus macros, tus comidas de hoy y tus días cumplidos.</p>
         <button className="btn mt-4 w-full" onClick={() => activar(false)} disabled={ocupado}>{codigo ? 'Descargar de nuevo' : 'Activar y descargar'}</button>
         {codigo && (
           <div className="mt-3 flex flex-wrap gap-2">

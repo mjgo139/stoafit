@@ -242,10 +242,10 @@ export interface ColoresWidget {
 }
 
 const FILAS = Array.from({ length: MAX_FILAS_ESCRITORIO }, (_, i) => i + 1);
-const urlResumen = (proyecto: string, codigo: string) =>
+export const urlResumen = (proyecto: string, codigo: string) =>
   `https://firestore.googleapis.com/v1/projects/${proyecto}/databases/(default)/documents/escritorio/${codigo}`;
 
-function variablesComunes(c: ColoresWidget) {
+export function variablesComunes(c: ColoresWidget) {
   return `Fondo=${aRainmeter(COLORES_ICONO.fondo, 242)}
 Oro=${aRainmeter(COLORES_ICONO.laurel)}
 Marfil=${aRainmeter(COLORES_ICONO.figura)}
@@ -260,7 +260,8 @@ Serie3=${c.series[2]}
 Serie4=${c.series[3]}`;
 }
 
-const MEDIDAS = `[MeasureDatos]
+/** Medidas WebParser que leen el resumen (#Url#) y la de error; los skins propios las reutilizan */
+export const MEDIDAS = `[MeasureDatos]
 Measure=WebParser
 URL=#Url#
 UpdateRate=900
@@ -412,7 +413,8 @@ LeftMouseUpAction=["#App#"]
 `;
 }
 
-const LUA_COMUN = `local function v(nombre) return SKIN:GetVariable(nombre) or '' end
+/** Funciones Lua comunes (v, poner, decodificar, partir respetando vacíos, romano, diaNumero) para skins propios */
+export const LUA_COMUN = `local function v(nombre) return SKIN:GetVariable(nombre) or '' end
 local function poner(meter, opcion, valor) SKIN:Bang('!SetOption', meter, opcion, valor) end
 
 local function u8(cp)
@@ -845,7 +847,7 @@ export function coloresDeLaFamilia(): ColoresWidget {
 }
 
 /** Dibuja el emblema de la app como PNG para el widget. */
-async function emblemaPng(figura: string, lado = 120): Promise<Uint8Array> {
+export async function emblemaPng(figura: string, lado = 120): Promise<Uint8Array> {
   const img = new Image();
   img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgEmblemaSolo(figura, lado))}`;
   await img.decode();
