@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { normalizar } from '../lib/alimentos';
 import { ErrorApp } from '../data/repo';
 import type { Etiqueta } from '../lib/nutricion';
-import { alimentoDeProducto, claveBusqueda, prefijosDe, limpiarLectura, productoDeEtiqueta, recordarProducto, type LecturaEtiqueta } from '../lib/productos';
+import { CODIGO_VALIDO, ID_SIN_CODIGO, alimentoDeProducto, claveBusqueda, idProducto, olvidarProducto, prefijosDe, limpiarLectura, productoDeEtiqueta, recordarProducto, type LecturaEtiqueta } from '../lib/productos';
 import type { Alimento, Producto } from '../lib/tipos';
 import { useSesion } from './contexto';
 
@@ -26,9 +26,22 @@ export function useProductos() {
     return { creado: r.creado, alimento: a };
   }, [repo, usuario.uid, cargador]);
 
-  /** Cargadores y admin: corrige y deja verificado (el código no cambia) */
+  /**
+   * Cargadores y admin: corrige y deja verificado. El código de barras no cambia nunca, salvo un alimento
+   * que no tenía (llave "n-…"): si se le pone uno, el producto pasa a esa llave y se borra la vieja (v1.22.0).
+   */
   const corregir = useCallback(async (codigo: string, e: Etiqueta, via: Producto['via']) => {
     const previo = await repo.leerProducto(codigo);
+    if (ID_SIN_CODIGO.test(codigo) && e.codigo && CODIGO_VALIDO.test(e.codigo)) {
+      const p = productoDeEtiqueta(e, usuario.uid, true, via, Date.now(), previo ? { ...previo, codigo: e.codigo } : undefined);
+      const r = await repo.crearProducto(p);
+      if (!r.creado) throw new ErrorApp(`Ese código de barras ya es de otro producto: ${r.producto.nombre}.`);
+      await repo.borrarProducto(codigo);
+      olvidarProducto(idProducto(codigo));
+      const a = alimentoDeProducto(p);
+      recordarProducto(a);
+      return a;
+    }
     const p = productoDeEtiqueta({ ...e, codigo }, usuario.uid, true, via, Date.now(), previo ?? undefined);
     await repo.guardarProducto(p);
     const a = alimentoDeProducto(p);

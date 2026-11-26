@@ -73,6 +73,14 @@ export function recordarProducto(a: Alimento) {
   } catch { /* sin espacio */ }
 }
 
+export function olvidarProducto(id: string) {
+  try {
+    const c = JSON.parse(localStorage.getItem(CLAVE) ?? '{}') as Record<string, Alimento>;
+    delete c[id];
+    localStorage.setItem(CLAVE, JSON.stringify(c));
+  } catch { /* nada */ }
+}
+
 /** Lo que la IA lee de una etiqueta nutricional */
 export interface LecturaEtiqueta {
   nombre?: string; marca?: string;

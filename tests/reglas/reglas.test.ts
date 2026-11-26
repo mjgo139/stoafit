@@ -152,6 +152,17 @@ describe('reglas de Firestore', () => {
       await assertSucceeds(deleteDoc(doc(ana, 'productos/7840000000024')));
     });
 
+    it('v1.22.0: un cargador le pone código a un alimento sin código (lo crea con el autor original y borra la llave vieja)', async () => {
+      await preparar();
+      const beto = env.authenticatedContext('beto').firestore();
+      const carla = env.authenticatedContext('carla').firestore();
+      await setDoc(doc(beto, 'productos/n-abc123def4'), prod('n-abc123def4', 'beto'));
+      await assertSucceeds(setDoc(doc(carla, 'productos/7840000000123'), { ...prod('7840000000123', 'beto', true), verificadoPor: 'carla' }));
+      await assertSucceeds(deleteDoc(doc(carla, 'productos/n-abc123def4')));
+      // un usuario común sigue sin poder crearlo a nombre de otro
+      await assertFails(setDoc(doc(beto, 'productos/7840000000130'), prod('7840000000130', 'carla')));
+    });
+
     it('reportes: los crea cualquiera; los ven y borran cargadores', async () => {
       await preparar();
       const beto = env.authenticatedContext('beto').firestore();

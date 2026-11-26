@@ -404,7 +404,7 @@ export default function Agregar() {
                 {form.privado ? 'Solo lo ves vos: no aparece en las búsquedas de otros usuarios.' : 'Queda en StoaFit para que lo encuentren todos. Si es algo solo tuyo, creálo como privado desde Mis alimentos.'}
               </p>
             )}
-            <FormEtiqueta key={form.editar?.id ?? form.codigo ?? 'nuevo'} inicial={form.inicial} codigoFijo={form.codigo} pedirCodigo={!form.editar && !form.codigo && !form.privado}
+            <FormEtiqueta key={form.editar?.id ?? form.codigo ?? 'nuevo'} inicial={form.inicial} codigoFijo={form.codigo} pedirCodigo={form.editar ? !(form.codigo && CODIGO_VALIDO.test(form.codigo)) : !form.codigo && !form.privado} soloVos={!!form.editar?.propio}
               leerFoto={productos.leerFoto}
               textoGuardar={form.codigo ? (form.editar ? 'Guardar y verificar' : 'Guardar producto') : 'Guardar alimento'}
               alBorrar={form.editar && !form.codigo ? async () => {
@@ -421,9 +421,9 @@ export default function Agregar() {
                     const a = await productos.corregir(form.codigo, e, via);
                     setCache(productosEnCache());
                     setForm(null);
-                    aviso(`${a.nombre} quedó corregido y verificado`);
+                    aviso(e.codigo && CODIGO_VALIDO.test(e.codigo) && !CODIGO_VALIDO.test(form.codigo) ? `${a.nombre} ahora tiene código de barras ${e.codigo}` : `${a.nombre} quedó corregido y verificado`);
                     setElegido(a);
-                  } else if (form.codigo || e.codigo || !form.privado) {
+                  } else if (!form.editar?.propio && (form.codigo || e.codigo || !form.privado)) {
                     // Producto nuevo de la base compartida (el código es la llave)
                     const r = await productos.crear(e, via);
                     setCache(productosEnCache());

@@ -1,6 +1,15 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.22.0',
+    fecha: '2026-11-26',
+    cambios: [
+      'Cargadores y admin: a un alimento que se creó sin código de barras ahora se le puede poner uno al corregirlo (escribiéndolo o escaneándolo). Queda un solo producto con ese código, sin duplicados.',
+      'Al corregir un alimento también se puede volver a leer la etiqueta con foto para actualizar los valores.',
+      'En tus alimentos privados también podés agregar el código de barras, para encontrarlos escaneando.',
+    ],
+  },
+  {
     version: '1.21.0',
     fecha: '2026-11-26',
     cambios: [

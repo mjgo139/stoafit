@@ -282,7 +282,7 @@ export class RepoMemoria implements Repo {
     await espera(80);
     const ya = this.comun.productos.get(p.codigo);
     if (ya) return { creado: false, producto: copia(ya) };
-    if (p.creadoPor !== this.usuario!.uid) throw ERR('permission-denied');
+    if (p.creadoPor !== this.usuario!.uid && !(await this.esCargador(this.usuario!.uid))) throw ERR('permission-denied');
     if (p.verificado && !(await this.esCargador(this.usuario!.uid))) throw ERR('permission-denied');
     this.comun.productos.set(p.codigo, copia(p));
     this.guardar();

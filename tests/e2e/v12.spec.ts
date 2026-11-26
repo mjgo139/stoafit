@@ -237,3 +237,36 @@ test('líquidos: un alimento en ml se agrega en mililitros', async ({ page }) =>
   await expect(d.getByLabel('Unidad')).toContainText('mililitros (ml)');
   await expect(d.getByLabel('Unidad')).toContainText('100 ml');
 });
+
+test('v1.22.0: a un alimento sin código, el cargador le pone código de barras y lo corrige con foto', async ({ page }) => {
+  await entrar(page, 'sofia@ejemplo.com', 'Sofía');
+  await page.goto('/agregar?comida=merienda');
+  await page.getByRole('button', { name: /Crear alimento/ }).filter({ visible: true }).first().click();
+  await page.getByLabel('Nombre del alimento').fill('Pan casero de la esquina');
+  await page.getByLabel('Calorías').fill('260');
+  await page.getByRole('button', { name: 'Guardar alimento' }).click();
+  await expect(page.getByText(/quedó cargado para todos/)).toBeVisible();
+  // Abrir para corregir: se ve la foto de la etiqueta y el campo para el código
+  await page.getByRole('button', { name: 'Corregir producto' }).click();
+  await expect(page.getByTestId('leer-foto')).toBeVisible();
+  await expect(page.getByTestId('codigo-nuevo')).toBeVisible();
+  await page.getByLabel('Foto de la etiqueta').setInputFiles('public/icono-192.png');
+  await expect(page.getByTestId('leer-foto')).toContainText('revisá los valores');
+  await expect(page.getByLabel('Calorías')).toHaveValue('145');
+  await expect(page.getByLabel('Nombre del alimento')).toHaveValue('Pan casero de la esquina');
+  await page.getByLabel('Código de barras del alimento').fill('7840000000123');
+  await page.getByRole('button', { name: 'Guardar y verificar' }).click();
+  await expect(page.getByText(/ahora tiene código de barras 7840000000123/)).toBeVisible();
+  await page.keyboard.press('Escape');
+  // Escaneando ese código aparece el mismo alimento, y ya con el código fijo
+  await page.goto('/agregar?comida=merienda');
+  await escanear(page, '7840000000123');
+  await expect(page.getByRole('dialog', { name: 'Pan casero de la esquina' })).toBeVisible();
+  await page.getByRole('button', { name: 'Corregir producto' }).click();
+  await expect(page.getByTestId('codigo-fijo')).toContainText('7840000000123');
+  await expect(page.getByTestId('codigo-nuevo')).toHaveCount(0);
+  // Buscando por nombre ya no hay dos
+  await page.goto('/agregar?comida=merienda');
+  await page.getByLabel('Buscar alimento').fill('pan casero esquina');
+  await expect(page.getByTestId('alimento').filter({ hasText: 'Pan casero de la esquina' })).toHaveCount(1);
+});

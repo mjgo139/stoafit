@@ -240,9 +240,10 @@ service cloud.firestore {
     // Base compartida de productos envasados: un código = un producto
     match /productos/{codigo} {
       allow read: if conSesion();
-      // Cualquiera con sesión lo crea si el código no existe; si no es cargador, queda "sin verificar"
+      // Cualquiera con sesión lo crea si el código no existe; si no es cargador, queda "sin verificar".
+      // Un cargador puede crearlo a nombre de otro: pasa al ponerle código de barras a un alimento que no tenía (v1.22.0).
       allow create: if conSesion() && productoValido(codigo)
-        && request.resource.data.creadoPor == request.auth.uid
+        && (request.resource.data.creadoPor == request.auth.uid || esCargador())
         && (request.resource.data.verificado == false || esCargador());
       // Corregir, verificar o borrar: solo cargadores y admin (el código no cambia nunca)
       allow update: if esCargador() && productoValido(codigo) && request.resource.data.codigo == resource.data.codigo;

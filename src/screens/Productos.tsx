@@ -146,7 +146,7 @@ export default function Productos() {
         {editar && (
           <>
             <p className="mb-3 text-[13.5px] text-mu">{editar.verificado ? 'Verificado' : 'Sin verificar'} · cargado {editar.via === 'foto' ? 'con foto' : 'a mano'} el {fechaCorta(editar.creado)}</p>
-            <FormEtiqueta key={editar.codigo} inicial={etiquetaDe(alimentoDeProducto(editar))} codigoFijo={editar.codigo} leerFoto={productos.leerFoto}
+            <FormEtiqueta key={editar.codigo} inicial={etiquetaDe(alimentoDeProducto(editar))} codigoFijo={editar.codigo} pedirCodigo leerFoto={productos.leerFoto}
               textoGuardar="Guardar y verificar"
               alBorrar={async () => { await repo.borrarProducto(editar.codigo); setEditar(null); aviso('Producto borrado'); recargar(); }}
               alGuardar={async (e, via) => {
