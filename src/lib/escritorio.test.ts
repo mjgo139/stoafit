@@ -30,7 +30,7 @@ describe('widget para Windows · StoaFit', () => {
     const m = meta.split('|');
     // id|nombre|estado|racha|color|subtítulo|35 días|%|derecha|ruta|tarjeta|unidad
     expect(m.slice(0, 5)).toEqual(['meta', 'Meta del día', '0', '2', 'Oro']);
-    expect(m[5]).toBe('META 2.000 KCAL · 120 G PROTEÍNA');
+    expect(m[5]).toBe('META 2.000 KCAL');
     // antes del 1/11 no tenía cuenta; esta semana: lunes 23 y martes 24 cumplidos, hoy pendiente
     expect(m[6].slice(0, 6)).toBe('------');
     expect(m[6].slice(28)).toBe('11pffff');

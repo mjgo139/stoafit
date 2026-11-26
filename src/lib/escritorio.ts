@@ -65,7 +65,7 @@ export function resumenStoaFit(perfil: Perfil, dia: Dia | null, ahora = Date.now
     estado: cumplidoHoy ? '1' : '0',
     racha: racha(conHoy(cumplidos, cumplidoHoy), hoy),
     color: 'Oro',
-    subtitulo: `META ${formatoNumero(metas.kcal)} KCAL · ${formatoNumero(metas.prot)} G PROTEÍNA`,
+    subtitulo: `META ${formatoNumero(metas.kcal)} KCAL`,
     dias: dias(cumplidos, cumplidoHoy),
     pct: pct(cumplidos, cumplidoHoy),
     derecha: `${formatoNumero(kcal)}/${formatoNumero(metas.kcal)}`,
