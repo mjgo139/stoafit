@@ -151,6 +151,8 @@ export interface Perfil {
   acento?: Acento;
   /** Foto de perfil (data URL WebP/JPEG 256×256, v1.11.0); null = sin foto */
   foto?: string | null;
+  /** Widget para Windows (v1.20.0): código secreto de 24 letras del resumen `escritorio/{codigo}`, o null */
+  escritorio?: string | null;
   unidad: Unidad;
   recordatorio: Recordatorio;
   creado: number;

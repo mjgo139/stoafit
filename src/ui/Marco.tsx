@@ -2,6 +2,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { flushSync } from 'react-dom';
 import { useEffect, type MouseEvent } from 'react';
 import { useSesion } from './contexto';
+import { useResumenEscritorio } from './Escritorio';
 import { AvisoPrueba, Avatar, BarraLateral, Pestanas } from '../../familia/react';
 import { Emblema } from './familia';
 import { useRecordatorio } from './recordatorio';
@@ -29,6 +30,7 @@ export function useNavegarSuave() {
 export function Marco() {
   const { perfil, usuario, repo } = useSesion();
   useIndiceNombres();
+  useResumenEscritorio();
   const loc = useLocation();
   const ir = useNavegarSuave();
   useEffect(() => { window.scrollTo({ top: 0 }); }, [loc.pathname]);

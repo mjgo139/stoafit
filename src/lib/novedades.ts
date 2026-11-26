@@ -1,6 +1,13 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.20.0',
+    fecha: '2026-11-26',
+    cambios: [
+      'Widget para Windows: en Perfil → "Widget para Windows" se baja StoaFit.rmskin para Rainmeter (gratis). En el escritorio quedan tus calorías de hoy, tus comidas, tu racha y tarjetas con las últimas 5 semanas.',
+    ],
+  },
+  {
     version: '1.19.0',
     fecha: '2026-11-22',
     cambios: [

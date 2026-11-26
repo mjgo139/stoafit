@@ -10,6 +10,7 @@ import { useSesion } from '../ui/contexto';
 import { Avatar, BotonFoto, CabeceraPagina, Grupo, TarjetaPerfil, TEMAS } from '../ui/familia';
 import { Icono } from '../../familia/iconos';
 import { Hoja, Selector } from '../ui/piezas';
+import { FilaEscritorio } from '../ui/Escritorio';
 
 const ACENTOS: { v: Acento; t: string; c: string }[] = [
   { v: 'oliva', t: 'Oliva', c: 'var(--muestra-oliva)' },
@@ -137,6 +138,7 @@ export default function Perfil() {
           <section>
             <Grupo n={4} className="mb-3">Tu cuenta</Grupo>
             <div className="tarjeta py-1">
+              <FilaEscritorio />
               <button className={fila} onClick={exportar}><Icono n="descargar" className="oro" /><span className="flex-1"><b>Exportar mis datos</b><span className="block text-[12.5px] text-mu">Un archivo con todo lo que registraste</span></span></button>
               <button className={fila} onClick={() => repo.salir()}><Icono n="salir" className="text-mu" /><span className="flex-1"><b>Salir</b></span></button>
               <button className={`${fila} border-0 text-miss`} onClick={() => setBorrar(true)}><Icono n="basura" /><span className="flex-1"><b>Borrar mi cuenta</b></span></button>
