@@ -12,7 +12,7 @@
  */
 import { COLORES_ICONO, FIGURAS } from '../../familia/emblema.mjs';
 import {
-  LUA_COMUN, MEDIDAS, aRainmeter, armarRmskin, coloresDeLaFamilia, emblemaPng, fechasGrilla, limpio, urlResumen, utf16le, variablesComunes,
+  LUA_COMUN, MEDIDAS, conTamanos, aRainmeter, armarRmskin, coloresDeLaFamilia, emblemaPng, fechasGrilla, limpio, urlResumen, utf16le, variablesComunes,
   type ColoresWidget,
 } from '../../familia/escritorio';
 import { claveDia, fechaDeClave, hastaHoy, racha, sumarDias, NOMBRES_DIA } from './logica';
@@ -143,6 +143,10 @@ const MACROS = [['Prot', 'Proteína'], ['Carb', 'Carbohidr.'], ['Gras', 'Grasas'
 
 /** "Tu día": StoaFit/Hoy/Hoy.ini */
 export function skinDiaIni(proyecto: string, codigo: string, c: ColoresFit): string {
+  return conTamanos(skinDiaBase(proyecto, codigo, c));
+}
+
+function skinDiaBase(proyecto: string, codigo: string, c: ColoresFit): string {
   const macros = MACROS.map(([k, nombre], i) => `
 [MeterM${i + 1}Nombre]
 Meter=String
@@ -326,6 +330,10 @@ LeftMouseUpAction=["#App#/agregar"]
 
 /** "Tu mes": StoaFit/Mes/Mes.ini */
 export function skinMesIni(proyecto: string, codigo: string, c: ColoresFit): string {
+  return conTamanos(skinMesBase(proyecto, codigo, c));
+}
+
+function skinMesBase(proyecto: string, codigo: string, c: ColoresFit): string {
   const letras = LETRAS.map((l, i) => `
 [MeterL${i + 1}]
 Meter=String

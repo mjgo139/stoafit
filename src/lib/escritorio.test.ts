@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { archivosStoaFit, skinDiaIni, skinDiaLua, skinMesLua, textoStoaFit } from './escritorio';
+import { archivosStoaFit, skinDiaIni, skinDiaLua, skinMesIni, skinMesLua, textoStoaFit } from './escritorio';
 import { diaVacio } from './nutricion';
 import type { Dia, Perfil } from './tipos';
 
@@ -55,5 +55,24 @@ describe('widget para Windows · StoaFit', () => {
     expect(ini).toContain('projects/stoafit-app/');
     expect(ini).toContain('Prot=11,1,1');
     expect(skinDiaLua() + skinMesLua()).not.toMatch(/Rojo|✕/);
+  });
+});
+
+/** Familia 1.11.0: todos los widgets con tamaños chico · normal · grande (pedido del dueño) */
+function revisarTamanos(ini: string) {
+  expect(ini).toMatch(/^E=1$/m);
+  for (const t of ['chico', 'normal', 'grande']) expect(ini).toContain(`Tamaño ${t}`);
+  expect(ini).toContain('[!WriteKeyValue Variables E 1.3][!Refresh]');
+  // ContextTitle seguidos (Rainmeter corta la lista en el primer hueco)
+  const n = [...ini.matchAll(/^ContextTitle(\d*)=/gm)].map((m) => Number(m[1] || 1));
+  expect(n).toEqual(n.map((_, i) => i + 1));
+  // ninguna medida queda fija: todas pasan por #E#
+  expect(ini).not.toMatch(/^(X|Y|W|FontSize)=-?[1-9][\d.]*[rR]?$/m);
+}
+
+describe('widget para Windows · tamaños', () => {
+  it('Tu día y Tu mes se agrandan y achican con E', () => {
+    revisarTamanos(skinDiaIni('stoafit-app', 'C', C));
+    revisarTamanos(skinMesIni('stoafit-app', 'C', C));
   });
 });

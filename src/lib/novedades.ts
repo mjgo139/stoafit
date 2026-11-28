@@ -1,6 +1,13 @@
 /** Novedades de cada versión: se muestran en Perfil → Ajustes (solo admin) */
 export const NOVEDADES: { version: string; fecha: string; cambios: string[] }[] = [
   {
+    version: '1.23.0',
+    fecha: '2026-11-28',
+    cambios: [
+      'Widget para Windows con tres tamaños: clic derecho → Tamaño chico, normal o grande. Todos los widgets de la familia miden lo mismo (240, 300 o 390 de ancho) para que se acomoden en columnas parejas. Para tenerlo: Perfil → Widget para Windows → Descargar de nuevo.',
+    ],
+  },
+  {
     version: '1.22.0',
     fecha: '2026-11-26',
     cambios: [
